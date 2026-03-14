@@ -92,7 +92,7 @@ export default function LoginForm() {
             label="Correo"
             variant="outlined"
             type="email"
-            InputLabelProps={{ shrink: true }}
+            slotProps={{ inputLabel: { shrink: true } }}
             placeholder="Correo"
           />
 
@@ -101,7 +101,7 @@ export default function LoginForm() {
             label="Contraseña"
             variant="outlined"
             type={showPassword ? "text" : "password"}
-            InputLabelProps={{ shrink: true }}
+            slotProps={{ inputLabel: { shrink: true } }}
             placeholder="Contraseña"
             InputProps={{
               endAdornment: (

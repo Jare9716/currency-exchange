@@ -172,7 +172,7 @@ export default function UserList() {
             placeholder="Nombre o CC"
             variant="outlined"
             label="Buscar"
-            InputLabelProps={{ shrink: true }}
+            slotProps={{ inputLabel: { shrink: true } }}
             sx={{ maxWidth: 300 }}
           />
           <Button variant="contained" onClick={() => setModalOpen(true)}>

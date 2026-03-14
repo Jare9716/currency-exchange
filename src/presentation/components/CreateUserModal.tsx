@@ -69,7 +69,7 @@ export default function CreateUserModal({
           fullWidth
           variant="outlined"
           placeholder="Jhon Doe"
-          InputLabelProps={{ shrink: true }}
+          slotProps={{ inputLabel: { shrink: true } }}
         />
         <TextField
           label="Correo"
@@ -79,7 +79,7 @@ export default function CreateUserModal({
           fullWidth
           variant="outlined"
           placeholder="Doe.Jhon@kmail.com"
-          InputLabelProps={{ shrink: true }}
+          slotProps={{ inputLabel: { shrink: true } }}
         />
         <Box sx={{ display: "flex", gap: 3 }}>
           <TextField
@@ -90,7 +90,7 @@ export default function CreateUserModal({
             fullWidth
             variant="outlined"
             placeholder="0202020202"
-            InputLabelProps={{ shrink: true }}
+            slotProps={{ inputLabel: { shrink: true } }}
           />
           <TextField
             label="Telefono"
@@ -100,7 +100,7 @@ export default function CreateUserModal({
             fullWidth
             variant="outlined"
             placeholder="3409388333"
-            InputLabelProps={{ shrink: true }}
+            slotProps={{ inputLabel: { shrink: true } }}
           />
         </Box>
       </DialogContent>
