@@ -21,6 +21,14 @@ We follow strict **Clean Architecture** and **Domain-Driven Design (DDD)** princ
 3.  **Presentation Layer:** Next.js pages, MUI components, and hooks. This layer only communicates with the Use Case layer.
 4.  **Infrastructure Layer:** API calls, local storage, and third-party integrations.
 
+## Styling & Theming
+
+We use a centralized **MUI Theme** to manage all design tokens from Figma.
+
+- **Strict Theming:** NEVER hardcode colors or typography, spacing values (e.g., do not use `color: '#123456'` or `fontSize: '22px'`).
+- **Theme Variables:** Always use MUI theme variables for styles (e.g., `theme.palette.primary.main` or `theme.typography.h1`).
+- **Custom Components:** Extend the MUI theme for custom component variants rather than overriding styles inline whenever possible.
+
 ## UI / UX Implementation Notes (From Wireframes)
 
 - [cite_start]**Login Flow:** Must include standard inputs for "Email Address" and "Password" [cite: 2, 6][cite_start], along with a "Remember me" checkbox[cite: 8].

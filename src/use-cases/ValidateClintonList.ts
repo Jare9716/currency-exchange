@@ -1,4 +1,4 @@
-import { ClintonListService } from '../domain/ClintonListService';
+import { ClintonListService } from "../domain/ClintonListService";
 
 export class ValidateClintonList {
   constructor(private clintonListService: ClintonListService) {}

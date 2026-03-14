@@ -1,34 +1,66 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { Dialog, DialogTitle, DialogContent, DialogActions, Button, TextField, Box } from '@mui/material';
+import React, { useState } from "react";
+import {
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Button,
+  TextField,
+  Box,
+} from "@mui/material";
 
 interface CreateUserModalProps {
   open: boolean;
   onClose: () => void;
-  onCreate: (user: { name: string; email: string; cc: string; phone: string }) => void;
+  onCreate: (user: {
+    name: string;
+    email: string;
+    cc: string;
+    phone: string;
+  }) => void;
 }
 
-export default function CreateUserModal({ open, onClose, onCreate }: CreateUserModalProps) {
-  const [formData, setFormData] = useState({ name: '', email: '', cc: '', phone: '' });
+export default function CreateUserModal({
+  open,
+  onClose,
+  onCreate,
+}: CreateUserModalProps) {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    cc: "",
+    phone: "",
+  });
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleCreate = () => {
     onCreate(formData);
-    setFormData({ name: '', email: '', cc: '', phone: '' }); // Reset
+    setFormData({ name: "", email: "", cc: "", phone: "" }); // Reset
   };
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth PaperProps={{ sx: { p: 0 } }}>
-      <DialogTitle sx={{ fontWeight: 600, fontSize: '22px', color: 'text.primary', px: 3, pt: 3, pb: 2 }}>
+    <Dialog
+      open={open}
+      onClose={onClose}
+      maxWidth="sm"
+      fullWidth
+      PaperProps={{ sx: { p: 0 } }}
+    >
+      <DialogTitle
+        sx={{ typography: "h2", color: "text.primary", px: 3, pt: 3, pb: 2 }}
+      >
         Nuevo cliente
       </DialogTitle>
-      
-      <DialogContent sx={{ display: 'flex', flexDirection: 'column', gap: 3, p: 3 }}>
+
+      <DialogContent
+        sx={{ display: "flex", flexDirection: "column", gap: 3, p: 3 }}
+      >
         <TextField
           label="Nombre"
           name="name"
@@ -49,7 +81,7 @@ export default function CreateUserModal({ open, onClose, onCreate }: CreateUserM
           placeholder="Doe.Jhon@kmail.com"
           InputLabelProps={{ shrink: true }}
         />
-        <Box sx={{ display: 'flex', gap: 3 }}>
+        <Box sx={{ display: "flex", gap: 3 }}>
           <TextField
             label="CC"
             name="cc"
@@ -72,14 +104,10 @@ export default function CreateUserModal({ open, onClose, onCreate }: CreateUserM
           />
         </Box>
       </DialogContent>
-      
+
       <DialogActions sx={{ p: 3, pt: 0 }}>
-        <Button onClick={handleCreate} sx={{ fontWeight: 600 }}>
-          Crear usuario
-        </Button>
-        <Button onClick={onClose} sx={{ fontWeight: 600 }}>
-          Cancelar
-        </Button>
+        <Button onClick={handleCreate}>Crear usuario</Button>
+        <Button onClick={onClose}>Cancelar</Button>
       </DialogActions>
     </Dialog>
   );
