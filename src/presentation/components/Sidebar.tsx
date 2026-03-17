@@ -37,7 +37,7 @@ export default function Sidebar() {
             <ListItemIcon>
               <HomeIcon />
             </ListItemIcon>
-            <ListItemText primary="Lorem" />
+            <ListItemText primary="Inicio" />
           </ListItemButton>
         </ListItem>
         <ListItem disablePadding>
