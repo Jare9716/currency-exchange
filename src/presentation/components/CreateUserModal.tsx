@@ -10,16 +10,13 @@ import {
   TextField,
   Box,
 } from "@mui/material";
+import { User } from "../../domain/User";
+import { API_BASE_URL } from "@/utils/urls";
 
 interface CreateUserModalProps {
   open: boolean;
   onClose: () => void;
-  onCreate: (user: {
-    name: string;
-    email: string;
-    cc: string;
-    phone: string;
-  }) => void;
+  onCreate: (user: User) => void;
 }
 
 export default function CreateUserModal({
@@ -34,14 +31,50 @@ export default function CreateUserModal({
     phone: "",
   });
 
+  const getClintonStatus = async (name: string): Promise<boolean> => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/v1/clinton-list/persons/by-name?name=${name}`);
+      const data = await response.json();
+      console.log(data)
+
+      return data.matchCount > 0;
+    } catch (error) {
+      console.error("Error consultando Clinton list:", error);
+      return false;
+    }
+  };
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleCreate = () => {
-    onCreate(formData);
-    setFormData({ name: "", email: "", cc: "", phone: "" }); // Reset
+  const handleCreate = async () => {
+    if (!formData.cc) {
+      console.warn("CC requerida");
+      return;
+    }
+
+    const isListed = await getClintonStatus(formData.name);
+
+    console.log("isClintonListed:", isListed);
+
+    const newUser: User = {
+      id: crypto.randomUUID(),
+      ...formData,
+      isClintonListed: isListed,
+      status: isListed ? "Reportado" : "Activo",
+    };
+
+    onCreate(newUser);
+
+    // reset
+    setFormData({
+      name: "",
+      email: "",
+      cc: "",
+      phone: "",
+    });
   };
 
   return (
@@ -71,6 +104,7 @@ export default function CreateUserModal({
           placeholder="Jhon Doe"
           slotProps={{ inputLabel: { shrink: true } }}
         />
+
         <TextField
           label="Correo"
           name="email"
@@ -81,6 +115,7 @@ export default function CreateUserModal({
           placeholder="Doe.Jhon@kmail.com"
           slotProps={{ inputLabel: { shrink: true } }}
         />
+
         <Box sx={{ display: "flex", gap: 3 }}>
           <TextField
             label="CC"
@@ -92,6 +127,7 @@ export default function CreateUserModal({
             placeholder="0202020202"
             slotProps={{ inputLabel: { shrink: true } }}
           />
+
           <TextField
             label="Telefono"
             name="phone"
