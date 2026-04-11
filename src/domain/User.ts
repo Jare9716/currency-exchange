@@ -4,7 +4,7 @@ export interface User {
   name: string;
   cc?: string;
   phone?: string;
-  status?: "Activo" | "Bloqueado" | "Reportado";
+  status?: "Activo" | "Reportado";
   token?: string;
   isClintonListed: boolean;
 }
