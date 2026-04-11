@@ -33,7 +33,13 @@ export default function CreateUserModal({
 
   const getClintonStatus = async (name: string): Promise<boolean> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/clinton-list/persons/by-name?name=${name}`);
+      const response = await fetch(`${API_BASE_URL}/api/v1/clinton-list/persons/by-name?name=${name}`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              "ngrok-skip-browser-warning": "true"
+            },
+      });
       const data = await response.json();
       console.log(data)
 

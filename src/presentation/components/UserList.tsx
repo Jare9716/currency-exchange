@@ -34,7 +34,6 @@ export default function UserList() {
 
   const [modalOpen, setModalOpen] = useState(false);
 
-  // Snackbar state
   const [snackbarOpen, setSnackbarOpen] = useState(false);
   const [snackbarMessage, setSnackbarMessage] = useState({
     title: "",
@@ -44,11 +43,9 @@ export default function UserList() {
     "success"
   );
 
-  // 🔥 AHORA recibe el usuario completo (NO formData)
   const handleCreateUser = (newUser: User) => {
     setModalOpen(false);
 
-    // Snackbar según estado
     if (newUser.isClintonListed) {
       setSnackbarSeverity("error");
       setSnackbarMessage({
@@ -65,7 +62,6 @@ export default function UserList() {
 
     setSnackbarOpen(true);
 
-    // 🔥 IMPORTANTE: no modificar el usuario
     setUsers((prevUsers) => [newUser, ...prevUsers]);
   };
 

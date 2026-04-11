@@ -87,6 +87,7 @@ export default function CurrencyExchangeForm() {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
+          "ngrok-skip-browser-warning": "true"
         },
         body: JSON.stringify({
           amount: usd,
@@ -108,7 +109,14 @@ export default function CurrencyExchangeForm() {
       try {
         setLoadingRate(true);
 
-        const res = await fetch(`${API_BASE_URL}/api/v1/currency/trm/usd`);
+        const res = await fetch(`${API_BASE_URL}/api/v1/currency/trm/usd`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              "ngrok-skip-browser-warning": "true"
+            },
+        });
+
         const data = await res.json();
 
         setExchangeRate(data.rate);
@@ -146,7 +154,13 @@ export default function CurrencyExchangeForm() {
 
   const getClintonStatus = async (name: string): Promise<boolean> => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/v1/clinton-list/persons/by-name?name=${name}`);
+      const response = await fetch(`${API_BASE_URL}/api/v1/clinton-list/persons/by-name?name=${name}`, {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              "ngrok-skip-browser-warning": "true"
+            },
+        });
       const data = await response.json()
 
       return data.matchCount > 0;
