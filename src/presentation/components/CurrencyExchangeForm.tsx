@@ -20,10 +20,10 @@ import {
 import SearchIcon from "@mui/icons-material/Search";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
-import { User } from "../../domain/User";
-import { Transaction } from "../../domain/Transaction";
-import { ExecuteTransaction } from "../../use-cases/ExecuteTransaction";
-import { transactionRepository } from "../../infrastructure/MockTransactionRepository";
+import { User } from "@/domain/User";
+import { Transaction } from "@/domain/Transaction";
+import { ExecuteTransaction } from "@/use-cases/ExecuteTransaction";
+import { transactionRepository } from "@/infrastructure/MockTransactionRepository";
 import { API_BASE_URL } from "@/utils/urls";
 import { UsersContext } from "@/context/UsersContext";
 

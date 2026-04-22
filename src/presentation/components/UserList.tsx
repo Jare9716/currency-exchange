@@ -19,8 +19,8 @@ import {
   Alert,
 } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
-import CreateUserModal from "./CreateUserModal";
-import { User } from "../../domain/User";
+import CreateUserModal from "@/presentation/components/CreateUserModal";
+import { User } from "@/domain/User";
 import { UsersContext } from "@/context/UsersContext";
 
 export default function UserList() {

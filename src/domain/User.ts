@@ -10,6 +10,6 @@ export interface User {
 }
 
 export interface UserRepository {
-  findByEmail(email: string): Promise<User | null>;
+  findByEmail(email: string): Promise<User | undefined>;
   save(user: User): Promise<void>;
 }

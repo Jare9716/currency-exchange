@@ -1,4 +1,4 @@
-import { ClintonListService } from "../domain/ClintonListService";
+import { ClintonListService } from "@/domain/ClintonListService";
 
 export class MockClintonListService implements ClintonListService {
   async isBlocked(name: string, _identifier: string): Promise<boolean> {

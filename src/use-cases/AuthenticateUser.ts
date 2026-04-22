@@ -1,4 +1,5 @@
-import { User, UserRepository } from "../domain/User";
+import { User, UserRepository } from "@/domain/User";
+import { DomainError } from "@/domain/Errors";
 
 export class AuthenticateUser {
   constructor(private userRepository: UserRepository) {}
@@ -6,7 +7,7 @@ export class AuthenticateUser {
   async execute(email: string): Promise<User> {
     const user = await this.userRepository.findByEmail(email);
     if (!user) {
-      throw new Error("User not found or invalid credentials");
+      throw new DomainError("user_not_found", "User not found or invalid credentials");
     }
 
     // For this mock, we assume successful auth purely based on email existence.
@@ -14,7 +15,7 @@ export class AuthenticateUser {
 
     // Also check if user is blocked
     if (user.isClintonListed) {
-      throw new Error("User is blocked due to Clinton List validation");
+      throw new DomainError("user_blocked", "User is blocked due to Clinton List validation");
     }
 
     // Generate a mock token

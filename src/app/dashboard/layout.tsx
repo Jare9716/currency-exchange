@@ -1,4 +1,4 @@
-import Sidebar from "../../presentation/components/Sidebar";
+import Sidebar from "@/presentation/components/Sidebar";
 import { Box } from "@mui/material";
 
 export default function DashboardLayout({

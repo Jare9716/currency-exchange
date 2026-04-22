@@ -10,7 +10,7 @@ import {
 	TextField,
 	Box,
 } from "@mui/material";
-import { User } from "../../domain/User";
+import { User } from "@/domain/User";
 import { API_BASE_URL } from "@/utils/urls";
 
 interface CreateUserModalProps {

@@ -1,4 +1,5 @@
-import { Transaction, TransactionRepository } from "../domain/Transaction";
+import { Transaction, TransactionRepository } from "@/domain/Transaction";
+import { DomainError } from "@/domain/Errors";
 
 export class ExecuteTransaction {
   constructor(private transactionRepository: TransactionRepository) {}
@@ -9,7 +10,7 @@ export class ExecuteTransaction {
     exchangeRate: number,
   ): Promise<Transaction> {
     if (amountUSD <= 0) {
-      throw new Error("Transaction amount must be strictly positive");
+      throw new DomainError("validation_error", "Transaction amount must be strictly positive");
     }
 
     const amountCOP = amountUSD * exchangeRate;

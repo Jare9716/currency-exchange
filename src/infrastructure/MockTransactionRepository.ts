@@ -1,4 +1,4 @@
-import { Transaction, TransactionRepository } from "../domain/Transaction";
+import { Transaction, TransactionRepository } from "@/domain/Transaction";
 
 export class MockTransactionRepository implements TransactionRepository {
   private transactions: Transaction[] = [];
