@@ -19,18 +19,12 @@ import {
   Alert,
 } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
-import CreateUserModal from "@/presentation/components/CreateUserModal";
+import { CreateUserModal } from "@/presentation/components/features/users/CreateUserModal";
 import { User } from "@/domain/User";
-import { UsersContext } from "@/context/UsersContext";
+import { useUsersStore } from "@/presentation/stores/users.store";
 
-export default function UserList() {
-  const usersContext = useContext(UsersContext);
-
-  if (!usersContext) {
-    throw new Error("UsersContext debe usarse dentro de UsersProvider");
-  }
-
-  const { users, setUsers } = usersContext;
+export function UserList() {
+  const { users, setUsers } = useUsersStore();
 
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -40,7 +34,7 @@ export default function UserList() {
     body: "",
   });
   const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">(
-    "success"
+    "success",
   );
 
   const handleCreateUser = (newUser: User) => {
@@ -79,7 +73,9 @@ export default function UserList() {
   };
 
   return (
-    <Box sx={{ width: "100%", display: "flex", flexDirection: "column", gap: 3 }}>
+    <Box
+      sx={{ width: "100%", display: "flex", flexDirection: "column", gap: 3 }}
+    >
       <Typography variant="h1" sx={{ color: "text.primary" }}>
         Clientes
       </Typography>

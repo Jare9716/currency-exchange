@@ -13,7 +13,7 @@ import HomeIcon from "@mui/icons-material/Home";
 import PeopleIcon from "@mui/icons-material/People";
 import { usePathname, useRouter } from "next/navigation";
 
-export default function Sidebar() {
+export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
 

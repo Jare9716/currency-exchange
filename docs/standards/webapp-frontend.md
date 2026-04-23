@@ -9,14 +9,19 @@ While following Clean Architecture, organize the **Presentation Layer** (`src/pr
 ```
 src/
 ├── presentation/          # Next.js Presentation Logic
-│   ├── components/        # Reusable UI components
-│   │   ├── forms/         # Inputs, selects, form-specific logic
-│   │   ├── layout/        # Shell, Nav, Footer
-│   │   └── common/        # Buttons, Cards, Modals
-│   ├── hooks/             # Presentation-specific hooks (e.g., useForm, useToggle)
-│   └── views/             # Page-level components (rendered by App Router)
+│   ├── components/        # FSD Component Architecture
+│   │   ├── ui/            # Pure, domain-agnostic UI wrappers
+│   │   ├── layout/        # Application layout structures (Sidebar, Headers)
+│   │   └── features/      # Business domain bound components (auth, users, exchange)
+│   ├── hooks/             # Presentation-specific hooks
+│   ├── stores/            # Zustand global state stores
+│   ├── styles/            # Global CSS and MUI Theme
+│   └── views/             # Page-level components
 ├── app/                   # Next.js App Router (Routing, Layouts, Metadata)
-├── context/               # Global state (React Context or Zustand)
+├── config/                # Global configuration and environment variables
+├── domain/                # Business logic and interfaces
+├── use-cases/             # Application specific logic
+├── infrastructure/        # Implementation of repositories and services
 └── utils/                 # Pure helper functions
 ```
 

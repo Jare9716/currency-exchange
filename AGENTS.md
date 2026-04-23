@@ -11,10 +11,13 @@ This project follows **Clean Architecture** and **Domain-Driven Design (DDD)** p
 src/
 ├── domain/          # Business logic, entities, interfaces (Zero dependencies)
 ├── use-cases/       # Application logic (e.g., AuthenticateUser, ExecuteTransaction)
-├── presentation/    # Next.js pages, MUI components, and hooks
-├── infrastructure/  # API calls, local storage, third-party integrations
+├── presentation/    # UI Layer: Components, Hooks, Stores, and Styles
+│   ├── components/  # FSD Components (ui, layout, features)
+│   ├── stores/      # Zustand state management
+│   └── styles/      # Global CSS and MUI Theme configuration
+├── infrastructure/  # Repositories, API calls, and third-party integrations
 ├── app/             # Next.js App Router (Routing and Layouts)
-├── context/         # React Context for global state
+├── config/          # Global configuration and environment variables
 └── utils/           # Shared helpers
 ```
 
@@ -73,5 +76,5 @@ Read the relevant standard before writing code (files in `docs/standards/` TBA):
 - **Framework:** Next.js (App Router)
 - **Language:** TypeScript
 - **Styling & UI:** Material UI (MUI) v5+
-- **State:** React Context or Redux
+- **State:** Zustand (Persistent stores)
 - **Integrations:** Figma MCP

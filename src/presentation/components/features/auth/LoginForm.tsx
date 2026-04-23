@@ -16,7 +16,7 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { useRouter } from "next/navigation";
 
-export default function LoginForm() {
+export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
 

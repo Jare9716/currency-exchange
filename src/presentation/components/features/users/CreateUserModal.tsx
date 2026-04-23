@@ -11,7 +11,7 @@ import {
 	Box,
 } from "@mui/material";
 import { User } from "@/domain/User";
-import { API_BASE_URL } from "@/utils/urls";
+import { API_BASE_URL } from "@/config";
 
 interface CreateUserModalProps {
 	open: boolean;
@@ -19,7 +19,7 @@ interface CreateUserModalProps {
 	onCreate: (user: User) => void;
 }
 
-export default function CreateUserModal({
+export function CreateUserModal({
 	open,
 	onClose,
 	onCreate,

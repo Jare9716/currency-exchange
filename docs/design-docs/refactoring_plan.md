@@ -18,20 +18,40 @@ This document outlines the proposed refactoring steps to align the current codeb
   - Update all interfaces to return `undefined` instead of `null`.
   - Define custom error classes (e.g., `DomainError`) with codes like `user_not_found`, `access_denied`.
 
-### Phase 2: State Management (Zustand Migration)
+### Phase 2: State Management (Zustand Migration) (Completed)
 - **Files to Modify:** `src/presentation/stores/users.store.ts` [NEW], `src/context/UsersContext.tsx` [DELETE]
 - **Actions:**
   - Create a Zustand store to manage user state and localStorage persistence.
   - Remove `UsersContext` and update the root layout.
 
-### Phase 3: Infrastructure & Repository Implementation
+### Phase 3: App Router Audit & Optimization (Completed)
+- **Files to Modify:** `src/app/layout.tsx`, `src/app/globals.css`, `src/app/page.tsx`
+- **Actions:**
+  - Remove `page.module.css` (unused).
+  - Move `globals.css` and `theme/` to `src/presentation/styles/`.
+  - Move `favicon.ico` to `public/`.
+  - Simplify `globals.css` to avoid conflicts with MUI `CssBaseline`.
+  - Update `layout.tsx` with meaningful metadata.
+  - Implement a redirect or unified route for the Login screen.
+
+### Phase 4: Component Architecture Restructuring (FSD Pattern) (Completed)
+- **Files to Modify:** `src/presentation/components/*`, `src/app/*`
+- **Actions:**
+  - Create directories: `ui/`, `layout/`, and `features/` (auth, users, exchange) inside `src/presentation/components/`.
+  - Move `Sidebar.tsx` to `layout/`.
+  - Move `LoginForm.tsx` to `features/auth/`.
+  - Move `UserList.tsx` and `CreateUserModal.tsx` to `features/users/`.
+  - Move `CurrencyExchangeForm.tsx` to `features/exchange/`.
+  - Update all internal imports across the application to reflect these new paths.
+
+### Phase 5: Infrastructure & Repository Implementation
 - **Files to Modify:** `src/infrastructure/MockTransactionRepository.ts`, `src/infrastructure/MockUserRepository.ts`
 - **Actions:**
   - Standardize error handling in repository methods.
   - Ensure compatibility with the `undefined` return types.
 
-### Phase 4: Presentation & Validation
-- **Files to Modify:** `src/presentation/components/LoginForm.tsx`, `src/app/login/page.tsx`
+### Phase 6: Presentation & Validation
+- **Files to Modify:** `src/presentation/components/features/auth/LoginForm.tsx`, `src/app/login/page.tsx`
 - **Actions:**
   - Implement **Zod** schema for credentials validation.
   - Refactor `LoginForm` into smaller, atomic components (Inputs, Buttons).
