@@ -44,18 +44,48 @@ This document outlines the proposed refactoring steps to align the current codeb
   - Move `CurrencyExchangeForm.tsx` to `features/exchange/`.
   - Update all internal imports across the application to reflect these new paths.
 
-### Phase 5: Infrastructure & Repository Implementation
+### Phase 5: Infrastructure & Repository Implementation (Completed)
 - **Files to Modify:** `src/infrastructure/MockTransactionRepository.ts`, `src/infrastructure/MockUserRepository.ts`
 - **Actions:**
   - Standardize error handling in repository methods.
   - Ensure compatibility with the `undefined` return types.
 
-### Phase 6: Presentation & Validation
+### Phase 6: Presentation & Validation (Completed)
 - **Files to Modify:** `src/presentation/components/features/auth/LoginForm.tsx`, `src/app/login/page.tsx`
 - **Actions:**
   - Implement **Zod** schema for credentials validation.
   - Refactor `LoginForm` into smaller, atomic components (Inputs, Buttons).
   - Use a dedicated hook or state for redirection logic.
+
+### Phase 7: Centralize Mock Data & Unify Store (Completed)
+- **Files to Modify:** `src/infrastructure/mockData.ts` [NEW], `src/presentation/stores/users.store.ts`, `src/infrastructure/MockUserRepository.ts`
+- **Actions:**
+  - Create a centralized `mockData.ts` file to hold `initialUsers`.
+  - Refactor the Zustand store to fetch/sync data through the `UserRepository` instead of bypassing it, enforcing the Repository pattern.
+
+### Phase 8: Extract Infrastructure Services (Completed)
+- **Files to Modify:** `src/presentation/components/features/users/CreateUserModal.tsx`, `src/presentation/components/features/exchange/CurrencyExchangeForm.tsx`, `src/infrastructure/*`, `src/use-cases/*`
+- **Actions:**
+  - Remove direct `fetch` calls from the UI components.
+  - Abstract the Clinton List API and Currency Conversion APIs into proper Infrastructure services.
+  - Create or update Use Cases to handle the logic, keeping the presentation layer pure.
+
+### Phase 9: Zod Validation for Features (Completed)
+- **Files to Modify:** `src/presentation/components/features/users/CreateUserModal.tsx`, `src/presentation/components/features/exchange/CurrencyExchangeForm.tsx`
+- **Actions:**
+  - Create `user.schema.ts` and `exchange.schema.ts`.
+  - Implement strict Zod validation for user creation and currency conversion inputs, replacing manual `if` statements.
+
+### Phase 10: Atomic Component Adoption
+- **Files to Modify:** `src/presentation/components/features/users/UserList.tsx`, `src/presentation/components/features/users/CreateUserModal.tsx`, `src/presentation/components/features/exchange/CurrencyExchangeForm.tsx`
+- **Actions:**
+  - Refactor all remaining feature components to use the new atomic `@/presentation/components/ui/Button/Button` and `TextField` components.
+
+### Phase 11: Comprehensive Audit & Polish
+- **Actions:**
+  - Conduct a full project audit against `AGENTS.md` and `docs/standards/`.
+  - Check for any remaining layer violations, hardcoded styles, or missing path aliases.
+  - **Rule:** If issues are found during this audit, a new Phase (Phase 12, etc.) MUST be created and executed until the audit passes completely.
 
 ## Verification Plan
 

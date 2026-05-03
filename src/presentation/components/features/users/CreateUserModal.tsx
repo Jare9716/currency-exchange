@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import { createUserSchema, CreateUserFormData } from "./user.schema";
 import {
 	Dialog,
 	DialogTitle,
@@ -11,7 +12,8 @@ import {
 	Box,
 } from "@mui/material";
 import { User } from "@/domain/User";
-import { API_BASE_URL } from "@/config";
+import { ValidateClintonList } from "@/use-cases/ValidateClintonList";
+import { clintonListService } from "@/infrastructure/HttpClintonListService";
 
 interface CreateUserModalProps {
 	open: boolean;
@@ -24,46 +26,40 @@ export function CreateUserModal({
 	onClose,
 	onCreate,
 }: CreateUserModalProps) {
-	const [formData, setFormData] = useState({
+	const [formData, setFormData] = useState<CreateUserFormData>({
 		name: "",
 		email: "",
 		cc: "",
 		phone: "",
 	});
+	const [errors, setErrors] = useState<Partial<Record<keyof CreateUserFormData, string>>>({});
 
 	const getClintonStatus = async (
 		name: string,
 		cc: string,
 	): Promise<boolean> => {
-		try {
-			const response = await fetch(
-				`${API_BASE_URL}/api/v1/clinton-list/persons/by-name?name=${name}&idNumber=${cc}`,
-				{
-					method: "GET",
-					headers: {
-						"Content-Type": "application/json",
-						"ngrok-skip-browser-warning": "true",
-					},
-				},
-			);
-			const data = await response.json();
-			console.log(data);
-
-			return data.matchCount > 0;
-		} catch (error) {
-			console.error("Error consultando Clinton list:", error);
-			return false;
-		}
+		const validateClintonList = new ValidateClintonList(clintonListService);
+		return await validateClintonList.execute(name, cc);
 	};
 
 	const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const { name, value } = e.target;
 		setFormData((prev) => ({ ...prev, [name]: value }));
+		if (errors[name as keyof CreateUserFormData]) {
+			setErrors((prev) => ({ ...prev, [name]: undefined }));
+		}
 	};
 
 	const handleCreate = async () => {
-		if (!formData.cc) {
-			console.warn("CC requerida");
+		const validation = createUserSchema.safeParse(formData);
+		if (!validation.success) {
+			const fieldErrors: Partial<Record<keyof CreateUserFormData, string>> = {};
+			validation.error.issues.forEach((err) => {
+				if (err.path[0]) {
+					fieldErrors[err.path[0] as keyof CreateUserFormData] = err.message;
+				}
+			});
+			setErrors(fieldErrors);
 			return;
 		}
 
@@ -115,6 +111,8 @@ export function CreateUserModal({
 					variant="outlined"
 					placeholder="Jhon Doe"
 					slotProps={{ inputLabel: { shrink: true } }}
+					error={!!errors.name}
+					helperText={errors.name}
 				/>
 
 				<TextField
@@ -126,6 +124,8 @@ export function CreateUserModal({
 					variant="outlined"
 					placeholder="Doe.Jhon@kmail.com"
 					slotProps={{ inputLabel: { shrink: true } }}
+					error={!!errors.email}
+					helperText={errors.email}
 				/>
 
 				<Box sx={{ display: "flex", gap: 3 }}>
@@ -138,6 +138,8 @@ export function CreateUserModal({
 						variant="outlined"
 						placeholder="0202020202"
 						slotProps={{ inputLabel: { shrink: true } }}
+						error={!!errors.cc}
+						helperText={errors.cc}
 					/>
 
 					<TextField
@@ -149,6 +151,8 @@ export function CreateUserModal({
 						variant="outlined"
 						placeholder="3409388333"
 						slotProps={{ inputLabel: { shrink: true } }}
+						error={!!errors.phone}
+						helperText={errors.phone}
 					/>
 				</Box>
 			</DialogContent>

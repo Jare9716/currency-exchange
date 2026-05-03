@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useContext } from "react";
+import { searchUserSchema, exchangeSchema } from "./exchange.schema";
 import {
   Box,
   Button,
@@ -24,8 +25,12 @@ import { User } from "@/domain/User";
 import { Transaction } from "@/domain/Transaction";
 import { ExecuteTransaction } from "@/use-cases/ExecuteTransaction";
 import { transactionRepository } from "@/infrastructure/MockTransactionRepository";
-import { API_BASE_URL } from "@/config";
 import { useUsersStore } from "@/presentation/stores/users.store";
+import { GetExchangeRate } from "@/use-cases/GetExchangeRate";
+import { ConvertCurrency } from "@/use-cases/ConvertCurrency";
+import { ValidateClintonList } from "@/use-cases/ValidateClintonList";
+import { currencyService } from "@/infrastructure/HttpCurrencyService";
+import { clintonListService } from "@/infrastructure/HttpClintonListService";
 
 export function CurrencyExchangeForm() {
   const { users, setUsers } = useUsersStore();
@@ -37,6 +42,7 @@ export function CurrencyExchangeForm() {
   const [lookupAttempted, setLookupAttempted] = useState(false);
 
   const [amountUSD, setAmountUSD] = useState<string>("");
+  const [amountError, setAmountError] = useState<string | undefined>(undefined);
   const [fromCurrency] = useState("USD");
   const [toCurrency] = useState("COP");
   const [observations, setObservations] = useState("");
@@ -81,24 +87,9 @@ export function CurrencyExchangeForm() {
   const fetchConversion = async (usd: number) => {
     try {
       setLoadingConversion(true);
-
-      const res = await fetch(
-        `${API_BASE_URL}/api/v1/currency/trm/usd/convert`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            "ngrok-skip-browser-warning": "true",
-          },
-          body: JSON.stringify({
-            amount: usd,
-            to_currency: "COP",
-          }),
-        },
-      );
-
-      const data = await res.json();
-      setCalculatedCOP(data.to_amount);
+      const convertCurrency = new ConvertCurrency(currencyService);
+      const cop = await convertCurrency.execute(usd, "USD", "COP");
+      setCalculatedCOP(cop);
     } catch (error) {
       console.error("Error converting currency", error);
     } finally {
@@ -110,18 +101,9 @@ export function CurrencyExchangeForm() {
     const fetchExchangeRate = async () => {
       try {
         setLoadingRate(true);
-
-        const res = await fetch(`${API_BASE_URL}/api/v1/currency/trm/usd`, {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "ngrok-skip-browser-warning": "true",
-          },
-        });
-
-        const data = await res.json();
-
-        setExchangeRate(data.rate);
+        const getExchangeRate = new GetExchangeRate(currencyService);
+        const rate = await getExchangeRate.execute("USD");
+        setExchangeRate(rate);
       } catch (error) {
         console.error("Error fetching exchange rate", error);
       } finally {
@@ -158,27 +140,22 @@ export function CurrencyExchangeForm() {
     name: string,
     cc: string,
   ): Promise<boolean> => {
-    try {
-      const response = await fetch(
-        `${API_BASE_URL}/api/v1/clinton-list/persons/by-name?name=${name}&idNumber=${cc}`,
-        {
-          method: "GET",
-          headers: {
-            "Content-Type": "application/json",
-            "ngrok-skip-browser-warning": "true",
-          },
-        },
-      );
-      const data = await response.json();
-
-      return data.matchCount > 0;
-    } catch (error) {
-      console.error("Error consultando Clinton list:", error);
-      return false;
-    }
+    const validateClintonList = new ValidateClintonList(clintonListService);
+    return await validateClintonList.execute(name, cc);
   };
 
   const handleCheckClient = async () => {
+    const validation = searchUserSchema.safeParse({ ccInput });
+    if (!validation.success) {
+      setSnackbarSeverity("error");
+      setSnackbarMessage({
+        title: "CC Inválida",
+        body: validation.error.issues[0].message,
+      });
+      setSnackbarOpen(true);
+      return;
+    }
+
     setLookupAttempted(true);
 
     const user = users.find((u) => u.cc === ccInput.trim());
@@ -222,15 +199,12 @@ export function CurrencyExchangeForm() {
       return;
     }
 
-    if (!amountUSD || Number(amountUSD) <= 0) {
-      setSnackbarSeverity("error");
-      setSnackbarMessage({
-        title: "Monto inválido",
-        body: "Ingrese un monto en USD mayor a 0.",
-      });
-      setSnackbarOpen(true);
+    const validation = exchangeSchema.safeParse({ amountUSD });
+    if (!validation.success) {
+      setAmountError(validation.error.issues[0].message);
       return;
     }
+    setAmountError(undefined);
 
     try {
       const executeTransaction = new ExecuteTransaction(transactionRepository);
@@ -410,7 +384,12 @@ export function CurrencyExchangeForm() {
               type="number"
               placeholder="$1.00"
               value={amountUSD}
-              onChange={(e) => setAmountUSD(e.target.value)}
+              onChange={(e) => {
+                setAmountUSD(e.target.value);
+                if (amountError) setAmountError(undefined);
+              }}
+              error={!!amountError}
+              helperText={amountError}
               inputProps={{ style: { textAlign: "center", fontSize: "2rem" } }}
             />
           </Box>

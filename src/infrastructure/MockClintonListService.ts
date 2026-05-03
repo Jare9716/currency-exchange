@@ -1,5 +1,10 @@
 import { ClintonListService } from "@/domain/ClintonListService";
 
+/**
+ * TEMPORARY IMPLEMENTATION
+ * This is a mock service for development and testing purposes.
+ * It will be replaced by a real external API integration in the future.
+ */
 export class MockClintonListService implements ClintonListService {
   async isBlocked(name: string, _identifier: string): Promise<boolean> {
     // Mock logic: Block any user whose name includes "Clinton" or "Block" or "Reportado"
