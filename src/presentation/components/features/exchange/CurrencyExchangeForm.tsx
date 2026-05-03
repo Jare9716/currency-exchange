@@ -1,7 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { searchUserSchema, exchangeSchema } from "@/presentation/components/features/exchange/exchange.schema";
+import { useState, useEffect } from "react";
+import {
+  searchUserSchema,
+  exchangeSchema,
+} from "@/presentation/components/features/exchange/exchange.schema";
 import {
   Box,
   Typography,
@@ -56,15 +59,14 @@ export function CurrencyExchangeForm() {
     "success",
   );
 
-  const [lastTransaction, setLastTransaction] = useState<Transaction | undefined>(
-    undefined,
-  );
+  const [lastTransaction, setLastTransaction] = useState<
+    Transaction | undefined
+  >(undefined);
 
   const [exchangeRate, setExchangeRate] = useState<number>(0.0);
 
   const [calculatedCOP, setCalculatedCOP] = useState<number>(0);
   const [loadingConversion, setLoadingConversion] = useState(false);
-
 
   const updateClientClintonStatus = (cc: string, newStatus: boolean) => {
     setClients((prevClients): Client[] => {
@@ -385,7 +387,9 @@ export function CurrencyExchangeForm() {
               }}
               error={!!amountError}
               helperText={amountError}
-              inputProps={{ style: { textAlign: "center", fontSize: "2rem" } }}
+              slotProps={{
+                htmlInput: { style: { textAlign: "center", fontSize: "2rem" } },
+              }}
             />
           </Box>
 
@@ -417,8 +421,8 @@ export function CurrencyExchangeForm() {
                     ? exchangeRate.toLocaleString("es-CO")
                     : "N/A"
               }
-              inputProps={{ style: { textAlign: "center", fontSize: "2rem" } }}
               slotProps={{
+                htmlInput: { style: { textAlign: "center", fontSize: "2rem" } },
                 input: {
                   endAdornment: loadingConversion ? (
                     <InputAdornment position="end">

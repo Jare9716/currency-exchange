@@ -7,6 +7,9 @@
 - **Focus on Behavior:** Test inputs and outputs, not implementation details.
 - **Mock selectively:** Only mock external dependencies or expensive operations.
 - **Consistent Structure:** Always mirror the `src/` directory structure in `test/`.
+- **Pre-commit / Pre-push Hooks:** Code cannot be committed if linting fails, and cannot be pushed if tests fail (enforced by Husky + lint-staged).
+- **Minimum Coverage:** We aim for a strict minimum of 80% coverage across the `domain/` and `use-cases/` layers. No new features should be pushed without corresponding tests.
+- **Type Safety:** Tests must be strictly typed. Using `any` in tests is just as bad as using `any` in production code.
 
 ---
 

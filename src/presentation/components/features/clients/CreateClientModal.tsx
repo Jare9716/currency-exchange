@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState, ChangeEvent } from "react";
 import { createClientSchema, CreateClientFormData } from "@/presentation/components/features/clients/client.schema";
 import {
   Dialog,
@@ -44,7 +44,7 @@ export function CreateClientModal({
     return await validateClintonList.execute(name, cc);
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
     if (errors[name as keyof CreateClientFormData]) {

@@ -65,8 +65,8 @@ Read the relevant standard before writing code (files in `docs/standards/` TBA):
 
 ### After Making Changes
 
-1.  **Lint:** Run `npm run lint` and fix any issues.
-2.  **Test:** (Once added) Run `npm test`.
+1.  **Lint:** Run `pnpm lint` and fix any issues.
+2.  **Test:** (Once added) Run `pnpm test`.
 3.  **Verify UI:** Use the browser tool to verify responsive design and theme consistency.
 
 ---
@@ -77,4 +77,5 @@ Read the relevant standard before writing code (files in `docs/standards/` TBA):
 - **Language:** TypeScript
 - **Styling & UI:** Material UI (MUI) v5+
 - **State:** Zustand (Persistent stores)
+- **Package Manager:** pnpm
 - **Integrations:** Figma MCP
