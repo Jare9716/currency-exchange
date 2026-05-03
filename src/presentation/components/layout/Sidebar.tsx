@@ -42,8 +42,8 @@ export function Sidebar() {
         </ListItem>
         <ListItem disablePadding>
           <ListItemButton
-            selected={pathname === "/dashboard/users"}
-            onClick={() => router.push("/dashboard/users")}
+            selected={pathname === "/dashboard/clients"}
+            onClick={() => router.push("/dashboard/clients")}
             sx={{
               "&.Mui-selected": {
                 bgcolor: "rgba(0, 0, 0, 0.08)",

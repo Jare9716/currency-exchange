@@ -76,7 +76,7 @@ This document outlines the proposed refactoring steps to align the current codeb
   - Create `user.schema.ts` and `exchange.schema.ts`.
   - Implement strict Zod validation for user creation and currency conversion inputs, replacing manual `if` statements.
 
-### Phase 10: Atomic Component Adoption
+### Phase 10: Atomic Component Adoption (Completed)
 - **Files to Modify:** `src/presentation/components/features/users/UserList.tsx`, `src/presentation/components/features/users/CreateUserModal.tsx`, `src/presentation/components/features/exchange/CurrencyExchangeForm.tsx`
 - **Actions:**
   - Refactor all remaining feature components to use the new atomic `@/presentation/components/ui/Button/Button` and `TextField` components.
@@ -86,6 +86,14 @@ This document outlines the proposed refactoring steps to align the current codeb
   - Conduct a full project audit against `AGENTS.md` and `docs/standards/`.
   - Check for any remaining layer violations, hardcoded styles, or missing path aliases.
   - **Rule:** If issues are found during this audit, a new Phase (Phase 12, etc.) MUST be created and executed until the audit passes completely.
+
+### Phase 12: Domain Separation (Cashier vs Client) (Completed)
+- **Files to Modify:** `src/domain/*`, `src/infrastructure/*`, `src/use-cases/*`, `src/presentation/stores/*`, `src/presentation/components/*`
+- **Actions:**
+  - Rename the current `User` entity to `Client` across the entire application (domain, repositories, stores, and UI).
+  - Rename directories and files from `users` to `clients` (e.g., `users.store.ts` -> `clients.store.ts`, `UserList.tsx` -> `ClientList.tsx`).
+  - Create a new `Cashier` (or `Employee`) entity and a dedicated `AuthService` in the infrastructure layer.
+  - Refactor `AuthenticateUser` use case to authenticate against the `AuthService` (which holds internal employee credentials) instead of the `ClientRepository`.
 
 ## Verification Plan
 

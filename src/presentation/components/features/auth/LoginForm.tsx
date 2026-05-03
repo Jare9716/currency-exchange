@@ -168,11 +168,7 @@ export function LoginForm() {
             </Link>
           </Box>
 
-          <Button
-            type="submit"
-            disabled={isSubmitting}
-            sx={{ mt: 2 }}
-          >
+          <Button type="submit" disabled={isSubmitting} sx={{ mt: 2 }}>
             {isSubmitting ? "Ingresando..." : "Ingresar"}
           </Button>
         </Box>

@@ -1,8 +1,11 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { loginSchema, LoginFormData } from "@/presentation/components/features/auth/login.schema";
+import {
+  loginSchema,
+  LoginFormData,
+} from "@/presentation/components/features/auth/login.schema";
 import { AuthenticateUser } from "@/use-cases/AuthenticateUser";
-import { userRepository } from "@/infrastructure/MockUserRepository";
+import { authService } from "@/infrastructure/MockAuthService";
 
 export function useLoginForm() {
   const router = useRouter();
@@ -11,21 +14,28 @@ export function useLoginForm() {
     password: "",
     rememberMe: false,
   });
-  const [errors, setErrors] = useState<Partial<Record<keyof LoginFormData, string>>>({});
+  const [errors, setErrors] = useState<
+    Partial<Record<keyof LoginFormData, string>>
+  >({});
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [generalError, setGeneralError] = useState<string | undefined>(undefined);
+  const [generalError, setGeneralError] = useState<string | undefined>(
+    undefined,
+  );
 
-  const handleChange = (field: keyof LoginFormData) => (
-    event: React.ChangeEvent<HTMLInputElement>
-  ) => {
-    const value = event.target.type === "checkbox" ? event.target.checked : event.target.value;
-    setFormData((prev) => ({ ...prev, [field]: value }));
-    
-    // Clear error when user starts typing
-    if (errors[field]) {
-      setErrors((prev) => ({ ...prev, [field]: undefined }));
-    }
-  };
+  const handleChange =
+    (field: keyof LoginFormData) =>
+    (event: React.ChangeEvent<HTMLInputElement>) => {
+      const value =
+        event.target.type === "checkbox"
+          ? event.target.checked
+          : event.target.value;
+      setFormData((prev) => ({ ...prev, [field]: value }));
+
+      // Clear error when user starts typing
+      if (errors[field]) {
+        setErrors((prev) => ({ ...prev, [field]: undefined }));
+      }
+    };
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -34,7 +44,7 @@ export function useLoginForm() {
 
     // 1. Validate with Zod
     const validation = loginSchema.safeParse(formData);
-    
+
     if (!validation.success) {
       const fieldErrors: Partial<Record<keyof LoginFormData, string>> = {};
       validation.error.issues.forEach((err) => {
@@ -49,11 +59,11 @@ export function useLoginForm() {
 
     // 2. Call Use Case
     try {
-      const authenticateUser = new AuthenticateUser(userRepository);
+      const authenticateUser = new AuthenticateUser(authService);
       await authenticateUser.execute(validation.data.email);
-      
+
       // Success! Redirect to dashboard
-      router.push("/dashboard/users");
+      router.push("/dashboard/clients");
     } catch (error: any) {
       setGeneralError(error.message || "Error al iniciar sesión");
     } finally {

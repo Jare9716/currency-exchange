@@ -1,10 +1,8 @@
 "use client";
 
-import React, { useContext, useState } from "react";
+import React, { useState } from "react";
 import {
   Box,
-  Button,
-  TextField,
   Typography,
   Table,
   TableBody,
@@ -19,12 +17,14 @@ import {
   Alert,
 } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
-import { CreateUserModal } from "@/presentation/components/features/users/CreateUserModal";
-import { User } from "@/domain/User";
-import { useUsersStore } from "@/presentation/stores/users.store";
+import { CreateClientModal } from "@/presentation/components/features/clients/CreateClientModal";
+import { Client } from "@/domain/Client";
+import { useClientsStore } from "@/presentation/stores/clients.store";
+import { Button } from "@/presentation/components/ui/Button/Button";
+import { TextField } from "@/presentation/components/ui/TextField/TextField";
 
-export function UserList() {
-  const { users, setUsers } = useUsersStore();
+export function ClientList() {
+  const { clients, setClients } = useClientsStore();
 
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -37,13 +37,13 @@ export function UserList() {
     "success",
   );
 
-  const handleCreateUser = (newUser: User) => {
+  const handleCreateClient = (newClient: Client) => {
     setModalOpen(false);
 
-    if (newUser.isClintonListed) {
+    if (newClient.isClintonListed) {
       setSnackbarSeverity("error");
       setSnackbarMessage({
-        title: "Usuario reportado",
+        title: "Cliente reportado",
         body: "El cliente fue marcado por validación tipo Lista Clinton.",
       });
     } else {
@@ -56,7 +56,7 @@ export function UserList() {
 
     setSnackbarOpen(true);
 
-    setUsers((prevUsers) => [newUser, ...prevUsers]);
+    setClients((prevClients) => [newClient, ...prevClients]);
   };
 
   const getStatusColor = (status?: string) => {
@@ -131,25 +131,25 @@ export function UserList() {
             </TableHead>
 
             <TableBody>
-              {users.map((user) => (
-                <TableRow key={user.id}>
+              {clients.map((client) => (
+                <TableRow key={client.id}>
                   <TableCell>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                       <Avatar sx={{ width: 24, height: 24 }}>
                         <PersonIcon fontSize="small" />
                       </Avatar>
-                      {user.name}
+                      {client.name}
                     </Box>
                   </TableCell>
 
-                  <TableCell>{user.email}</TableCell>
-                  <TableCell>{user.cc}</TableCell>
-                  <TableCell>{user.phone}</TableCell>
+                  <TableCell>{client.email}</TableCell>
+                  <TableCell>{client.cc}</TableCell>
+                  <TableCell>{client.phone}</TableCell>
 
                   <TableCell>
                     <Chip
-                      label={user.status}
-                      color={getStatusColor(user.status)}
+                      label={client.status}
+                      color={getStatusColor(client.status)}
                       size="small"
                     />
                   </TableCell>
@@ -160,10 +160,10 @@ export function UserList() {
         </TableContainer>
       </Paper>
 
-      <CreateUserModal
+      <CreateClientModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        onCreate={handleCreateUser}
+        onCreate={handleCreateClient}
       />
 
       <Snackbar

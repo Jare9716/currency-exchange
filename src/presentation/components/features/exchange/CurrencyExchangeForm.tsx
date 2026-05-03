@@ -4,8 +4,6 @@ import React, { useState, useEffect, useContext } from "react";
 import { searchUserSchema, exchangeSchema } from "./exchange.schema";
 import {
   Box,
-  Button,
-  TextField,
   Typography,
   Paper,
   Select,
@@ -18,14 +16,16 @@ import {
   Alert,
   CircularProgress,
 } from "@mui/material";
+import { Button } from "@/presentation/components/ui/Button/Button";
+import { TextField } from "@/presentation/components/ui/TextField/TextField";
 import SearchIcon from "@mui/icons-material/Search";
 import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
-import { User } from "@/domain/User";
+import { Client } from "@/domain/Client";
 import { Transaction } from "@/domain/Transaction";
 import { ExecuteTransaction } from "@/use-cases/ExecuteTransaction";
 import { transactionRepository } from "@/infrastructure/MockTransactionRepository";
-import { useUsersStore } from "@/presentation/stores/users.store";
+import { useClientsStore } from "@/presentation/stores/clients.store";
 import { GetExchangeRate } from "@/use-cases/GetExchangeRate";
 import { ConvertCurrency } from "@/use-cases/ConvertCurrency";
 import { ValidateClintonList } from "@/use-cases/ValidateClintonList";
@@ -33,12 +33,12 @@ import { currencyService } from "@/infrastructure/HttpCurrencyService";
 import { clintonListService } from "@/infrastructure/HttpClintonListService";
 
 export function CurrencyExchangeForm() {
-  const { users, setUsers } = useUsersStore();
+  const { clients, setClients } = useClientsStore();
 
   const [loadingRate, setLoadingRate] = useState(false);
 
   const [ccInput, setCcInput] = useState("");
-  const [foundUser, setFoundUser] = useState<User | undefined>(undefined);
+  const [foundClient, setFoundClient] = useState<Client | undefined>(undefined);
   const [lookupAttempted, setLookupAttempted] = useState(false);
 
   const [amountUSD, setAmountUSD] = useState<string>("");
@@ -69,17 +69,17 @@ export function CurrencyExchangeForm() {
     boolean | undefined
   >(undefined);
 
-  const updateUserClintonStatus = (cc: string, newStatus: boolean) => {
-    setUsers((prevUsers): User[] => {
-      return prevUsers.map((user): User => {
-        if (user.cc === cc) {
+  const updateClientClintonStatus = (cc: string, newStatus: boolean) => {
+    setClients((prevClients): Client[] => {
+      return prevClients.map((client): Client => {
+        if (client.cc === cc) {
           return {
-            ...user,
+            ...client,
             isClintonListed: newStatus,
-            status: (newStatus ? "Reportado" : "Activo") as User["status"],
+            status: (newStatus ? "Reportado" : "Activo") as Client["status"],
           };
         }
-        return user;
+        return client;
       });
     });
   };
@@ -128,13 +128,13 @@ export function CurrencyExchangeForm() {
   }, [amountUSD]);
 
   useEffect(() => {
-    if (!foundUser) return;
+    if (!foundClient) return;
 
-    const updatedUser = users.find((u) => u.cc === foundUser.cc);
-    if (updatedUser) {
-      setFoundUser(updatedUser);
+    const updatedClient = clients.find((c) => c.cc === foundClient.cc);
+    if (updatedClient) {
+      setFoundClient(updatedClient);
     }
-  }, [users]);
+  }, [clients, foundClient]);
 
   const getClintonStatus = async (
     name: string,
@@ -158,17 +158,17 @@ export function CurrencyExchangeForm() {
 
     setLookupAttempted(true);
 
-    const user = users.find((u) => u.cc === ccInput.trim());
-    setFoundUser(user ?? undefined);
+    const client = clients.find((c) => c.cc === ccInput.trim());
+    setFoundClient(client ?? undefined);
 
-    if (user?.name && user?.cc) {
-      const isListed = await getClintonStatus(user.name, user.cc);
+    if (client?.name && client?.cc) {
+      const isListed = await getClintonStatus(client.name, client.cc);
 
       setClintonListValidation(isListed);
-      updateUserClintonStatus(user.cc!, isListed);
+      updateClientClintonStatus(client.cc!, isListed);
     }
 
-    if (!user) {
+    if (!client) {
       setSnackbarSeverity("error");
       setSnackbarMessage({
         title: "Cliente no encontrado",
@@ -179,7 +179,7 @@ export function CurrencyExchangeForm() {
   };
 
   const handleMakeTransaction = async () => {
-    if (!foundUser) {
+    if (!foundClient) {
       setSnackbarSeverity("error");
       setSnackbarMessage({
         title: "Sin cliente",
@@ -189,7 +189,7 @@ export function CurrencyExchangeForm() {
       return;
     }
 
-    if (foundUser.status === "Reportado") {
+    if (foundClient.status === "Reportado") {
       setSnackbarSeverity("error");
       setSnackbarMessage({
         title: "Transacción rechazada",
@@ -209,7 +209,7 @@ export function CurrencyExchangeForm() {
     try {
       const executeTransaction = new ExecuteTransaction(transactionRepository);
       const txn = await executeTransaction.execute(
-        foundUser.id,
+        foundClient.id,
         Number(amountUSD),
         exchangeRate,
       );
@@ -240,7 +240,7 @@ export function CurrencyExchangeForm() {
   const handleCancel = () => {
     setAmountUSD("");
     setObservations("");
-    setFoundUser(undefined);
+    setFoundClient(undefined);
     setCcInput("");
     setLookupAttempted(false);
     setLastTransaction(undefined);
@@ -321,13 +321,13 @@ export function CurrencyExchangeForm() {
               </Typography>
             )}
 
-            {lookupAttempted && foundUser && (
+            {lookupAttempted && foundClient && (
               <>
                 <Typography variant="h2" sx={{ color: "text.primary" }}>
-                  {foundUser.name}
+                  {foundClient.name}
                 </Typography>
 
-                {foundUser.status === "Reportado" ? (
+                {foundClient.status === "Reportado" ? (
                   <ErrorOutlineIcon
                     sx={{ fontSize: 64, color: "error.main" }}
                   />
@@ -338,7 +338,7 @@ export function CurrencyExchangeForm() {
                 )}
 
                 <Typography variant="body1" sx={{ color: "text.primary" }}>
-                  {foundUser.status === "Reportado"
+                  {foundClient.status === "Reportado"
                     ? "Cliente bloqueado – Lista Clinton"
                     : lastTransaction
                       ? `Última transacción: $${lastTransaction.amountUSD.toLocaleString("es-CO")} USD`
@@ -347,7 +347,7 @@ export function CurrencyExchangeForm() {
               </>
             )}
 
-            {lookupAttempted && !foundUser && (
+            {lookupAttempted && !foundClient && (
               <Typography variant="body1" sx={{ color: "error.main" }}>
                 Cliente no encontrado.
               </Typography>
@@ -508,8 +508,8 @@ export function CurrencyExchangeForm() {
               fullWidth
               onClick={handleMakeTransaction}
               disabled={
-                !foundUser ||
-                foundUser?.status === "Reportado" ||
+                !foundClient ||
+                foundClient?.status === "Reportado" ||
                 !amountUSD ||
                 calculatedCOP <= 0 ||
                 loadingConversion

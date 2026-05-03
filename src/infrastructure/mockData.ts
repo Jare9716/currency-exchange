@@ -1,6 +1,6 @@
-import { User } from "@/domain/User";
+import { Client } from "@/domain/Client";
 
-export const initialUsers: User[] = [
+export const initialClients: Client[] = [
   {
     id: "1",
     name: "Jane Doe",

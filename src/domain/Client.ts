@@ -1,4 +1,4 @@
-export interface User {
+export interface Client {
   id: string;
   email: string;
   name: string;
@@ -9,7 +9,7 @@ export interface User {
   isClintonListed: boolean;
 }
 
-export interface UserRepository {
-  findByEmail(email: string): Promise<User | undefined>;
-  save(user: User): Promise<void>;
+export interface ClientRepository {
+  findByEmail(email: string): Promise<Client | undefined>;
+  save(client: Client): Promise<void>;
 }
