@@ -48,12 +48,13 @@ Read the relevant standard before writing code (files in `docs/standards/` TBA):
 10. **Error Handling:** Standardize on snake_case error codes and proper boundary handling.
 11. **Testing Structure:** `test/` directory MUST mirror `src/` structure (e.g., `test/domain/`, `test/use-cases/`).
 12. **Path Aliases:** Always use the `@/*` prefix for imports from the `src/` directory.
+13. **Git Hooks:** Automated linting (pre-commit) and testing (pre-push) are enforced via Husky. Never bypass these hooks.
 
 ## UI / UX Implementation Notes
 
 - **Login Flow:** Standard inputs for "Email Address" and "Password", plus a "Remember me" checkbox.
-- **Dashboard:** Handle complex state including a User List and an active exchange interface (e.g., USD to COP ratio).
-- **User Validation:** "New user" modal must trigger a validation step (blocked state for Clinton List check).
+- **Dashboard:** Handle complex state including a Client List and an active exchange interface (e.g., USD to COP ratio).
+- **User Validation:** "New client" modal must trigger a validation step (blocked state for Clinton List check).
 
 ## Implementation Workflow
 

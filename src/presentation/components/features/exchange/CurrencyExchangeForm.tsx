@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import {
-  searchUserSchema,
+  searchClientSchema,
   exchangeSchema,
 } from "@/presentation/components/features/exchange/exchange.schema";
 import {
@@ -144,7 +144,7 @@ export function CurrencyExchangeForm() {
   };
 
   const handleCheckClient = async () => {
-    const validation = searchUserSchema.safeParse({ ccInput });
+    const validation = searchClientSchema.safeParse({ ccInput });
     if (!validation.success) {
       setSnackbarSeverity("error");
       setSnackbarMessage({
