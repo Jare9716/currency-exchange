@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { createClientSchema, CreateClientFormData } from "./client.schema";
+import { createClientSchema, CreateClientFormData } from "@/presentation/components/features/clients/client.schema";
 import {
   Dialog,
   DialogTitle,

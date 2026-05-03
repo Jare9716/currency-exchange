@@ -46,7 +46,7 @@ export function Sidebar() {
             onClick={() => router.push("/dashboard/clients")}
             sx={{
               "&.Mui-selected": {
-                bgcolor: "rgba(0, 0, 0, 0.08)",
+                bgcolor: "action.selected",
               },
             }}
           >

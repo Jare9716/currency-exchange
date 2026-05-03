@@ -64,8 +64,12 @@ export function useLoginForm() {
 
       // Success! Redirect to dashboard
       router.push("/dashboard/clients");
-    } catch (error: any) {
-      setGeneralError(error.message || "Error al iniciar sesión");
+    } catch (error) {
+      if (error instanceof Error) {
+        setGeneralError(error.message);
+      } else {
+        setGeneralError("Error al iniciar sesión");
+      }
     } finally {
       setIsSubmitting(false);
     }

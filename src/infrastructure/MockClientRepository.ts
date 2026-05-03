@@ -6,7 +6,7 @@ import { Client, ClientRepository } from "@/domain/Client";
  * It will be replaced by a real database-connected repository in the future.
  */
 
-import { initialClients } from "./mockData";
+import { initialClients } from "@/infrastructure/mockData";
 
 export class MockClientRepository implements ClientRepository {
   private clients: Client[] = [...initialClients];

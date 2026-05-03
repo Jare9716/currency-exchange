@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useState, useEffect, useContext } from "react";
-import { searchUserSchema, exchangeSchema } from "./exchange.schema";
+import React, { useState, useEffect } from "react";
+import { searchUserSchema, exchangeSchema } from "@/presentation/components/features/exchange/exchange.schema";
 import {
   Box,
   Typography,
@@ -65,9 +65,6 @@ export function CurrencyExchangeForm() {
   const [calculatedCOP, setCalculatedCOP] = useState<number>(0);
   const [loadingConversion, setLoadingConversion] = useState(false);
 
-  const [clintonListValidation, setClintonListValidation] = useState<
-    boolean | undefined
-  >(undefined);
 
   const updateClientClintonStatus = (cc: string, newStatus: boolean) => {
     setClients((prevClients): Client[] => {
@@ -164,7 +161,6 @@ export function CurrencyExchangeForm() {
     if (client?.name && client?.cc) {
       const isListed = await getClintonStatus(client.name, client.cc);
 
-      setClintonListValidation(isListed);
       updateClientClintonStatus(client.cc!, isListed);
     }
 
@@ -245,7 +241,6 @@ export function CurrencyExchangeForm() {
     setLookupAttempted(false);
     setLastTransaction(undefined);
     setCalculatedCOP(0);
-    setClintonListValidation(undefined);
   };
 
   return (
