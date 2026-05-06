@@ -1,6 +1,5 @@
 "use client";
 
-import React from "react";
 import {
   Box,
   List,
@@ -13,7 +12,7 @@ import HomeIcon from "@mui/icons-material/Home";
 import PeopleIcon from "@mui/icons-material/People";
 import { usePathname, useRouter } from "next/navigation";
 
-export default function Sidebar() {
+export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
 
@@ -42,11 +41,11 @@ export default function Sidebar() {
         </ListItem>
         <ListItem disablePadding>
           <ListItemButton
-            selected={pathname === "/dashboard/users"}
-            onClick={() => router.push("/dashboard/users")}
+            selected={pathname === "/dashboard/clients"}
+            onClick={() => router.push("/dashboard/clients")}
             sx={{
               "&.Mui-selected": {
-                bgcolor: "rgba(0, 0, 0, 0.08)",
+                bgcolor: "action.selected",
               },
             }}
           >

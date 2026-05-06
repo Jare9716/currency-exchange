@@ -1,6 +1,6 @@
 export interface Transaction {
   id: string;
-  userId: string;
+  clientId: string;
   amountUSD: number;
   exchangeRate: number;
   amountCOP: number;
@@ -9,5 +9,5 @@ export interface Transaction {
 
 export interface TransactionRepository {
   save(transaction: Transaction): Promise<void>;
-  findByUserId(userId: string): Promise<Transaction[]>;
+  findByClientId(clientId: string): Promise<Transaction[]>;
 }

@@ -11,10 +11,13 @@ This project follows **Clean Architecture** and **Domain-Driven Design (DDD)** p
 src/
 ├── domain/          # Business logic, entities, interfaces (Zero dependencies)
 ├── use-cases/       # Application logic (e.g., AuthenticateUser, ExecuteTransaction)
-├── presentation/    # Next.js pages, MUI components, and hooks
-├── infrastructure/  # API calls, local storage, third-party integrations
+├── presentation/    # UI Layer: Components, Hooks, Stores, and Styles
+│   ├── components/  # FSD Components (ui, layout, features)
+│   ├── stores/      # Zustand state management
+│   └── styles/      # Global CSS and MUI Theme configuration
+├── infrastructure/  # Repositories, API calls, and third-party integrations
 ├── app/             # Next.js App Router (Routing and Layouts)
-├── context/         # React Context for global state
+├── config/          # Global configuration and environment variables
 └── utils/           # Shared helpers
 ```
 
@@ -45,12 +48,13 @@ Read the relevant standard before writing code (files in `docs/standards/` TBA):
 10. **Error Handling:** Standardize on snake_case error codes and proper boundary handling.
 11. **Testing Structure:** `test/` directory MUST mirror `src/` structure (e.g., `test/domain/`, `test/use-cases/`).
 12. **Path Aliases:** Always use the `@/*` prefix for imports from the `src/` directory.
+13. **Git Hooks:** Automated linting (pre-commit) and testing (pre-push) are enforced via Husky. Never bypass these hooks.
 
 ## UI / UX Implementation Notes
 
 - **Login Flow:** Standard inputs for "Email Address" and "Password", plus a "Remember me" checkbox.
-- **Dashboard:** Handle complex state including a User List and an active exchange interface (e.g., USD to COP ratio).
-- **User Validation:** "New user" modal must trigger a validation step (blocked state for Clinton List check).
+- **Dashboard:** Handle complex state including a Client List and an active exchange interface (e.g., USD to COP ratio).
+- **User Validation:** "New client" modal must trigger a validation step (blocked state for Clinton List check).
 
 ## Implementation Workflow
 
@@ -62,8 +66,8 @@ Read the relevant standard before writing code (files in `docs/standards/` TBA):
 
 ### After Making Changes
 
-1.  **Lint:** Run `npm run lint` and fix any issues.
-2.  **Test:** (Once added) Run `npm test`.
+1.  **Lint:** Run `pnpm lint` and fix any issues.
+2.  **Test:** (Once added) Run `pnpm test`.
 3.  **Verify UI:** Use the browser tool to verify responsive design and theme consistency.
 
 ---
@@ -73,5 +77,6 @@ Read the relevant standard before writing code (files in `docs/standards/` TBA):
 - **Framework:** Next.js (App Router)
 - **Language:** TypeScript
 - **Styling & UI:** Material UI (MUI) v5+
-- **State:** React Context or Redux
+- **State:** Zustand (Persistent stores)
+- **Package Manager:** pnpm
 - **Integrations:** Figma MCP

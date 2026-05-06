@@ -1,24 +1,32 @@
 "use client";
 
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   Box,
-  Button,
-  TextField,
   Typography,
   Link,
   InputAdornment,
   IconButton,
   Checkbox,
   FormControlLabel,
+  Alert,
 } from "@mui/material";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import { useRouter } from "next/navigation";
+import { Button } from "@/presentation/components/ui/Button/Button";
+import { TextField } from "@/presentation/components/ui/TextField/TextField";
+import { useLoginForm } from "@/presentation/components/features/auth/useLoginForm";
 
-export default function LoginForm() {
+export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
-  const router = useRouter();
+  const {
+    formData,
+    errors,
+    isSubmitting,
+    generalError,
+    handleChange,
+    handleLogin,
+  } = useLoginForm();
 
   const handleClickShowPassword = () => setShowPassword((show) => !show);
 
@@ -26,11 +34,6 @@ export default function LoginForm() {
     event: React.MouseEvent<HTMLButtonElement>,
   ) => {
     event.preventDefault();
-  };
-
-  const handleLogin = () => {
-    // Basic redirection
-    router.push("/dashboard/users");
   };
 
   return (
@@ -53,7 +56,7 @@ export default function LoginForm() {
           alignItems: "center",
           gap: 6,
           width: "100%",
-          maxWidth: "680px", // container width in Figma
+          maxWidth: "680px",
         }}
       >
         <Box sx={{ textAlign: "center", width: "100%", maxWidth: "520px" }}>
@@ -79,6 +82,7 @@ export default function LoginForm() {
 
         <Box
           component="form"
+          onSubmit={handleLogin}
           sx={{
             width: "100%",
             maxWidth: "520px",
@@ -87,35 +91,45 @@ export default function LoginForm() {
             gap: 2,
           }}
         >
+          {generalError && (
+            <Alert severity="error" sx={{ mb: 2 }}>
+              {generalError}
+            </Alert>
+          )}
+
           <TextField
-            fullWidth
             label="Correo"
-            variant="outlined"
-            type="email"
-            slotProps={{ inputLabel: { shrink: true } }}
             placeholder="Correo"
+            type="email"
+            value={formData.email}
+            onChange={handleChange("email")}
+            error={!!errors.email}
+            helperText={errors.email}
           />
 
           <TextField
-            fullWidth
             label="Contraseña"
-            variant="outlined"
-            type={showPassword ? "text" : "password"}
-            slotProps={{ inputLabel: { shrink: true } }}
             placeholder="Contraseña"
-            InputProps={{
-              endAdornment: (
-                <InputAdornment position="end">
-                  <IconButton
-                    aria-label="toggle password visibility"
-                    onClick={handleClickShowPassword}
-                    onMouseDown={handleMouseDownPassword}
-                    edge="end"
-                  >
-                    {showPassword ? <VisibilityOff /> : <Visibility />}
-                  </IconButton>
-                </InputAdornment>
-              ),
+            type={showPassword ? "text" : "password"}
+            value={formData.password}
+            onChange={handleChange("password")}
+            error={!!errors.password}
+            helperText={errors.password}
+            slotProps={{
+              input: {
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      aria-label="toggle password visibility"
+                      onClick={handleClickShowPassword}
+                      onMouseDown={handleMouseDownPassword}
+                      edge="end"
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              },
             }}
           />
 
@@ -129,7 +143,14 @@ export default function LoginForm() {
             }}
           >
             <FormControlLabel
-              control={<Checkbox color="primary" sx={{ py: 0 }} />}
+              control={
+                <Checkbox
+                  color="primary"
+                  sx={{ py: 0 }}
+                  checked={formData.rememberMe}
+                  onChange={handleChange("rememberMe")}
+                />
+              }
               label={
                 <Typography sx={{ color: "text.primary", fontSize: "14px" }}>
                   Recordarme
@@ -149,17 +170,8 @@ export default function LoginForm() {
             </Link>
           </Box>
 
-          <Button
-            fullWidth
-            variant="contained"
-            onClick={handleLogin}
-            sx={{
-              mt: 2,
-              height: "42px",
-              fontSize: "16px",
-            }}
-          >
-            Ingresar
+          <Button type="submit" disabled={isSubmitting} sx={{ mt: 2 }}>
+            {isSubmitting ? "Ingresando..." : "Ingresar"}
           </Button>
         </Box>
       </Box>
