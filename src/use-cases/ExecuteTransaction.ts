@@ -5,7 +5,7 @@ export class ExecuteTransaction {
   constructor(private transactionRepository: TransactionRepository) {}
 
   async execute(
-    clientId: string,
+    customerId: string,
     amountUSD: number,
     exchangeRate: number,
   ): Promise<Transaction> {
@@ -17,7 +17,7 @@ export class ExecuteTransaction {
 
     const transaction: Transaction = {
       id: crypto.randomUUID(),
-      clientId,
+      customerId,
       amountUSD,
       exchangeRate,
       amountCOP,

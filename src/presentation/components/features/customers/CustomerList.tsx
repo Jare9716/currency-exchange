@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   Box,
   Typography,
@@ -17,14 +17,19 @@ import {
   Alert,
 } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
-import { CreateClientModal } from "@/presentation/components/features/clients/CreateClientModal";
-import { Client } from "@/domain/Client";
-import { useClientsStore } from "@/presentation/stores/clients.store";
+import BusinessIcon from "@mui/icons-material/Business";
+import { CreateCustomerModal } from "@/presentation/components/features/customers/CreateCustomerModal";
+import { Customer } from "@/domain/Customer";
+import { useCustomersStore } from "@/presentation/stores/customers.store";
 import { Button } from "@/presentation/components/ui/Button/Button";
 import { TextField } from "@/presentation/components/ui/TextField/TextField";
 
-export function ClientList() {
-  const { clients, setClients } = useClientsStore();
+export function CustomerList() {
+  const { customers, setCustomers, fetchCustomers } = useCustomersStore();
+
+  useEffect(() => {
+    fetchCustomers().catch(console.error);
+  }, [fetchCustomers]);
 
   const [modalOpen, setModalOpen] = useState(false);
 
@@ -37,26 +42,25 @@ export function ClientList() {
     "success",
   );
 
-  const handleCreateClient = (newClient: Client) => {
+  const handleCreateCustomer = (newCustomer: Customer) => {
     setModalOpen(false);
 
-    if (newClient.isClintonListed) {
+    if (newCustomer.isClintonListed) {
       setSnackbarSeverity("error");
       setSnackbarMessage({
-        title: "Cliente reportado",
-        body: "El cliente fue marcado por validación tipo Lista Clinton.",
+        title: "Customer reportado",
+        body: "El customer fue marcado por validación tipo Lista Clinton.",
       });
     } else {
       setSnackbarSeverity("success");
       setSnackbarMessage({
-        title: "Cliente creado",
-        body: "El cliente ha sido creado exitosamente",
+        title: "Customer creado",
+        body: "El customer ha sido creado exitosamente",
       });
     }
 
     setSnackbarOpen(true);
-
-    setClients((prevClients) => [newClient, ...prevClients]);
+    setCustomers((prev) => [newCustomer, ...prev]);
   };
 
   const getStatusColor = (status?: string) => {
@@ -77,7 +81,7 @@ export function ClientList() {
       sx={{ width: "100%", display: "flex", flexDirection: "column", gap: 3 }}
     >
       <Typography variant="h1" sx={{ color: "text.primary" }}>
-        Clientes
+        Customers
       </Typography>
 
       <Paper
@@ -102,7 +106,7 @@ export function ClientList() {
         >
           <TextField
             size="small"
-            placeholder="Buscar por nombre o CC"
+            placeholder="Buscar por nombre o documento"
             variant="outlined"
             label="Buscar"
             slotProps={{ inputLabel: { shrink: true } }}
@@ -114,7 +118,7 @@ export function ClientList() {
           />
 
           <Button variant="contained" onClick={() => setModalOpen(true)}>
-            Nuevo cliente
+            Nuevo Customer
           </Button>
         </Box>
 
@@ -122,34 +126,34 @@ export function ClientList() {
           <Table sx={{ minWidth: 650 }}>
             <TableHead>
               <TableRow sx={{ bgcolor: "background.paper" }}>
-                <TableCell sx={{ typography: "subtitle2" }}>Nombre</TableCell>
+                <TableCell sx={{ typography: "subtitle2" }}>Nombre / Razón Social</TableCell>
                 <TableCell sx={{ typography: "subtitle2" }}>Email</TableCell>
-                <TableCell sx={{ typography: "subtitle2" }}>CC</TableCell>
-                <TableCell sx={{ typography: "subtitle2" }}>Telefono</TableCell>
+                <TableCell sx={{ typography: "subtitle2" }}>Documento</TableCell>
+                <TableCell sx={{ typography: "subtitle2" }}>Teléfono</TableCell>
                 <TableCell sx={{ typography: "subtitle2" }}>Estado</TableCell>
               </TableRow>
             </TableHead>
 
             <TableBody>
-              {clients.map((client) => (
-                <TableRow key={client.id}>
+              {customers.map((customer) => (
+                <TableRow key={customer.id || customer.document_number}>
                   <TableCell>
                     <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
                       <Avatar sx={{ width: 24, height: 24 }}>
-                        <PersonIcon fontSize="small" />
+                        {customer.person_type === "juridical" ? <BusinessIcon fontSize="small" /> : <PersonIcon fontSize="small" />}
                       </Avatar>
-                      {client.name}
+                      {customer.first_name} {customer.first_surname || ""}
                     </Box>
                   </TableCell>
 
-                  <TableCell>{client.email}</TableCell>
-                  <TableCell>{client.cc}</TableCell>
-                  <TableCell>{client.phone}</TableCell>
+                  <TableCell>{customer.email || "N/A"}</TableCell>
+                  <TableCell>{customer.document_type} {customer.document_number}</TableCell>
+                  <TableCell>{customer.phone || "N/A"}</TableCell>
 
                   <TableCell>
                     <Chip
-                      label={client.status}
-                      color={getStatusColor(client.status)}
+                      label={customer.status}
+                      color={getStatusColor(customer.status)}
                       size="small"
                     />
                   </TableCell>
@@ -160,10 +164,10 @@ export function ClientList() {
         </TableContainer>
       </Paper>
 
-      <CreateClientModal
+      <CreateCustomerModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        onCreate={handleCreateClient}
+        onCreate={handleCreateCustomer}
       />
 
       <Snackbar

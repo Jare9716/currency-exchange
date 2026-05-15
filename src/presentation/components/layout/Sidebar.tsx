@@ -41,8 +41,8 @@ export function Sidebar() {
         </ListItem>
         <ListItem disablePadding>
           <ListItemButton
-            selected={pathname === "/dashboard/clients"}
-            onClick={() => router.push("/dashboard/clients")}
+            selected={pathname === "/dashboard/customers"}
+            onClick={() => router.push("/dashboard/customers")}
             sx={{
               "&.Mui-selected": {
                 bgcolor: "action.selected",
@@ -52,7 +52,7 @@ export function Sidebar() {
             <ListItemIcon>
               <PeopleIcon />
             </ListItemIcon>
-            <ListItemText primary="Clientes" />
+            <ListItemText primary="Customers" />
           </ListItemButton>
         </ListItem>
       </List>

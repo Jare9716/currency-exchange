@@ -36,7 +36,7 @@ Read the relevant standard before writing code (files in `docs/standards/` TBA):
 
 ## Key Rules
 
-1.  **Strict Layering:** Domain layer MUST have zero dependencies on Next.js or MUI.
+1.  **Strict Layering:** Domain layer MUST have zero dependencies on Next.js or MUI. *(Exception: `zod` is allowed in Domain as a language-level type/validation utility).*
 2.  **Ports & Interfaces:** Use Case layer only communicates with Domain interfaces.
 3.  **Strict Theming:** NEVER hardcode colors, typography, or spacing (no `color: '#123456'`). Always use `theme.palette.*`.
 4.  **No Placeholders:** If you need an image, use the `generate_image` tool.

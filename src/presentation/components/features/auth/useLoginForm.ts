@@ -5,7 +5,10 @@ import {
   LoginFormData,
 } from "@/presentation/components/features/auth/login.schema";
 import { AuthenticateUser } from "@/use-cases/AuthenticateUser";
-import { authService } from "@/infrastructure/MockAuthService";
+import { authService } from "@/infrastructure/auth/HttpAuthService";
+import { useAuthStore } from "@/presentation/stores/auth.store";
+import { to } from "@/utils/async";
+import { ApiError } from "@/domain/Errors";
 
 export function useLoginForm() {
   const router = useRouter();
@@ -58,20 +61,29 @@ export function useLoginForm() {
     }
 
     // 2. Call Use Case
-    try {
-      const authenticateUser = new AuthenticateUser(authService);
-      await authenticateUser.execute(validation.data.email);
+    const authenticateUser = new AuthenticateUser(authService);
+    const [err, tokens] = await to(
+      authenticateUser.execute({
+        email: validation.data.email,
+        password: validation.data.password,
+      })
+    );
 
-      // Success! Redirect to dashboard
-      router.push("/dashboard/clients");
-    } catch (error) {
-      if (error instanceof Error) {
-        setGeneralError(error.message);
+    setIsSubmitting(false);
+
+    if (err) {
+      if (err instanceof ApiError) {
+        setGeneralError(err.detail || "Credenciales inválidas");
       } else {
-        setGeneralError("Error al iniciar sesión");
+        setGeneralError("Error de conexión al iniciar sesión");
       }
-    } finally {
-      setIsSubmitting(false);
+      return;
+    }
+
+    // Success! Redirect to dashboard
+    if (tokens) {
+      useAuthStore.getState().setTokens(tokens.accessToken, tokens.refreshToken);
+      router.push("/dashboard/customers");
     }
   };
 

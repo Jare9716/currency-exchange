@@ -16,8 +16,8 @@ export class MockTransactionRepository implements TransactionRepository {
     // In a real app we'd persist to a DB
   }
 
-  async findByClientId(clientId: string): Promise<Transaction[]> {
-    return this.transactions.filter((t) => t.clientId === clientId);
+  async findByCustomerId(customerId: string): Promise<Transaction[]> {
+    return this.transactions.filter((t) => t.customerId === customerId);
   }
 
   async findAll(): Promise<Transaction[]> {
