@@ -1,3 +1,5 @@
+"use client";
+
 import { createTheme } from "@mui/material/styles";
 
 const theme = createTheme({
@@ -69,22 +71,29 @@ const theme = createTheme({
     },
   },
   components: {
+    MuiTextField: {
+      defaultProps: {
+        size: "small",
+        variant: "outlined",
+      },
+    },
     MuiButton: {
+      defaultProps: {
+        size: "medium",
+      },
       styleOverrides: {
         root: {
-          // Based on user request "Let the radius as they are on MUI."
-          // So we intentionally omit borderRadius: "360px" overrides.
-          boxShadow: "none", // Removing defaults for a flatter, more modern look unless specified
+          boxShadow: "none",
         },
         contained: {
-          boxShadow: "0px 1px 5px 0px rgba(0,0,0,0.12)", // Subtle shadow from Figma variables
+          boxShadow: "0px 1px 5px 0px rgba(0,0,0,0.12)",
         },
       },
     },
     MuiPaper: {
       styleOverrides: {
         root: {
-          backgroundImage: "none", // Ensure flat surfaces in dark mode if configured later
+          backgroundImage: "none",
         },
       },
     },

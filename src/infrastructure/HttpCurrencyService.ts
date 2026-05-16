@@ -1,40 +1,29 @@
 import { CurrencyService } from "@/domain/CurrencyService";
-import { API_BASE_URL } from "@/config";
+import { HttpClient } from "./http/HttpClient";
+
+interface CurrencyProduct {
+  iso_code: string;
+  buy_rate: string;
+  [key: string]: unknown;
+}
 
 export class HttpCurrencyService implements CurrencyService {
   async getExchangeRate(baseCurrency: string): Promise<number> {
-    const res = await fetch(`${API_BASE_URL}/api/v1/currency/trm/${baseCurrency.toLowerCase()}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-        "ngrok-skip-browser-warning": "true",
-      },
-    });
+    const response = await HttpClient.get("/api/v1/fx/products?include_inactive=false");
+    const data = (await response.json()) as CurrencyProduct[];
+    
+    const product = data.find((p) => p.iso_code === baseCurrency.toUpperCase());
+    
+    if (!product) {
+      throw new Error(`Currency ${baseCurrency} not found`);
+    }
 
-    if (!res.ok) throw new Error("Failed to fetch exchange rate");
-    const data = await res.json();
-    return data.rate;
+    return parseFloat(product.buy_rate);
   }
 
-  async convertCurrency(amount: number, fromCurrency: string, toCurrency: string): Promise<number> {
-    const res = await fetch(
-      `${API_BASE_URL}/api/v1/currency/trm/${fromCurrency.toLowerCase()}/convert`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "ngrok-skip-browser-warning": "true",
-        },
-        body: JSON.stringify({
-          amount,
-          to_currency: toCurrency,
-        }),
-      },
-    );
-
-    if (!res.ok) throw new Error("Failed to convert currency");
-    const data = await res.json();
-    return data.to_amount;
+  async convertCurrency(amount: number, fromCurrency: string): Promise<number> {
+    const rate = await this.getExchangeRate(fromCurrency);
+    return amount * rate;
   }
 }
 

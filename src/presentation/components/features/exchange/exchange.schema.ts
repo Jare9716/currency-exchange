@@ -1,7 +1,7 @@
 import { z } from "zod";
 
-export const searchClientSchema = z.object({
-  ccInput: z.string().min(5, { message: "La CC debe tener al menos 5 caracteres" }),
+export const searchCustomerSchema = z.object({
+  documentInput: z.string().min(5, { message: "El documento debe tener al menos 5 caracteres" }),
 });
 
 export const exchangeSchema = z.object({
@@ -13,5 +13,5 @@ export const exchangeSchema = z.object({
     }),
 });
 
-export type SearchClientFormData = z.infer<typeof searchClientSchema>;
+export type SearchCustomerFormData = z.infer<typeof searchCustomerSchema>;
 export type ExchangeFormData = z.infer<typeof exchangeSchema>;

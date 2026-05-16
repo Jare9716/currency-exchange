@@ -1,4 +1,6 @@
 import { Sidebar } from "@/presentation/components/layout/Sidebar";
+import { Header } from "@/presentation/components/layout/Header";
+import { Footer } from "@/presentation/components/layout/Footer";
 import { Box } from "@mui/material";
 
 export default function DashboardLayout({
@@ -10,12 +12,46 @@ export default function DashboardLayout({
     <Box
       sx={{
         display: "flex",
+        flexDirection: "column",
+        height: "100vh", // Force total viewport height
+        width: "100vw",
         bgcolor: "background.default",
-        minHeight: "100vh",
+        overflow: "hidden", // Disable global scroll
       }}
     >
-      <Sidebar />
-      <Box sx={{ flexGrow: 1, p: 3 }}>{children}</Box>
+      <Header />
+      
+      <Box
+        sx={{
+          display: "flex",
+          flexGrow: 1,
+          height: "calc(100vh - 64px)", // Remaining height after Header
+          overflow: "hidden",
+        }}
+      >
+        <Sidebar />
+        
+        <Box
+          sx={{
+            flexGrow: 1,
+            display: "flex",
+            flexDirection: "column",
+            overflowY: "auto", // Only this area scrolls
+            bgcolor: "background.default",
+          }}
+        >
+          <Box
+            component="main"
+            sx={{
+              flexGrow: 1,
+              p: { xs: 2, sm: 3 },
+            }}
+          >
+            {children}
+          </Box>
+          <Footer />
+        </Box>
+      </Box>
     </Box>
   );
 }

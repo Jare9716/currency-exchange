@@ -1,114 +1,60 @@
 # Frontend & Webapp Standards
 
-> Standards for web application development in this project using Next.js (App Router), React, and Material UI (MUI).
+> Standards for web application development using Next.js 16 (App Router), React 19, and Material UI v7.
 
 ## Layered Folder Structure (Clean Architecture)
 
-While following Clean Architecture, organize the **Presentation Layer** (`src/presentation`) and other directories as follows:
+This project follows **Domain-Driven Design (DDD)** and **Clean Architecture** patterns.
 
 ```
 src/
-├── presentation/          # Next.js Presentation Logic
-│   ├── components/        # FSD Component Architecture
-│   │   ├── ui/            # Pure, domain-agnostic UI wrappers
-│   │   ├── layout/        # Application layout structures (Sidebar, Headers)
-│   │   └── features/      # Business domain bound components (auth, users, exchange)
-│   ├── hooks/             # Presentation-specific hooks
-│   ├── stores/            # Zustand global state stores
-│   ├── styles/            # Global CSS and MUI Theme
-│   └── views/             # Page-level components
-├── app/                   # Next.js App Router (Routing, Layouts, Metadata)
-├── config/                # Global configuration and environment variables
-├── domain/                # Business logic and interfaces
-├── use-cases/             # Application specific logic
-├── infrastructure/        # Implementation of repositories and services
-└── utils/                 # Pure helper functions
+├── domain/                # Enterprise logic, entities, and repository interfaces (Zero dependencies)
+├── use-cases/             # Application business logic (Interacts only with Domain interfaces)
+├── presentation/          # UI Layer
+│   ├── components/        # FSD (Feature Sliced Design) structure
+│   │   ├── ui/            # Atoms/Wrappers (Button, TextField, Notification)
+│   │   ├── layout/        # Persistent structures (Sidebar, Footer)
+│   │   └── features/      # Complex, domain-bound components (exchange, auth)
+│   ├── stores/            # Zustand global state (Persistent and fast)
+│   └── styles/            # Theme configuration and global CSS
+├── infrastructure/        # Implementation of interfaces (API Repositories, Services)
+└── app/                   # Next.js App Router (Routing and Server Layouts)
 ```
 
----
+## 1. Technical Stack Standards
 
-## React Components
+- **React 19 & Next.js 16:** Utilize the latest features of the App Router.
+- **Server Components:** Default to Server Components for data fetching. Use `'use client'` only for interactivity.
+- **MUI v7:**
+  - **Grid v2:** Use `Grid` with the `size` property. Legacy grid props (`xs`, `md`) are deprecated.
+  - **SlotProps API:** Always use `slotProps` for deep component customization. Legacy props like `InputProps` or `TypographyProps` are forbidden.
+- **Zustand:** Use for state management over React Context to minimize re-renders.
 
-### Prefer Functional Components
+## 2. Component Design Principles
 
-Use functional components for all UI. Use Class Components only for **Error Boundaries**.
+### Type Safety
+- **Avoid `null`:** Use `undefined` for optional or missing values.
+- **Strict Typing:** All props and state must be explicitly typed. Avoid `any`.
 
-### Avoid Render Functions in Component Body
+### Error Handling
+- Use standardized snake_case error codes (e.g., `NO_OPEN_SHIFT`, `CUSTOMER_FLAGGED`).
+- UI must handle these codes via a central notification system or error boundaries.
 
-Prefer extracting sub-components over creating `renderHeader()` functions within a component.
+## 3. Responsive Layout Standard
 
-```tsx
-// GOOD
-export function Card() {
-  return (
-    <Box>
-      <CardHeader />
-      <CardContent />
-    </Box>
-  );
-}
+The application uses a **Responsive Mini-Sidebar** pattern:
+- **Desktop (sm+):** Sidebar expanded (240px) with icons and text.
+- **Mobile (xs):** Sidebar collapsed (72px) showing only icons. Text is hidden but available via Tooltip.
+- **Main Content:** Must be fluid and handle different screen aspect ratios without hardcoded widths.
 
-function CardHeader() {
-  /* ... */
-}
-```
+## 4. UI Consistency Guardrails
 
-### Avoid Writing Your Own Request Logic
+- **Default Sizing:** Use `size="small"` for all inputs and buttons in the Dashboard area to ensure a professional, high-density look.
+- **Theme Usage:** **NEVER** hardcode hex colors or pixel values for spacing. Always use `theme.palette` and `theme.spacing`.
+- **CSS Hierarchy:** Prohibit global CSS resets that interfere with MUI's internal logic (like global `border-box`).
 
-Use **TanStack Query (React Query)** if the project requires complex caching/syncing. For simpler requirements, use Server Components and `fetch`.
+## 5. Security and Performance
 
-### Prefer Zustand over complex React Context
-
-For global state that requires high performance or frequent updates, prefer **Zustand** over React Context to avoid unnecessary re-renders of the entire tree.
-
----
-
-## Next.js (App Router)
-
-- **Server Components by Default:** Fetch data directly in Server Components whenever possible.
-- **Client Components:** Use `'use client'` only when strictly necessary (interactivity, browser APIs, context).
-- **Metadata:** Use the `generateMetadata` API for SEO.
-- **Optimization:** Use `next/image` for images and `next/link` for internal navigation.
-
----
-
-## Styling & MUI
-
-### Mobile-First Responsive Design
-
-Always design for mobile first. Use MUI's responsive objects or media queries.
-
-```tsx
-// GOOD — MUI responsive object
-<Box
-  sx={{
-    display: "grid",
-    gridTemplateColumns: { xs: "1fr", md: "1fr 1fr", lg: "1fr 1fr 1fr" },
-    gap: { xs: 2, md: 3, lg: 4 },
-  }}
->
-  {/* Content */}
-</Box>
-```
-
-### Theme Consistency
-
-- **NEVER** hardcode colors or spacing.
-- Use `theme.spacing()` (e.g., `padding: theme.spacing(2)`).
-- Use `theme.palette.*` for all colors.
-
----
-
-## Security
-
-- **Validate Input:** Use **Zod** for all external data (API responses, form inputs).
-- **Sanitize:** Avoid `dangerouslySetInnerHTML`. If forced to use it, sanitize with `sanitize-html`.
-- **Public Files:** Remember `public/` is completely open to the internet. Do not store sensitive assets there.
-- **Client-Side Auth:** Do not rely solely on client-side checks for security.
-
----
-
-## Backend-First Approach
-
-- All frontend communications should ideally go through a proxy or local API route if transformation/security check is needed.
-- Prefer manipulating complex data in the backend/infrastructure layer rather than the presentation layer.
+- **Zod Validation:** Every form and API response must be validated via Zod schemas.
+- **Image Optimization:** Use `next/image` with generated assets (no placeholders).
+- **Icons:** Use `@mui/icons-material` consistently.

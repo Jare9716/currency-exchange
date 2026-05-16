@@ -11,9 +11,7 @@ export function Button({ children, variant = "contained", fullWidth = true, ...p
       variant={variant}
       fullWidth={fullWidth}
       sx={{
-        height: "42px",
-        fontSize: "16px",
-        textTransform: "none", // Avoid all-caps default
+        textTransform: "none",
         fontWeight: 600,
         ...props.sx,
       }}

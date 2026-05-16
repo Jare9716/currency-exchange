@@ -1,5 +1,5 @@
 import { ExecuteTransaction } from '@/use-cases/ExecuteTransaction';
-import { TransactionRepository } from '@/domain/Transaction';
+import { TransactionRepository, Transaction } from '@/domain/Transaction';
 import { DomainError } from '@/domain/Errors';
 
 describe('ExecuteTransaction', () => {
@@ -9,39 +9,51 @@ describe('ExecuteTransaction', () => {
   beforeEach(() => {
     transactionRepository = {
       save: jest.fn(),
-      findByClientId: jest.fn(),
+      findByCustomerId: jest.fn(),
+      findAll: jest.fn(),
     } as unknown as jest.Mocked<TransactionRepository>;
     executeTransaction = new ExecuteTransaction(transactionRepository);
   });
 
   describe('when executing a transaction', () => {
-    it('should calculate the COP amount correctly and save the transaction', async () => {
+    it('should call repository with correct data and return the transaction', async () => {
       // Arrange
-      const clientId = 'client-123';
+      const customerId = 'customer-123';
       const amountUSD = 100;
-      const exchangeRate = 4000;
+      const mockTransaction: Transaction = {
+        id: 'txn-1',
+        ticket_number: 1,
+        customer_id: customerId,
+        transaction_type: 'buy',
+        iso_code: 'USD',
+        foreign_amount: '100',
+        exchange_rate: '4000',
+        cop_amount: '400000',
+        description: 'Exchange via frontend',
+        created_at: new Date().toISOString(),
+      };
+
+      transactionRepository.save.mockResolvedValue(mockTransaction);
 
       // Act
-      const result = await executeTransaction.execute(clientId, amountUSD, exchangeRate);
+      const result = await executeTransaction.execute(customerId, amountUSD);
 
       // Assert
-      expect(result.amountCOP).toBe(400000);
-      expect(result.clientId).toBe(clientId);
+      expect(result.cop_amount).toBe('400000');
+      expect(result.customer_id).toBe(customerId);
       expect(transactionRepository.save).toHaveBeenCalledWith(expect.objectContaining({
-        clientId,
-        amountUSD,
-        amountCOP: 400000,
+        customer_id: customerId,
+        foreign_amount: '100',
       }));
     });
 
     it('should throw a DomainError if amountUSD is zero or negative', async () => {
       // Arrange
-      const clientId = 'client-123';
+      const customerId = 'customer-123';
       const amountUSD = 0;
-      const exchangeRate = 4000;
 
       // Act & Assert
-      await expect(executeTransaction.execute(clientId, amountUSD, exchangeRate))
+      await expect(executeTransaction.execute(customerId, amountUSD))
         .rejects
         .toThrow(DomainError);
     });

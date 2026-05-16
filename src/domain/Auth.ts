@@ -1,0 +1,17 @@
+import { z } from "zod";
+
+export const loginCredentialsSchema = z.object({
+  email: z.string(),
+  password: z.string().min(1),
+});
+
+export type LoginCredentials = z.infer<typeof loginCredentialsSchema>;
+
+export type AuthTokens = {
+  accessToken: string;
+  refreshToken: string;
+};
+
+export interface AuthService {
+  login(credentials: LoginCredentials): Promise<AuthTokens>;
+}

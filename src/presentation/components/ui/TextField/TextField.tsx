@@ -1,25 +1,35 @@
-import { TextField as MuiTextField, TextFieldProps as MuiTextFieldProps } from "@mui/material";
+import {
+  TextField as MuiTextField,
+  TextFieldProps as MuiTextFieldProps,
+} from "@mui/material";
 
 export type TextFieldProps = MuiTextFieldProps & {
   // Custom props
 };
 
-export function TextField({ variant = "outlined", fullWidth = true, ...props }: TextFieldProps) {
+export function TextField({
+  variant = "outlined",
+  size = "small",
+  fullWidth = true,
+  slotProps,
+  sx,
+  ...props
+}: TextFieldProps) {
+  const mergedSlotProps: MuiTextFieldProps["slotProps"] = {
+    ...slotProps,
+    inputLabel: {
+      shrink: props.label ? true : undefined,
+      ...(slotProps?.inputLabel as object | undefined),
+    },
+  };
+
   return (
     <MuiTextField
       variant={variant}
+      size={size}
       fullWidth={fullWidth}
-      slotProps={{
-        inputLabel: {
-          shrink: true,
-        },
-      }}
-      sx={{
-        "& .MuiInputBase-root": {
-          fontSize: "16px",
-        },
-        ...props.sx,
-      }}
+      slotProps={mergedSlotProps}
+      sx={sx}
       {...props}
     />
   );
