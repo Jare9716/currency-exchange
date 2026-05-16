@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, ChangeEvent, useEffect, useMemo } from "react";
+import { useState, ChangeEvent, useMemo } from "react";
 import {
   createCustomerSchema,
   CreateCustomerFormData,
