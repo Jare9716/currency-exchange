@@ -33,7 +33,10 @@ async function handleResponse(
       if (state.refreshToken) {
         const refreshResponse = await fetch(`${BASE_URL}/api/v1/auth/refresh`, {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            "ngrok-skip-browser-warning": "true"
+          },
           body: JSON.stringify({ refresh_token: state.refreshToken }),
         });
 
@@ -98,6 +101,12 @@ async function request(url: string, options: FetchOptions = {}): Promise<Respons
   if (!headers.has("Content-Type") && !(init.body instanceof FormData)) {
     headers.set("Content-Type", "application/json");
   }
+
+  if (!headers.has("Accept")) {
+    headers.set("Accept", "application/json");
+  }
+
+  headers.set("ngrok-skip-browser-warning", "true");
 
   const requestUrl = url.startsWith("http") ? url : `${BASE_URL}${url}`;
   const response = await fetch(requestUrl, { ...init, headers });

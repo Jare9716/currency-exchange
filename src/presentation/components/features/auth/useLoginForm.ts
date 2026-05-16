@@ -40,7 +40,7 @@ export function useLoginForm() {
       }
     };
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.SyntheticEvent<HTMLFormElement>) => {
     e.preventDefault();
     setIsSubmitting(true);
     setGeneralError(undefined);

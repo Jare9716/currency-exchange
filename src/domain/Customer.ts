@@ -35,5 +35,5 @@ export interface CustomerFilters {
 export interface CustomerRepository {
   findByDocument(documentNumber: string): Promise<Customer | undefined>;
   save(customer: Customer): Promise<void>;
-  findAll(filters?: CustomerFilters): Promise<Customer[]>;
+  findAll(filters?: CustomerFilters): Promise<{ items: Customer[]; total: number }>;
 }

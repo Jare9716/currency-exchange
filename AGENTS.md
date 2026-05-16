@@ -33,6 +33,7 @@ Read the relevant standard before writing code (files in `docs/standards/` TBA):
 | **Git & Commits**      | Conventional Commits and branching workflow                                            |
 | **TypeScript & JS**    | [Types, error handling, and deps](docs/standards/typescript-javascript.md)             |
 | **Testing**            | [Jest, AAA pattern, and structure](docs/standards/testing.md)                          |
+| **UI / UX**            | [Usability, proportions, and alignment](docs/standards/ui-ux.md)                       |
 
 ## Key Rules
 

@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist, createJSONStorage } from "zustand/middleware";
 
 type AuthState = {
   accessToken?: string;
@@ -7,10 +8,18 @@ type AuthState = {
   clearTokens: () => void;
 };
 
-export const useAuthStore = create<AuthState>((set) => ({
-  accessToken: undefined,
-  refreshToken: undefined,
-  setTokens: (access, refresh) =>
-    set({ accessToken: access, refreshToken: refresh }),
-  clearTokens: () => set({ accessToken: undefined, refreshToken: undefined }),
-}));
+export const useAuthStore = create<AuthState>()(
+  persist(
+    (set) => ({
+      accessToken: undefined,
+      refreshToken: undefined,
+      setTokens: (access, refresh) =>
+        set({ accessToken: access, refreshToken: refresh }),
+      clearTokens: () => set({ accessToken: undefined, refreshToken: undefined }),
+    }),
+    {
+      name: "auth-storage",
+      storage: createJSONStorage(() => localStorage),
+    },
+  ),
+);

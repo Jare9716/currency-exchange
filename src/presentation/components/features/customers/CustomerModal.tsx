@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, ChangeEvent } from "react";
+import { useState, ChangeEvent, useEffect, useMemo } from "react";
 import { createCustomerSchema, CreateCustomerFormData } from "@/presentation/components/features/customers/customer.schema";
 import {
   Dialog,
@@ -18,24 +18,28 @@ import { Button } from "@/presentation/components/ui/Button/Button";
 import { TextField } from "@/presentation/components/ui/TextField/TextField";
 import { Customer } from "@/domain/Customer";
 import { ValidateClintonList } from "@/use-cases/ValidateClintonList";
-import { CreateCustomer } from "@/use-cases/CreateCustomer";
 import { clintonListService } from "@/infrastructure/HttpClintonListService";
 import { customerRepository } from "@/infrastructure/http/HttpCustomerRepository";
 import { to } from "@/utils/async";
 import { ApiError } from "@/domain/Errors";
+import { useNotificationStore } from "@/presentation/stores/notification.store";
 
-interface CreateCustomerModalProps {
+interface CustomerModalProps {
   open: boolean;
   onClose: () => void;
-  onCreate: (customer: Customer) => void;
+  onSave: (customer: Customer) => void;
+  customerToEdit?: Customer | null;
 }
 
-export function CreateCustomerModal({
+export function CustomerModal({
   open,
   onClose,
-  onCreate,
-}: CreateCustomerModalProps) {
-  const [formData, setFormData] = useState<CreateCustomerFormData>({
+  onSave,
+  customerToEdit,
+}: CustomerModalProps) {
+  const { showNotification } = useNotificationStore();
+
+  const defaultFormData: CreateCustomerFormData = useMemo(() => ({
     first_name: "",
     first_surname: "",
     document_type: "CC",
@@ -43,12 +47,38 @@ export function CreateCustomerModal({
     person_type: "natural",
     email: "",
     phone: "",
-  });
+  }), []);
+
+  const [formData, setFormData] = useState<CreateCustomerFormData>(defaultFormData);
   
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<
     Partial<Record<keyof CreateCustomerFormData, string>> & { general?: string }
   >({});
+
+  const isEditMode = !!customerToEdit;
+
+  // Pattern React 19: Adjusting state during render when props change
+  const [prevOpen, setPrevOpen] = useState(open);
+  const [prevCustomerToEdit, setPrevCustomerToEdit] = useState(customerToEdit);
+
+  if (open !== prevOpen || customerToEdit !== prevCustomerToEdit) {
+    setPrevOpen(open);
+    setPrevCustomerToEdit(customerToEdit);
+    
+    if (open) {
+      setFormData(customerToEdit ? {
+        first_name: customerToEdit.first_name || "",
+        first_surname: customerToEdit.first_surname || "",
+        document_type: customerToEdit.document_type || "CC",
+        document_number: customerToEdit.document_number || "",
+        person_type: customerToEdit.person_type || "natural",
+        email: customerToEdit.email || "",
+        phone: customerToEdit.phone || "",
+      } : defaultFormData);
+      setErrors({});
+    }
+  }
 
   const getClintonStatus = async (
     name: string,
@@ -66,7 +96,7 @@ export function CreateCustomerModal({
     }
   };
 
-  const handleCreate = async () => {
+  const handleSave = async () => {
     const validation = createCustomerSchema.safeParse(formData);
     if (!validation.success) {
       const fieldErrors: Partial<Record<keyof CreateCustomerFormData, string>> = {};
@@ -80,9 +110,11 @@ export function CreateCustomerModal({
     }
 
     const fullName = `${formData.first_name} ${formData.first_surname || ""}`.trim();
+    // En modo edición podríamos saltarnos la lista clinton o re-validar. Lo mantenemos seguro.
     const isListed = await getClintonStatus(fullName, formData.document_number);
 
-    const newCustomer: Customer = {
+    const customerData: Customer = {
+      ...(customerToEdit || {}), // Conservar ID si existe
       ...formData,
       customer_type: "customer",
       isClintonListed: isListed,
@@ -90,30 +122,24 @@ export function CreateCustomerModal({
     };
 
     setIsSubmitting(true);
-    const createCustomer = new CreateCustomer(customerRepository);
-    const [err] = await to(createCustomer.execute(newCustomer));
+    // Asumimos que customerRepository.save() hace upsert (crear o actualizar según si hay ID/Documento)
+    const [err] = await to(customerRepository.save(customerData));
     setIsSubmitting(false);
 
     if (err) {
       if (err instanceof ApiError) {
-        setErrors({ general: err.detail || "Error al crear el customer" });
+        showNotification(err.detail || `Error al ${isEditMode ? "actualizar" : "crear"} el cliente`, "error", `Error al ${isEditMode ? "actualizar" : "crear"} cliente`);
       } else {
-        setErrors({ general: "Error de conexión al crear customer" });
+        showNotification(`Error de conexión al ${isEditMode ? "actualizar" : "crear"} cliente`, "error", "Error de conexión");
       }
       return;
     }
 
-    onCreate(newCustomer);
-
-    setFormData({
-      first_name: "",
-      first_surname: "",
-      document_type: "CC",
-      document_number: "",
-      person_type: "natural",
-      email: "",
-      phone: "",
-    });
+    showNotification(`El cliente ha sido ${isEditMode ? "actualizado" : "creado"} exitosamente`, "success", `Cliente ${isEditMode ? "actualizado" : "creado"}`);
+    onSave(customerData);
+    if (!isEditMode) {
+      setFormData(defaultFormData);
+    }
   };
 
   return (
@@ -127,11 +153,11 @@ export function CreateCustomerModal({
       <DialogTitle
         sx={{ typography: "h2", color: "text.primary", px: 3, pt: 3, pb: 2 }}
       >
-        Nuevo Customer
+        {isEditMode ? "Editar Cliente" : "Nuevo Cliente"}
       </DialogTitle>
 
       <DialogContent
-        sx={{ display: "flex", flexDirection: "column", gap: 3, p: 3 }}
+        sx={{ display: "flex", flexDirection: "column", gap: 3, px: 3, pt: 6, pb: 3 }}
       >
         {errors.general && (
           <Box sx={{ color: "error.main", typography: "body2" }}>
@@ -139,16 +165,14 @@ export function CreateCustomerModal({
           </Box>
         )}
 
-        <Box sx={{ display: "flex", gap: 3 }}>
+        <Box sx={{ display: "flex", gap: 3, mt: 1 }}>
           <TextField
             label="Nombres / Razón Social"
             name="first_name"
             value={formData.first_name}
             onChange={handleChange}
             fullWidth
-            variant="outlined"
             placeholder="Ej. Acme SAS"
-            slotProps={{ inputLabel: { shrink: true } }}
             error={!!errors.first_name}
             helperText={errors.first_name}
           />
@@ -158,16 +182,14 @@ export function CreateCustomerModal({
             value={formData.first_surname}
             onChange={handleChange}
             fullWidth
-            variant="outlined"
             placeholder="Opcional"
-            slotProps={{ inputLabel: { shrink: true } }}
             error={!!errors.first_surname}
             helperText={errors.first_surname}
           />
         </Box>
 
         <Box sx={{ display: "flex", gap: 3 }}>
-          <FormControl fullWidth variant="outlined">
+          <FormControl fullWidth size="small">
             <InputLabel shrink>Tipo de Persona</InputLabel>
             <Select
               name="person_type"
@@ -183,7 +205,7 @@ export function CreateCustomerModal({
         </Box>
 
         <Box sx={{ display: "flex", gap: 3 }}>
-          <FormControl fullWidth variant="outlined">
+          <FormControl fullWidth size="small">
             <InputLabel shrink>Tipo Doc.</InputLabel>
             <Select
               name="document_type"
@@ -205,9 +227,7 @@ export function CreateCustomerModal({
             value={formData.document_number}
             onChange={handleChange}
             fullWidth
-            variant="outlined"
             placeholder="0202020202"
-            slotProps={{ inputLabel: { shrink: true } }}
             error={!!errors.document_number}
             helperText={errors.document_number}
           />
@@ -220,9 +240,7 @@ export function CreateCustomerModal({
             value={formData.email}
             onChange={handleChange}
             fullWidth
-            variant="outlined"
             placeholder="correo@ejemplo.com"
-            slotProps={{ inputLabel: { shrink: true } }}
             error={!!errors.email}
             helperText={errors.email}
           />
@@ -232,9 +250,7 @@ export function CreateCustomerModal({
             value={formData.phone}
             onChange={handleChange}
             fullWidth
-            variant="outlined"
             placeholder="3001234567"
-            slotProps={{ inputLabel: { shrink: true } }}
             error={!!errors.phone}
             helperText={errors.phone}
           />
@@ -242,8 +258,10 @@ export function CreateCustomerModal({
       </DialogContent>
 
       <DialogActions sx={{ p: 3, pt: 0 }}>
-        <Button onClick={handleCreate} disabled={isSubmitting}>
-          {isSubmitting ? "Creando..." : "Crear Customer"}
+        <Button onClick={handleSave} disabled={isSubmitting}>
+          {isSubmitting
+            ? isEditMode ? "Guardando..." : "Creando..."
+            : isEditMode ? "Guardar Cambios" : "Crear Cliente"}
         </Button>
         <Button onClick={onClose} variant="outlined" disabled={isSubmitting}>Cancelar</Button>
       </DialogActions>

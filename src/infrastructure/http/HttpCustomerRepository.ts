@@ -10,7 +10,7 @@ const paginatedCustomersSchema = z.object({
 });
 
 export class HttpCustomerRepository implements CustomerRepository {
-  async findAll(filters?: CustomerFilters): Promise<Customer[]> {
+  async findAll(filters?: CustomerFilters): Promise<{ items: Customer[]; total: number }> {
     const params = new URLSearchParams();
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
@@ -25,7 +25,7 @@ export class HttpCustomerRepository implements CustomerRepository {
     const response = await HttpClient.get(url);
     const data = await response.json();
     const parsed = paginatedCustomersSchema.parse(data);
-    return parsed.items;
+    return { items: parsed.items, total: parsed.total };
   }
 
   async findByDocument(documentNumber: string): Promise<Customer | undefined> {

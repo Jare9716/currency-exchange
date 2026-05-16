@@ -7,24 +7,19 @@ export class ExecuteTransaction {
   async execute(
     customerId: string,
     amountUSD: number,
-    exchangeRate: number,
   ): Promise<Transaction> {
     if (amountUSD <= 0) {
       throw new DomainError("validation_error", "Transaction amount must be strictly positive");
     }
 
-    const amountCOP = amountUSD * exchangeRate;
+    const transaction = await this.transactionRepository.save({
+      customer_id: customerId,
+      transaction_type: "buy", // Assuming buy for now based on USD -> COP flow
+      iso_code: "USD",
+      foreign_amount: amountUSD.toString(),
+      description: "Exchange via frontend",
+    });
 
-    const transaction: Transaction = {
-      id: crypto.randomUUID(),
-      customerId,
-      amountUSD,
-      exchangeRate,
-      amountCOP,
-      date: new Date(),
-    };
-
-    await this.transactionRepository.save(transaction);
     return transaction;
   }
 }

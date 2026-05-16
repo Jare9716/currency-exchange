@@ -13,54 +13,88 @@ import {
   Paper,
   Avatar,
   Chip,
-  Snackbar,
-  Alert,
+  TablePagination,
+  IconButton,
+  Tooltip,
+  InputAdornment,
 } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import BusinessIcon from "@mui/icons-material/Business";
-import { CreateCustomerModal } from "@/presentation/components/features/customers/CreateCustomerModal";
+import EditIcon from "@mui/icons-material/Edit";
+import SearchIcon from "@mui/icons-material/Search";
+import { CustomerModal } from "@/presentation/components/features/customers/CustomerModal";
 import { Customer } from "@/domain/Customer";
 import { useCustomersStore } from "@/presentation/stores/customers.store";
 import { Button } from "@/presentation/components/ui/Button/Button";
 import { TextField } from "@/presentation/components/ui/TextField/TextField";
 
 export function CustomerList() {
-  const { customers, setCustomers, fetchCustomers } = useCustomersStore();
-
-  useEffect(() => {
-    fetchCustomers().catch(console.error);
-  }, [fetchCustomers]);
+  const { customers, total, page, size, setCustomers, fetchCustomers } = useCustomersStore();
 
   const [modalOpen, setModalOpen] = useState(false);
+  const [customerToEdit, setCustomerToEdit] = useState<Customer | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
 
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarMessage, setSnackbarMessage] = useState({
-    title: "",
-    body: "",
-  });
-  const [snackbarSeverity, setSnackbarSeverity] = useState<"success" | "error">(
-    "success",
-  );
+  // Real-time search with debounce
+  useEffect(() => {
+    const handler = setTimeout(async () => {
+      setIsLoading(true);
+      try {
+        await fetchCustomers({ name: searchQuery, page: 1, size: size });
+      } catch (error) {
+        console.error("Error searching customers:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    }, 400);
 
-  const handleCreateCustomer = (newCustomer: Customer) => {
-    setModalOpen(false);
+    return () => clearTimeout(handler);
+  }, [searchQuery, fetchCustomers, size]);
 
-    if (newCustomer.isClintonListed) {
-      setSnackbarSeverity("error");
-      setSnackbarMessage({
-        title: "Customer reportado",
-        body: "El customer fue marcado por validación tipo Lista Clinton.",
-      });
-    } else {
-      setSnackbarSeverity("success");
-      setSnackbarMessage({
-        title: "Customer creado",
-        body: "El customer ha sido creado exitosamente",
-      });
+  const handleChangePage = async (_: unknown, newPage: number) => {
+    setIsLoading(true);
+    try {
+      await fetchCustomers({ name: searchQuery, page: newPage + 1, size: size });
+    } finally {
+      setIsLoading(false);
     }
+  };
 
-    setSnackbarOpen(true);
-    setCustomers((prev) => [newCustomer, ...prev]);
+  const handleChangeRowsPerPage = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const newSize = parseInt(event.target.value, 10);
+    setIsLoading(true);
+    try {
+      await fetchCustomers({ name: searchQuery, page: 1, size: newSize });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleOpenCreateModal = () => {
+    setCustomerToEdit(null);
+    setModalOpen(true);
+  };
+
+  const handleOpenEditModal = (customer: Customer) => {
+    setCustomerToEdit(customer);
+    setModalOpen(true);
+  };
+
+  const handleSaveCustomer = (savedCustomer: Customer) => {
+    setModalOpen(false);
+    
+    // Si era edición, actualizar en la lista actual sin recargar todo. 
+    // Idealmente haríamos un re-fetch si el sort importa, pero por UX rápida actualizamos local.
+    setCustomers((prev) => {
+      const isExisting = prev.some((c) => c.document_number === savedCustomer.document_number);
+      if (isExisting) {
+        return prev.map((c) => 
+          c.document_number === savedCustomer.document_number ? savedCustomer : c
+        );
+      }
+      return [savedCustomer, ...prev];
+    });
   };
 
   const getStatusColor = (status?: string) => {
@@ -81,7 +115,7 @@ export function CustomerList() {
       sx={{ width: "100%", display: "flex", flexDirection: "column", gap: 3 }}
     >
       <Typography variant="h1" sx={{ color: "text.primary" }}>
-        Customers
+        Clientes
       </Typography>
 
       <Paper
@@ -96,33 +130,61 @@ export function CustomerList() {
       >
         <Box
           sx={{
-            p: 2,
+            p: 3,
             display: "flex",
-            flexWrap: "wrap",
             gap: 2,
             alignItems: "center",
-            justifyContent: "space-between",
           }}
         >
           <TextField
-            size="small"
-            placeholder="Buscar por nombre o documento"
+            placeholder="Nombre o CC"
             variant="outlined"
             label="Buscar"
-            slotProps={{ inputLabel: { shrink: true } }}
-            sx={{
-              flex: 1,
-              minWidth: 220,
-              maxWidth: 400,
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            slotProps={{
+              inputLabel: { shrink: true },
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{ color: "text.secondary" }} />
+                  </InputAdornment>
+                ),
+              },
             }}
+            sx={{ flex: 1 }}
           />
 
-          <Button variant="contained" onClick={() => setModalOpen(true)}>
-            Nuevo Customer
+          <Button 
+            variant="contained" 
+            fullWidth={false}
+            onClick={handleOpenCreateModal}
+            sx={{ px: 4, minWidth: "120px" }}
+          >
+            Nuevo
           </Button>
         </Box>
 
-        <TableContainer>
+        <TableContainer sx={{ position: "relative" }}>
+          {isLoading && (
+            <Box
+              sx={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                bgcolor: "background.paper",
+                opacity: 0.7,
+                zIndex: 1,
+              }}
+            >
+              <Typography variant="body2">Buscando...</Typography>
+            </Box>
+          )}
           <Table sx={{ minWidth: 650 }}>
             <TableHead>
               <TableRow sx={{ bgcolor: "background.paper" }}>
@@ -131,56 +193,77 @@ export function CustomerList() {
                 <TableCell sx={{ typography: "subtitle2" }}>Documento</TableCell>
                 <TableCell sx={{ typography: "subtitle2" }}>Teléfono</TableCell>
                 <TableCell sx={{ typography: "subtitle2" }}>Estado</TableCell>
+                <TableCell sx={{ typography: "subtitle2" }} align="center">Acciones</TableCell>
               </TableRow>
             </TableHead>
 
             <TableBody>
-              {customers.map((customer) => (
-                <TableRow key={customer.id || customer.document_number}>
-                  <TableCell>
-                    <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
-                      <Avatar sx={{ width: 24, height: 24 }}>
-                        {customer.person_type === "juridical" ? <BusinessIcon fontSize="small" /> : <PersonIcon fontSize="small" />}
-                      </Avatar>
-                      {customer.first_name} {customer.first_surname || ""}
-                    </Box>
-                  </TableCell>
-
-                  <TableCell>{customer.email || "N/A"}</TableCell>
-                  <TableCell>{customer.document_type} {customer.document_number}</TableCell>
-                  <TableCell>{customer.phone || "N/A"}</TableCell>
-
-                  <TableCell>
-                    <Chip
-                      label={customer.status}
-                      color={getStatusColor(customer.status)}
-                      size="small"
-                    />
+              {customers.length === 0 && !isLoading ? (
+                <TableRow>
+                  <TableCell colSpan={6} align="center" sx={{ py: 4 }}>
+                    <Typography variant="body2" color="text.secondary">
+                      No se encontraron clientes
+                    </Typography>
                   </TableCell>
                 </TableRow>
-              ))}
+              ) : (
+                customers.map((customer) => (
+                  <TableRow key={customer.id || customer.document_number}>
+                    <TableCell>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                        <Avatar sx={{ width: 24, height: 24 }}>
+                          {customer.person_type === "juridical" ? <BusinessIcon fontSize="small" /> : <PersonIcon fontSize="small" />}
+                        </Avatar>
+                        {customer.first_name} {customer.first_surname || ""}
+                      </Box>
+                    </TableCell>
+
+                    <TableCell>{customer.email || "N/A"}</TableCell>
+                    <TableCell>{customer.document_type} {customer.document_number}</TableCell>
+                    <TableCell>{customer.phone || "N/A"}</TableCell>
+
+                    <TableCell>
+                      <Chip
+                        label={customer.status}
+                        color={getStatusColor(customer.status)}
+                        size="small"
+                      />
+                    </TableCell>
+                    
+                    <TableCell align="center">
+                      <Tooltip title="Editar Cliente">
+                        <IconButton size="small" onClick={() => handleOpenEditModal(customer)}>
+                          <EditIcon fontSize="small" />
+                        </IconButton>
+                      </Tooltip>
+                    </TableCell>
+                  </TableRow>
+                ))
+              )}
             </TableBody>
           </Table>
         </TableContainer>
+        <TablePagination
+          rowsPerPageOptions={[5, 10, 20, 50]}
+          component="div"
+          count={total}
+          rowsPerPage={size}
+          page={page - 1} // MUI uses 0-indexed pages
+          onPageChange={handleChangePage}
+          onRowsPerPageChange={handleChangeRowsPerPage}
+          labelRowsPerPage="Clientes por página"
+          labelDisplayedRows={({ from, to, count }) =>
+            `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`
+          }
+        />
       </Paper>
 
-      <CreateCustomerModal
+      <CustomerModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
-        onCreate={handleCreateCustomer}
+        onSave={handleSaveCustomer}
+        customerToEdit={customerToEdit}
       />
-
-      <Snackbar
-        open={snackbarOpen}
-        autoHideDuration={6000}
-        onClose={() => setSnackbarOpen(false)}
-        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
-      >
-        <Alert severity={snackbarSeverity} variant="filled">
-          <Typography variant="subtitle1">{snackbarMessage.title}</Typography>
-          <Typography variant="body2">{snackbarMessage.body}</Typography>
-        </Alert>
-      </Snackbar>
     </Box>
   );
 }

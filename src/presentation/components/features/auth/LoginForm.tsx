@@ -7,8 +7,6 @@ import {
   Link,
   InputAdornment,
   IconButton,
-  Checkbox,
-  FormControlLabel,
   Alert,
 } from "@mui/material";
 import Visibility from "@mui/icons-material/Visibility";
@@ -99,22 +97,24 @@ export function LoginForm() {
 
           <TextField
             label="Correo"
-            placeholder="Correo"
             type="email"
+            autoComplete="email"
             value={formData.email}
             onChange={handleChange("email")}
             error={!!errors.email}
             helperText={errors.email}
+            fullWidth
           />
 
           <TextField
             label="Contraseña"
-            placeholder="Contraseña"
             type={showPassword ? "text" : "password"}
+            autoComplete="current-password"
             value={formData.password}
             onChange={handleChange("password")}
             error={!!errors.password}
             helperText={errors.password}
+            fullWidth
             slotProps={{
               input: {
                 endAdornment: (
@@ -136,34 +136,19 @@ export function LoginForm() {
           <Box
             sx={{
               display: "flex",
-              justifyContent: "space-between",
+              justifyContent: "flex-end",
               alignItems: "center",
               width: "100%",
               mt: -1,
             }}
           >
-            <FormControlLabel
-              control={
-                <Checkbox
-                  color="primary"
-                  sx={{ py: 0 }}
-                  checked={formData.rememberMe}
-                  onChange={handleChange("rememberMe")}
-                />
-              }
-              label={
-                <Typography sx={{ color: "text.primary", fontSize: "14px" }}>
-                  Recordarme
-                </Typography>
-              }
-            />
             <Link
               href="#"
               underline="none"
               sx={{
                 color: "primary.main",
                 fontWeight: 600,
-                fontSize: "16px",
+                fontSize: "14px",
               }}
             >
               ¿Olvidaste tu contraseña?
