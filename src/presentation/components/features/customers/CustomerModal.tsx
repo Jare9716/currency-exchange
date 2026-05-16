@@ -1,7 +1,10 @@
 "use client";
 
 import { useState, ChangeEvent, useEffect, useMemo } from "react";
-import { createCustomerSchema, CreateCustomerFormData } from "@/presentation/components/features/customers/customer.schema";
+import {
+  createCustomerSchema,
+  CreateCustomerFormData,
+} from "@/presentation/components/features/customers/customer.schema";
 import {
   Dialog,
   DialogTitle,
@@ -39,18 +42,22 @@ export function CustomerModal({
 }: CustomerModalProps) {
   const { showNotification } = useNotificationStore();
 
-  const defaultFormData: CreateCustomerFormData = useMemo(() => ({
-    first_name: "",
-    first_surname: "",
-    document_type: "CC",
-    document_number: "",
-    person_type: "natural",
-    email: "",
-    phone: "",
-  }), []);
+  const defaultFormData: CreateCustomerFormData = useMemo(
+    () => ({
+      first_name: "",
+      first_surname: "",
+      document_type: "CC",
+      document_number: "",
+      person_type: "natural",
+      email: "",
+      phone: "",
+    }),
+    [],
+  );
 
-  const [formData, setFormData] = useState<CreateCustomerFormData>(defaultFormData);
-  
+  const [formData, setFormData] =
+    useState<CreateCustomerFormData>(defaultFormData);
+
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errors, setErrors] = useState<
     Partial<Record<keyof CreateCustomerFormData, string>> & { general?: string }
@@ -65,17 +72,21 @@ export function CustomerModal({
   if (open !== prevOpen || customerToEdit !== prevCustomerToEdit) {
     setPrevOpen(open);
     setPrevCustomerToEdit(customerToEdit);
-    
+
     if (open) {
-      setFormData(customerToEdit ? {
-        first_name: customerToEdit.first_name || "",
-        first_surname: customerToEdit.first_surname || "",
-        document_type: customerToEdit.document_type || "CC",
-        document_number: customerToEdit.document_number || "",
-        person_type: customerToEdit.person_type || "natural",
-        email: customerToEdit.email || "",
-        phone: customerToEdit.phone || "",
-      } : defaultFormData);
+      setFormData(
+        customerToEdit
+          ? {
+              first_name: customerToEdit.first_name || "",
+              first_surname: customerToEdit.first_surname || "",
+              document_type: customerToEdit.document_type || "CC",
+              document_number: customerToEdit.document_number || "",
+              person_type: customerToEdit.person_type || "natural",
+              email: customerToEdit.email || "",
+              phone: customerToEdit.phone || "",
+            }
+          : defaultFormData,
+      );
       setErrors({});
     }
   }
@@ -88,7 +99,9 @@ export function CustomerModal({
     return await validateClintonList.execute(name, documentNumber);
   };
 
-  const handleChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent) => {
+  const handleChange = (
+    e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement> | SelectChangeEvent,
+  ) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name as string]: value }));
     if (errors[name as keyof CreateCustomerFormData]) {
@@ -99,17 +112,20 @@ export function CustomerModal({
   const handleSave = async () => {
     const validation = createCustomerSchema.safeParse(formData);
     if (!validation.success) {
-      const fieldErrors: Partial<Record<keyof CreateCustomerFormData, string>> = {};
+      const fieldErrors: Partial<Record<keyof CreateCustomerFormData, string>> =
+        {};
       validation.error.issues.forEach((err) => {
         if (err.path[0]) {
-          fieldErrors[err.path[0] as keyof CreateCustomerFormData] = err.message;
+          fieldErrors[err.path[0] as keyof CreateCustomerFormData] =
+            err.message;
         }
       });
       setErrors(fieldErrors);
       return;
     }
 
-    const fullName = `${formData.first_name} ${formData.first_surname || ""}`.trim();
+    const fullName =
+      `${formData.first_name} ${formData.first_surname || ""}`.trim();
     // En modo edición podríamos saltarnos la lista clinton o re-validar. Lo mantenemos seguro.
     const isListed = await getClintonStatus(fullName, formData.document_number);
 
@@ -128,14 +144,27 @@ export function CustomerModal({
 
     if (err) {
       if (err instanceof ApiError) {
-        showNotification(err.detail || `Error al ${isEditMode ? "actualizar" : "crear"} el cliente`, "error", `Error al ${isEditMode ? "actualizar" : "crear"} cliente`);
+        showNotification(
+          err.detail ||
+            `Error al ${isEditMode ? "actualizar" : "crear"} el cliente`,
+          "error",
+          `Error al ${isEditMode ? "actualizar" : "crear"} cliente`,
+        );
       } else {
-        showNotification(`Error de conexión al ${isEditMode ? "actualizar" : "crear"} cliente`, "error", "Error de conexión");
+        showNotification(
+          `Error de conexión al ${isEditMode ? "actualizar" : "crear"} cliente`,
+          "error",
+          "Error de conexión",
+        );
       }
       return;
     }
 
-    showNotification(`El cliente ha sido ${isEditMode ? "actualizado" : "creado"} exitosamente`, "success", `Cliente ${isEditMode ? "actualizado" : "creado"}`);
+    showNotification(
+      `El cliente ha sido ${isEditMode ? "actualizado" : "creado"} exitosamente`,
+      "success",
+      `Cliente ${isEditMode ? "actualizado" : "creado"}`,
+    );
     onSave(customerData);
     if (!isEditMode) {
       setFormData(defaultFormData);
@@ -157,7 +186,14 @@ export function CustomerModal({
       </DialogTitle>
 
       <DialogContent
-        sx={{ display: "flex", flexDirection: "column", gap: 3, px: 3, pt: 6, pb: 3 }}
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          gap: 3,
+          px: 3,
+          pt: 6,
+          pb: 3,
+        }}
       >
         {errors.general && (
           <Box sx={{ color: "error.main", typography: "body2" }}>
@@ -260,10 +296,16 @@ export function CustomerModal({
       <DialogActions sx={{ p: 3, pt: 0 }}>
         <Button onClick={handleSave} disabled={isSubmitting}>
           {isSubmitting
-            ? isEditMode ? "Guardando..." : "Creando..."
-            : isEditMode ? "Guardar Cambios" : "Crear Cliente"}
+            ? isEditMode
+              ? "Guardando..."
+              : "Creando..."
+            : isEditMode
+              ? "Guardar Cambios"
+              : "Crear Cliente"}
         </Button>
-        <Button onClick={onClose} variant="outlined" disabled={isSubmitting}>Cancelar</Button>
+        <Button onClick={onClose} variant="outlined" disabled={isSubmitting}>
+          Cancelar
+        </Button>
       </DialogActions>
     </Dialog>
   );

@@ -29,7 +29,8 @@ import { Button } from "@/presentation/components/ui/Button/Button";
 import { TextField } from "@/presentation/components/ui/TextField/TextField";
 
 export function CustomerList() {
-  const { customers, total, page, size, setCustomers, fetchCustomers } = useCustomersStore();
+  const { customers, total, page, size, setCustomers, fetchCustomers } =
+    useCustomersStore();
 
   const [modalOpen, setModalOpen] = useState(false);
   const [customerToEdit, setCustomerToEdit] = useState<Customer | null>(null);
@@ -55,13 +56,19 @@ export function CustomerList() {
   const handleChangePage = async (_: unknown, newPage: number) => {
     setIsLoading(true);
     try {
-      await fetchCustomers({ name: searchQuery, page: newPage + 1, size: size });
+      await fetchCustomers({
+        name: searchQuery,
+        page: newPage + 1,
+        size: size,
+      });
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleChangeRowsPerPage = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeRowsPerPage = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const newSize = parseInt(event.target.value, 10);
     setIsLoading(true);
     try {
@@ -83,14 +90,18 @@ export function CustomerList() {
 
   const handleSaveCustomer = (savedCustomer: Customer) => {
     setModalOpen(false);
-    
-    // Si era edición, actualizar en la lista actual sin recargar todo. 
+
+    // Si era edición, actualizar en la lista actual sin recargar todo.
     // Idealmente haríamos un re-fetch si el sort importa, pero por UX rápida actualizamos local.
     setCustomers((prev) => {
-      const isExisting = prev.some((c) => c.document_number === savedCustomer.document_number);
+      const isExisting = prev.some(
+        (c) => c.document_number === savedCustomer.document_number,
+      );
       if (isExisting) {
-        return prev.map((c) => 
-          c.document_number === savedCustomer.document_number ? savedCustomer : c
+        return prev.map((c) =>
+          c.document_number === savedCustomer.document_number
+            ? savedCustomer
+            : c,
         );
       }
       return [savedCustomer, ...prev];
@@ -155,8 +166,8 @@ export function CustomerList() {
             sx={{ flex: 1 }}
           />
 
-          <Button 
-            variant="contained" 
+          <Button
+            variant="contained"
             fullWidth={false}
             onClick={handleOpenCreateModal}
             sx={{ px: 4, minWidth: "120px" }}
@@ -188,12 +199,18 @@ export function CustomerList() {
           <Table sx={{ minWidth: 650 }}>
             <TableHead>
               <TableRow sx={{ bgcolor: "background.paper" }}>
-                <TableCell sx={{ typography: "subtitle2" }}>Nombre / Razón Social</TableCell>
+                <TableCell sx={{ typography: "subtitle2" }}>
+                  Nombre / Razón Social
+                </TableCell>
                 <TableCell sx={{ typography: "subtitle2" }}>Email</TableCell>
-                <TableCell sx={{ typography: "subtitle2" }}>Documento</TableCell>
+                <TableCell sx={{ typography: "subtitle2" }}>
+                  Documento
+                </TableCell>
                 <TableCell sx={{ typography: "subtitle2" }}>Teléfono</TableCell>
                 <TableCell sx={{ typography: "subtitle2" }}>Estado</TableCell>
-                <TableCell sx={{ typography: "subtitle2" }} align="center">Acciones</TableCell>
+                <TableCell sx={{ typography: "subtitle2" }} align="center">
+                  Acciones
+                </TableCell>
               </TableRow>
             </TableHead>
 
@@ -210,16 +227,24 @@ export function CustomerList() {
                 customers.map((customer) => (
                   <TableRow key={customer.id || customer.document_number}>
                     <TableCell>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                      <Box
+                        sx={{ display: "flex", alignItems: "center", gap: 1 }}
+                      >
                         <Avatar sx={{ width: 24, height: 24 }}>
-                          {customer.person_type === "juridical" ? <BusinessIcon fontSize="small" /> : <PersonIcon fontSize="small" />}
+                          {customer.person_type === "juridical" ? (
+                            <BusinessIcon fontSize="small" />
+                          ) : (
+                            <PersonIcon fontSize="small" />
+                          )}
                         </Avatar>
                         {customer.first_name} {customer.first_surname || ""}
                       </Box>
                     </TableCell>
 
                     <TableCell>{customer.email || "N/A"}</TableCell>
-                    <TableCell>{customer.document_type} {customer.document_number}</TableCell>
+                    <TableCell>
+                      {customer.document_type} {customer.document_number}
+                    </TableCell>
                     <TableCell>{customer.phone || "N/A"}</TableCell>
 
                     <TableCell>
@@ -229,10 +254,13 @@ export function CustomerList() {
                         size="small"
                       />
                     </TableCell>
-                    
+
                     <TableCell align="center">
                       <Tooltip title="Editar Cliente">
-                        <IconButton size="small" onClick={() => handleOpenEditModal(customer)}>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleOpenEditModal(customer)}
+                        >
                           <EditIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>

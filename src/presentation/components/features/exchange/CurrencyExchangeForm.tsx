@@ -42,9 +42,11 @@ export function CurrencyExchangeForm() {
 
   const [loadingRate, setLoadingRate] = useState(false);
   const [exchangeRate, setExchangeRate] = useState<number>(0.0);
-  
+
   const [documentInput, setDocumentInput] = useState("");
-  const [foundCustomer, setFoundCustomer] = useState<Customer | undefined>(undefined);
+  const [foundCustomer, setFoundCustomer] = useState<Customer | undefined>(
+    undefined,
+  );
   const [lookupAttempted, setLookupAttempted] = useState(false);
 
   const [amountUSD, setAmountUSD] = useState<string>("");
@@ -52,11 +54,13 @@ export function CurrencyExchangeForm() {
   const [fromCurrency] = useState("USD");
   const [toCurrency] = useState("COP");
   const [observations, setObservations] = useState("");
-  
+
   const [calculatedCOP, setCalculatedCOP] = useState<number>(0);
   const [loadingConversion, setLoadingConversion] = useState(false);
 
-  const [lastTransaction, setLastTransaction] = useState<Transaction | undefined>(undefined);
+  const [lastTransaction, setLastTransaction] = useState<
+    Transaction | undefined
+  >(undefined);
   const [receiptModalOpen, setReceiptModalOpen] = useState(false);
 
   // Fetch initial data
@@ -106,36 +110,60 @@ export function CurrencyExchangeForm() {
   const handleCheckCustomer = async () => {
     const validation = searchCustomerSchema.safeParse({ documentInput });
     if (!validation.success) {
-      showNotification(validation.error.issues[0].message, "error", "Documento Inválido");
+      showNotification(
+        validation.error.issues[0].message,
+        "error",
+        "Documento Inválido",
+      );
       return;
     }
 
     setLookupAttempted(true);
-    const customer = customers.find((c) => c.document_number === documentInput.trim());
+    const customer = customers.find(
+      (c) => c.document_number === documentInput.trim(),
+    );
     setFoundCustomer(customer ?? undefined);
 
     if (customer?.first_name && customer?.document_number) {
       const validateClintonList = new ValidateClintonList(clintonListService);
-      const fullName = `${customer.first_name} ${customer.first_surname || ""}`.trim();
-      const isListed = await validateClintonList.execute(fullName, customer.document_number);
+      const fullName =
+        `${customer.first_name} ${customer.first_surname || ""}`.trim();
+      const isListed = await validateClintonList.execute(
+        fullName,
+        customer.document_number,
+      );
 
       // Update store state
-      setCustomers(prev => prev.map(c => 
-        c.document_number === customer.document_number 
-          ? { ...c, isClintonListed: isListed, status: isListed ? "Reportado" : "Activo" } 
-          : c
-      ));
+      setCustomers((prev) =>
+        prev.map((c) =>
+          c.document_number === customer.document_number
+            ? {
+                ...c,
+                isClintonListed: isListed,
+                status: isListed ? "Reportado" : "Activo",
+              }
+            : c,
+        ),
+      );
     }
 
     if (!customer) {
-      showNotification(`No se encontró ningún cliente con documento ${documentInput}.`, "error", "Cliente no encontrado");
+      showNotification(
+        `No se encontró ningún cliente con documento ${documentInput}.`,
+        "error",
+        "Cliente no encontrado",
+      );
     }
   };
 
   const handleMakeTransaction = async () => {
     if (!foundCustomer) return;
     if (foundCustomer.status === "Reportado") {
-      showNotification("El cliente está bloqueado por la Lista Clinton.", "error", "Transacción rechazada");
+      showNotification(
+        "El cliente está bloqueado por la Lista Clinton.",
+        "error",
+        "Transacción rechazada",
+      );
       return;
     }
 
@@ -149,7 +177,7 @@ export function CurrencyExchangeForm() {
       const executeTransaction = new ExecuteTransaction(transactionRepository);
       const txn = await executeTransaction.execute(
         foundCustomer.id || foundCustomer.document_number,
-        Number(amountUSD)
+        Number(amountUSD),
       );
 
       setLastTransaction(txn);
@@ -157,7 +185,8 @@ export function CurrencyExchangeForm() {
       setLastTransaction(txn); // Keep txn for modal
       setReceiptModalOpen(true);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : "Error en transacción";
+      const errorMessage =
+        error instanceof Error ? error.message : "Error en transacción";
       showNotification(errorMessage, "error", "Error");
     }
   };
@@ -183,8 +212,17 @@ export function CurrencyExchangeForm() {
         <Grid size={{ xs: 12, md: 8 }}>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
             {/* Sección 1: Cliente */}
-            <Paper sx={{ p: 3, border: "1px solid", borderColor: "divider", boxShadow: "none" }}>
-              <Typography variant="h3" sx={{ mb: 2 }}>Información del Cliente</Typography>
+            <Paper
+              sx={{
+                p: 3,
+                border: "1px solid",
+                borderColor: "divider",
+                boxShadow: "none",
+              }}
+            >
+              <Typography variant="h3" sx={{ mb: 2 }}>
+                Información del Cliente
+              </Typography>
               <Box sx={{ display: "flex", gap: 2 }}>
                 <TextField
                   label="Cliente"
@@ -196,19 +234,36 @@ export function CurrencyExchangeForm() {
                     input: {
                       startAdornment: (
                         <InputAdornment position="start">
-                          <SearchIcon fontSize="small" sx={{ color: "text.secondary" }} />
+                          <SearchIcon
+                            fontSize="small"
+                            sx={{ color: "text.secondary" }}
+                          />
                         </InputAdornment>
                       ),
                     },
                   }}
                 />
-                <Button variant="contained" onClick={handleCheckCustomer} sx={{ minWidth: 120 }}>
+                <Button
+                  variant="contained"
+                  onClick={handleCheckCustomer}
+                  sx={{ minWidth: 120 }}
+                >
                   Verificar
                 </Button>
               </Box>
 
               {lookupAttempted && foundCustomer && (
-                <Box sx={{ mt: 2, p: 2, bgcolor: "action.hover", borderRadius: 1, display: "flex", alignItems: "center", gap: 2 }}>
+                <Box
+                  sx={{
+                    mt: 2,
+                    p: 2,
+                    bgcolor: "action.hover",
+                    borderRadius: 1,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 2,
+                  }}
+                >
                   {foundCustomer.status === "Reportado" ? (
                     <ErrorOutlineIcon color="error" />
                   ) : (
@@ -216,7 +271,8 @@ export function CurrencyExchangeForm() {
                   )}
                   <Box>
                     <Typography variant="subtitle2">
-                      {foundCustomer.first_name} {foundCustomer.first_surname || ""}
+                      {foundCustomer.first_name}{" "}
+                      {foundCustomer.first_surname || ""}
                     </Typography>
                     <Typography variant="body2" color="text.secondary">
                       Estado: {foundCustomer.status}
@@ -227,8 +283,17 @@ export function CurrencyExchangeForm() {
             </Paper>
 
             {/* Sección 2: Montos */}
-            <Paper sx={{ p: 3, border: "1px solid", borderColor: "divider", boxShadow: "none" }}>
-              <Typography variant="h3" sx={{ mb: 2 }}>Conversión</Typography>
+            <Paper
+              sx={{
+                p: 3,
+                border: "1px solid",
+                borderColor: "divider",
+                boxShadow: "none",
+              }}
+            >
+              <Typography variant="h3" sx={{ mb: 2 }}>
+                Conversión
+              </Typography>
               <Grid container spacing={2}>
                 <Grid size={{ xs: 12, sm: 6 }}>
                   <FormControl fullWidth size="small">
@@ -247,8 +312,10 @@ export function CurrencyExchangeForm() {
                     helperText={amountError}
                     slotProps={{
                       input: {
-                        startAdornment: <InputAdornment position="start">$</InputAdornment>,
-                      }
+                        startAdornment: (
+                          <InputAdornment position="start">$</InputAdornment>
+                        ),
+                      },
                     }}
                   />
                 </Grid>
@@ -263,12 +330,22 @@ export function CurrencyExchangeForm() {
                     sx={{ mt: 2 }}
                     disabled
                     label="Resultado COP"
-                    value={loadingConversion ? "Calculando..." : calculatedCOP > 0 ? calculatedCOP.toLocaleString("es-CO") : ""}
+                    value={
+                      loadingConversion
+                        ? "Calculando..."
+                        : calculatedCOP > 0
+                          ? calculatedCOP.toLocaleString("es-CO")
+                          : ""
+                    }
                     slotProps={{
                       input: {
-                        startAdornment: <InputAdornment position="start">$</InputAdornment>,
-                        endAdornment: loadingConversion && <CircularProgress size={16} />
-                      }
+                        startAdornment: (
+                          <InputAdornment position="start">$</InputAdornment>
+                        ),
+                        endAdornment: loadingConversion && (
+                          <CircularProgress size={16} />
+                        ),
+                      },
                     }}
                   />
                 </Grid>
@@ -276,8 +353,17 @@ export function CurrencyExchangeForm() {
             </Paper>
 
             {/* Sección 3: Observaciones */}
-            <Paper sx={{ p: 3, border: "1px solid", borderColor: "divider", boxShadow: "none" }}>
-              <Typography variant="h3" sx={{ mb: 2 }}>Información Adicional</Typography>
+            <Paper
+              sx={{
+                p: 3,
+                border: "1px solid",
+                borderColor: "divider",
+                boxShadow: "none",
+              }}
+            >
+              <Typography variant="h3" sx={{ mb: 2 }}>
+                Información Adicional
+              </Typography>
               <TextField
                 multiline
                 rows={3}
@@ -292,19 +378,43 @@ export function CurrencyExchangeForm() {
 
         {/* Lado Derecho: Resumen y Acciones */}
         <Grid size={{ xs: 12, md: 4 }}>
-          <Paper sx={{ p: 3, border: "1px solid", borderColor: "divider", boxShadow: "none", position: "sticky", top: 24 }}>
-            <Typography variant="h3" sx={{ mb: 3 }}>Resumen</Typography>
-            
-            <Box sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}>
-              <Typography variant="body2" color="text.secondary">Tasa Aplicada</Typography>
+          <Paper
+            sx={{
+              p: 3,
+              border: "1px solid",
+              borderColor: "divider",
+              boxShadow: "none",
+              position: "sticky",
+              top: 24,
+            }}
+          >
+            <Typography variant="h3" sx={{ mb: 3 }}>
+              Resumen
+            </Typography>
+
+            <Box
+              sx={{ display: "flex", justifyContent: "space-between", mb: 1 }}
+            >
+              <Typography variant="body2" color="text.secondary">
+                Tasa Aplicada
+              </Typography>
               <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                {loadingRate ? "..." : `$${exchangeRate.toLocaleString("es-CO")}`}
+                {loadingRate
+                  ? "..."
+                  : `$${exchangeRate.toLocaleString("es-CO")}`}
               </Typography>
             </Box>
-            
+
             <Divider sx={{ my: 2 }} />
-            
-            <Box sx={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end", mb: 4 }}>
+
+            <Box
+              sx={{
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "flex-end",
+                mb: 4,
+              }}
+            >
               <Typography variant="subtitle1">Total a entregar</Typography>
               <Typography variant="h2" color="primary.main">
                 ${calculatedCOP.toLocaleString("es-CO")}
@@ -317,7 +427,13 @@ export function CurrencyExchangeForm() {
                 fullWidth
                 size="medium"
                 onClick={handleMakeTransaction}
-                disabled={!foundCustomer || foundCustomer.status === "Reportado" || !amountUSD || calculatedCOP <= 0 || loadingConversion}
+                disabled={
+                  !foundCustomer ||
+                  foundCustomer.status === "Reportado" ||
+                  !amountUSD ||
+                  calculatedCOP <= 0 ||
+                  loadingConversion
+                }
               >
                 Confirmar Transacción
               </Button>
@@ -339,7 +455,11 @@ export function CurrencyExchangeForm() {
         open={receiptModalOpen}
         onClose={() => setReceiptModalOpen(false)}
         transaction={lastTransaction || null}
-        customerName={foundCustomer ? `${foundCustomer.first_name} ${foundCustomer.first_surname || ""}`.trim() : ""}
+        customerName={
+          foundCustomer
+            ? `${foundCustomer.first_name} ${foundCustomer.first_surname || ""}`.trim()
+            : ""
+        }
       />
     </Box>
   );

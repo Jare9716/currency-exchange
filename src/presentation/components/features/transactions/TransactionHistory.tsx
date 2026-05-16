@@ -26,17 +26,12 @@ import { Transaction } from "@/domain/Transaction";
 import { TextField } from "@/presentation/components/ui/TextField/TextField";
 
 export function TransactionHistory() {
-  const { 
-    transactions, 
-    total, 
-    page, 
-    size, 
-    isLoading, 
-    fetchTransactions 
-  } = useTransactionsStore();
+  const { transactions, total, page, size, isLoading, fetchTransactions } =
+    useTransactionsStore();
 
   const [localLoading, setLocalLoading] = useState(false);
-  const [selectedTransaction, setSelectedTransaction] = useState<Transaction | null>(null);
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<Transaction | null>(null);
   const [receiptModalOpen, setReceiptModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
@@ -44,7 +39,11 @@ export function TransactionHistory() {
     const handler = setTimeout(async () => {
       setLocalLoading(true);
       try {
-        await fetchTransactions({ ticket_number: searchQuery, page: 1, size: size });
+        await fetchTransactions({
+          ticket_number: searchQuery,
+          page: 1,
+          size: size,
+        });
       } finally {
         setLocalLoading(false);
       }
@@ -56,19 +55,33 @@ export function TransactionHistory() {
   const handleRefresh = async () => {
     setLocalLoading(true);
     try {
-      await fetchTransactions({ ticket_number: searchQuery, page: 1, size: size });
+      await fetchTransactions({
+        ticket_number: searchQuery,
+        page: 1,
+        size: size,
+      });
     } finally {
       setLocalLoading(false);
     }
   };
 
   const handleChangePage = async (_: unknown, newPage: number) => {
-    await fetchTransactions({ ticket_number: searchQuery, page: newPage + 1, size: size });
+    await fetchTransactions({
+      ticket_number: searchQuery,
+      page: newPage + 1,
+      size: size,
+    });
   };
 
-  const handleChangeRowsPerPage = async (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChangeRowsPerPage = async (
+    event: React.ChangeEvent<HTMLInputElement>,
+  ) => {
     const newSize = parseInt(event.target.value, 10);
-    await fetchTransactions({ ticket_number: searchQuery, page: 1, size: newSize });
+    await fetchTransactions({
+      ticket_number: searchQuery,
+      page: 1,
+      size: newSize,
+    });
   };
 
   const handleViewTicket = (transaction: Transaction) => {
@@ -83,7 +96,9 @@ export function TransactionHistory() {
   };
 
   return (
-    <Box sx={{ width: "100%", display: "flex", flexDirection: "column", gap: 3 }}>
+    <Box
+      sx={{ width: "100%", display: "flex", flexDirection: "column", gap: 3 }}
+    >
       <Typography variant="h1" sx={{ color: "text.primary" }}>
         Historial de Transacciones
       </Typography>
@@ -126,10 +141,10 @@ export function TransactionHistory() {
           />
 
           <Tooltip title="Actualizar">
-            <IconButton 
-              onClick={handleRefresh} 
+            <IconButton
+              onClick={handleRefresh}
               disabled={isLoading || localLoading}
-              sx={{ 
+              sx={{
                 color: "primary.main",
                 border: "1px solid",
                 borderColor: "divider",
@@ -158,21 +173,33 @@ export function TransactionHistory() {
                 zIndex: 2,
               }}
             >
-              <Typography variant="body2" color="text.secondary">Cargando transacciones...</Typography>
+              <Typography variant="body2" color="text.secondary">
+                Cargando transacciones...
+              </Typography>
             </Box>
           )}
 
           <Table sx={{ minWidth: 650 }}>
             <TableHead>
               <TableRow sx={{ bgcolor: "background.paper" }}>
-                <TableCell sx={{ typography: "subtitle2" }}>Fecha / Hora</TableCell>
+                <TableCell sx={{ typography: "subtitle2" }}>
+                  Fecha / Hora
+                </TableCell>
                 <TableCell sx={{ typography: "subtitle2" }}>Ticket</TableCell>
                 <TableCell sx={{ typography: "subtitle2" }}>Tipo</TableCell>
                 <TableCell sx={{ typography: "subtitle2" }}>Divisa</TableCell>
-                <TableCell sx={{ typography: "subtitle2" }} align="right">Monto Extranjero</TableCell>
-                <TableCell sx={{ typography: "subtitle2" }} align="right">Tasa</TableCell>
-                <TableCell sx={{ typography: "subtitle2" }} align="right">Total COP</TableCell>
-                <TableCell sx={{ typography: "subtitle2" }} align="center">Acciones</TableCell>
+                <TableCell sx={{ typography: "subtitle2" }} align="right">
+                  Monto Extranjero
+                </TableCell>
+                <TableCell sx={{ typography: "subtitle2" }} align="right">
+                  Tasa
+                </TableCell>
+                <TableCell sx={{ typography: "subtitle2" }} align="right">
+                  Total COP
+                </TableCell>
+                <TableCell sx={{ typography: "subtitle2" }} align="center">
+                  Acciones
+                </TableCell>
               </TableRow>
             </TableHead>
 
@@ -196,15 +223,21 @@ export function TransactionHistory() {
                     </TableCell>
                     <TableCell>
                       <Chip
-                        label={tx.transaction_type === "buy" ? "Compra" : "Venta"}
-                        color={tx.transaction_type === "buy" ? "success" : "info"}
+                        label={
+                          tx.transaction_type === "buy" ? "Compra" : "Venta"
+                        }
+                        color={
+                          tx.transaction_type === "buy" ? "success" : "info"
+                        }
                         size="small"
                         variant="outlined"
                       />
                     </TableCell>
                     <TableCell>{tx.iso_code}</TableCell>
                     <TableCell align="right">
-                      {parseFloat(tx.foreign_amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      {parseFloat(tx.foreign_amount).toLocaleString(undefined, {
+                        minimumFractionDigits: 2,
+                      })}
                     </TableCell>
                     <TableCell align="right">
                       {parseFloat(tx.exchange_rate).toLocaleString()}
@@ -214,7 +247,10 @@ export function TransactionHistory() {
                     </TableCell>
                     <TableCell align="center">
                       <Tooltip title="Ver Ticket">
-                        <IconButton size="small" onClick={() => handleViewTicket(tx)}>
+                        <IconButton
+                          size="small"
+                          onClick={() => handleViewTicket(tx)}
+                        >
                           <ReceiptIcon fontSize="small" />
                         </IconButton>
                       </Tooltip>
@@ -245,7 +281,11 @@ export function TransactionHistory() {
         open={receiptModalOpen}
         onClose={() => setReceiptModalOpen(false)}
         transaction={selectedTransaction}
-        customerName={selectedTransaction ? `ID: ${selectedTransaction.customer_id.substring(0, 8)}...` : ""}
+        customerName={
+          selectedTransaction
+            ? `ID: ${selectedTransaction.customer_id.substring(0, 8)}...`
+            : ""
+        }
       />
     </Box>
   );

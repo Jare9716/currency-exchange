@@ -37,11 +37,12 @@ export const useTransactionsStore = create<TransactionsState>()(
           set({ isLoading: false });
         }
       },
-      resetTransactions: () => set({ transactions: [], total: 0, page: 1, isLoading: false }),
+      resetTransactions: () =>
+        set({ transactions: [], total: 0, page: 1, isLoading: false }),
     }),
     {
       name: "transactions-storage",
       storage: createJSONStorage(() => localStorage),
-    }
-  )
+    },
+  ),
 );
