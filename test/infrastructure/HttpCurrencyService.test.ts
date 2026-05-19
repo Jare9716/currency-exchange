@@ -1,5 +1,6 @@
 import { HttpCurrencyService } from '@/infrastructure/HttpCurrencyService';
 import { HttpClient } from '@/infrastructure/http/HttpClient';
+import { DomainError } from '@/domain/Errors';
 
 jest.mock('@/infrastructure/http/HttpClient');
 
@@ -34,7 +35,9 @@ describe('HttpCurrencyService', () => {
     };
     (HttpClient.get as jest.Mock).mockResolvedValue(mockResponse);
  
-    await expect(service.getExchangeRate('USD')).rejects.toThrow('Currency USD not found');
+    await expect(service.getExchangeRate('USD')).rejects.toThrow(
+      new DomainError('exchange_rate_unavailable', 'Exchange rate for currency USD is currently unavailable')
+    );
   });
  
   it('should convert currency using fetched rate', async () => {
