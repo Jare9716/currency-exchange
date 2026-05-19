@@ -15,48 +15,36 @@ import {
   TablePagination,
   IconButton,
   Tooltip,
-  InputAdornment,
 } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import ReceiptIcon from "@mui/icons-material/Receipt";
-import SearchIcon from "@mui/icons-material/Search";
 import { useTransactionsStore } from "@/presentation/stores/transactions.store";
+import { useNotificationStore } from "@/presentation/stores/notification.store";
 import { TransactionReceiptModal } from "@/presentation/components/features/exchange/TransactionReceiptModal";
 import { Transaction } from "@/domain/Transaction";
-import { TextField } from "@/presentation/components/ui/TextField/TextField";
+import { customerRepository } from "@/infrastructure/http/HttpCustomerRepository";
 
 export function TransactionHistory() {
-  const { transactions, total, page, size, isLoading, fetchTransactions } =
+  const { showNotification } = useNotificationStore();
+  const { transactions, total, page, size, isLoading, fetchError, fetchTransactions } =
     useTransactionsStore();
 
   const [localLoading, setLocalLoading] = useState(false);
   const [selectedTransaction, setSelectedTransaction] =
-    useState<Transaction | null>(null);
+    useState<Transaction | undefined>(undefined);
   const [receiptModalOpen, setReceiptModalOpen] = useState(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCustomerName, setSelectedCustomerName] = useState("");
 
   useEffect(() => {
-    const handler = setTimeout(async () => {
-      setLocalLoading(true);
-      try {
-        await fetchTransactions({
-          ticket_number: searchQuery,
-          page: 1,
-          size: size,
-        });
-      } finally {
-        setLocalLoading(false);
-      }
-    }, 400);
-
-    return () => clearTimeout(handler);
-  }, [searchQuery, fetchTransactions, size]);
+    setLocalLoading(true);
+    fetchTransactions({ page: 1, size })
+      .finally(() => setLocalLoading(false));
+  }, [fetchTransactions, size]);
 
   const handleRefresh = async () => {
     setLocalLoading(true);
     try {
       await fetchTransactions({
-        ticket_number: searchQuery,
         page: 1,
         size: size,
       });
@@ -67,7 +55,6 @@ export function TransactionHistory() {
 
   const handleChangePage = async (_: unknown, newPage: number) => {
     await fetchTransactions({
-      ticket_number: searchQuery,
       page: newPage + 1,
       size: size,
     });
@@ -78,15 +65,30 @@ export function TransactionHistory() {
   ) => {
     const newSize = parseInt(event.target.value, 10);
     await fetchTransactions({
-      ticket_number: searchQuery,
       page: 1,
       size: newSize,
     });
   };
 
-  const handleViewTicket = (transaction: Transaction) => {
+  const handleViewTicket = async (transaction: Transaction) => {
     setSelectedTransaction(transaction);
     setReceiptModalOpen(true);
+    setSelectedCustomerName("Cargando...");
+    try {
+      const customer = await customerRepository.findById(transaction.customer_id);
+      setSelectedCustomerName(
+        customer
+          ? `${customer.first_name} ${customer.first_surname || ""}`.trim()
+          : `ID: ${transaction.customer_id.substring(0, 8)}...`
+      );
+    } catch (e) {
+      showNotification(
+        "No se pudo cargar el nombre del cliente para el recibo. Mostrando ID en su lugar.",
+        "warning",
+        "Información incompleta"
+      );
+      setSelectedCustomerName(`ID: ${transaction.customer_id.substring(0, 8)}...`);
+    }
   };
 
   const formatDate = (dateStr?: string | Date) => {
@@ -117,29 +119,10 @@ export function TransactionHistory() {
           sx={{
             p: 3,
             display: "flex",
-            gap: 2,
+            justifyContent: "flex-end",
             alignItems: "center",
           }}
         >
-          <TextField
-            placeholder="Buscar por número de ticket"
-            variant="outlined"
-            label="Buscar"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            slotProps={{
-              inputLabel: { shrink: true },
-              input: {
-                startAdornment: (
-                  <InputAdornment position="start">
-                    <SearchIcon sx={{ color: "text.secondary" }} />
-                  </InputAdornment>
-                ),
-              },
-            }}
-            sx={{ flex: 1 }}
-          />
-
           <Tooltip title="Actualizar">
             <IconButton
               onClick={handleRefresh}
@@ -157,6 +140,21 @@ export function TransactionHistory() {
         </Box>
 
         <TableContainer sx={{ position: "relative", minHeight: 200 }}>
+          {fetchError && (
+            <Box
+              sx={{
+                p: 3,
+                textAlign: "center",
+                bgcolor: "error.lighter",
+                color: "error.main",
+                borderBottom: "1px solid",
+                borderColor: "divider",
+              }}
+            >
+              <Typography variant="body2">{fetchError}</Typography>
+            </Box>
+          )}
+
           {(isLoading || localLoading) && (
             <Box
               sx={{
@@ -281,11 +279,7 @@ export function TransactionHistory() {
         open={receiptModalOpen}
         onClose={() => setReceiptModalOpen(false)}
         transaction={selectedTransaction}
-        customerName={
-          selectedTransaction
-            ? `ID: ${selectedTransaction.customer_id.substring(0, 8)}...`
-            : ""
-        }
+        customerName={selectedCustomerName}
       />
     </Box>
   );

@@ -17,6 +17,7 @@ import {
   IconButton,
   Tooltip,
   InputAdornment,
+  Alert,
 } from "@mui/material";
 import PersonIcon from "@mui/icons-material/Person";
 import BusinessIcon from "@mui/icons-material/Business";
@@ -27,13 +28,15 @@ import { Customer } from "@/domain/Customer";
 import { useCustomersStore } from "@/presentation/stores/customers.store";
 import { Button } from "@/presentation/components/ui/Button/Button";
 import { TextField } from "@/presentation/components/ui/TextField/TextField";
+import { useNotificationStore } from "@/presentation/stores/notification.store";
 
 export function CustomerList() {
-  const { customers, total, page, size, setCustomers, fetchCustomers } =
+  const { customers, total, page, size, fetchError, fetchCustomers } =
     useCustomersStore();
+  const { showNotification } = useNotificationStore();
 
   const [modalOpen, setModalOpen] = useState(false);
-  const [customerToEdit, setCustomerToEdit] = useState<Customer | null>(null);
+  const [customerToEdit, setCustomerToEdit] = useState<Customer | undefined>(undefined);
   const [searchQuery, setSearchQuery] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
@@ -44,14 +47,15 @@ export function CustomerList() {
       try {
         await fetchCustomers({ name: searchQuery, page: 1, size: size });
       } catch (error) {
-        console.error("Error searching customers:", error);
+        const errMsg = error instanceof Error ? error.message : "Error al buscar clientes";
+        showNotification(errMsg, "error", "Error de Búsqueda");
       } finally {
         setIsLoading(false);
       }
     }, 400);
 
     return () => clearTimeout(handler);
-  }, [searchQuery, fetchCustomers, size]);
+  }, [searchQuery, fetchCustomers, size, showNotification]);
 
   const handleChangePage = async (_: unknown, newPage: number) => {
     setIsLoading(true);
@@ -79,7 +83,7 @@ export function CustomerList() {
   };
 
   const handleOpenCreateModal = () => {
-    setCustomerToEdit(null);
+    setCustomerToEdit(undefined);
     setModalOpen(true);
   };
 
@@ -88,24 +92,17 @@ export function CustomerList() {
     setModalOpen(true);
   };
 
-  const handleSaveCustomer = (savedCustomer: Customer) => {
+  const handleSaveCustomer = async () => {
     setModalOpen(false);
-
-    // Si era edición, actualizar en la lista actual sin recargar todo.
-    // Idealmente haríamos un re-fetch si el sort importa, pero por UX rápida actualizamos local.
-    setCustomers((prev) => {
-      const isExisting = prev.some(
-        (c) => c.document_number === savedCustomer.document_number,
-      );
-      if (isExisting) {
-        return prev.map((c) =>
-          c.document_number === savedCustomer.document_number
-            ? savedCustomer
-            : c,
-        );
-      }
-      return [savedCustomer, ...prev];
-    });
+    setIsLoading(true);
+    try {
+      await fetchCustomers({ name: searchQuery, page: page, size: size });
+    } catch (error) {
+      const errMsg = error instanceof Error ? error.message : "Error al recargar clientes";
+      showNotification(errMsg, "error", "Error de Recarga");
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const getStatusColor = (status?: string) => {
@@ -128,6 +125,12 @@ export function CustomerList() {
       <Typography variant="h1" sx={{ color: "text.primary" }}>
         Clientes
       </Typography>
+
+      {fetchError && (
+        <Alert severity="error" sx={{ border: "1px solid", borderColor: "error.main" }}>
+          {fetchError}
+        </Alert>
+      )}
 
       <Paper
         sx={{

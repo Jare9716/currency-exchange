@@ -23,7 +23,6 @@ import { Customer } from "@/domain/Customer";
 import { ValidateClintonList } from "@/use-cases/ValidateClintonList";
 import { clintonListService } from "@/infrastructure/HttpClintonListService";
 import { customerRepository } from "@/infrastructure/http/HttpCustomerRepository";
-import { to } from "@/utils/async";
 import { ApiError } from "@/domain/Errors";
 import { useNotificationStore } from "@/presentation/stores/notification.store";
 
@@ -31,8 +30,10 @@ interface CustomerModalProps {
   open: boolean;
   onClose: () => void;
   onSave: (customer: Customer) => void;
-  customerToEdit?: Customer | null;
+  customerToEdit?: Customer | undefined;
 }
+
+const validateClintonList = new ValidateClintonList(clintonListService);
 
 export function CustomerModal({
   open,
@@ -95,7 +96,6 @@ export function CustomerModal({
     name: string,
     documentNumber: string,
   ): Promise<boolean> => {
-    const validateClintonList = new ValidateClintonList(clintonListService);
     return await validateClintonList.execute(name, documentNumber);
   };
 
@@ -124,50 +124,50 @@ export function CustomerModal({
       return;
     }
 
-    const fullName =
-      `${formData.first_name} ${formData.first_surname || ""}`.trim();
-    // En modo edición podríamos saltarnos la lista clinton o re-validar. Lo mantenemos seguro.
-    const isListed = await getClintonStatus(fullName, formData.document_number);
-
-    const customerData: Customer = {
-      ...(customerToEdit || {}), // Conservar ID si existe
-      ...formData,
-      customer_type: "customer",
-      isClintonListed: isListed,
-      status: isListed ? "Reportado" : "Activo",
-    };
-
     setIsSubmitting(true);
-    // Asumimos que customerRepository.save() hace upsert (crear o actualizar según si hay ID/Documento)
-    const [err] = await to(customerRepository.save(customerData));
-    setIsSubmitting(false);
+    try {
+      const fullName =
+        `${formData.first_name} ${formData.first_surname || ""}`.trim();
+      // In edit mode we could skip the sanctions list check, but we keep it enabled for safety.
+      const isListed = await getClintonStatus(fullName, formData.document_number);
 
-    if (err) {
+      const customerData: Customer = {
+        ...(customerToEdit || {}), // Preserve ID if it exists
+        ...formData,
+        customer_type: "customer",
+        isClintonListed: isListed,
+        status: isListed ? "Reportado" : "Activo",
+      };
+
+      // Save the customer in the repository (the backend endpoint handles the create or update operation appropriately)
+      await customerRepository.save(customerData);
+
+      showNotification(
+        `El cliente ha sido ${isEditMode ? "actualizado" : "creado"} exitosamente`,
+        "success",
+        `Cliente ${isEditMode ? "actualizado" : "creado"}`,
+      );
+      onSave(customerData);
+      if (!isEditMode) {
+        setFormData(defaultFormData);
+      }
+    } catch (err) {
       if (err instanceof ApiError) {
         showNotification(
-          err.detail ||
+          err.detail ??
             `Error al ${isEditMode ? "actualizar" : "crear"} el cliente`,
           "error",
           `Error al ${isEditMode ? "actualizar" : "crear"} cliente`,
         );
       } else {
         showNotification(
-          `Error de conexión al ${isEditMode ? "actualizar" : "crear"} cliente`,
+          `Error al ${isEditMode ? "actualizar" : "crear"} cliente: falló la verificación de la Lista Clinton o la base de datos`,
           "error",
-          "Error de conexión",
+          "Error de guardado",
         );
       }
-      return;
-    }
-
-    showNotification(
-      `El cliente ha sido ${isEditMode ? "actualizado" : "creado"} exitosamente`,
-      "success",
-      `Cliente ${isEditMode ? "actualizado" : "creado"}`,
-    );
-    onSave(customerData);
-    if (!isEditMode) {
-      setFormData(defaultFormData);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 

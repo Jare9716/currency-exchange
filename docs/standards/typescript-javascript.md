@@ -20,6 +20,13 @@ Use the `@/` prefix to reference the `src/` directory. This avoids complex relat
 - `import { User } from '@/domain/User'`
 - `import { LoginForm } from '@/presentation/components/LoginForm'`
 
+### Language and Comments Boundary
+
+We enforce a strict separation between technical codebase syntax and user-facing copy:
+
+- **Codebase in English:** All developer-facing codebase elements—including code comments, JSX block annotations (`{/* */}`), documentation files (`.md`), JSDocs, variable names, function signatures, and technical remarks—MUST be written strictly in **English**.
+- **UI in Spanish:** Spanish is exclusively reserved for end-user-facing text (e.g., component labels, UI buttons, placeholders, alert notifications, and error descriptions). Never mix Spanish sentences into codebase comments or diagnostic technical logs.
+
 ---
 
 ## Testing Standards
@@ -108,6 +115,14 @@ assert(typeof value === "string", "my value is not a string", { value });
 // TypeScript infers that value is a string at this point
 ```
 
+**No Mock Financial/Sensitive Fallbacks:**
+- **Zero Stale Assumptions:** Never hardcode default fallbacks or assume static rates/prices if live transaction-critical APIs (such as TRM, currency inventory, compliance checks) fail or are offline.
+- **Fail-Closed Strategy:** Financial and compliance operations must fail-closed. If data cannot be retrieved, throw a descriptive, user-facing error to block the transaction immediately and prevent financial liability.
+
+**No Console Logs in Production:**
+- **Telemetry Separation:** Never check in generic, unstructured `console.log`, `console.warn`, or `console.error` debug statements inside production-bound application files.
+- **Propagation:** Propagate standard errors or use proper boundary error components (e.g. React Error Boundaries) to handle UI failure recovery.
+
 ---
 
 ## TypeScript Best Practices
@@ -161,6 +176,14 @@ function start<TValue, TAnother>() {}
 const myValue: number = "clearly a string";
 ```
 
+### Avoid `eslint-disable` Comments
+
+Avoid using `eslint-disable`, `eslint-disable-line`, or `eslint-disable-next-line` comments unless it is absolutely, 100% necessary (such as in external third-party legacy wrappers).
+
+Instead of disabling the rules:
+- If a parameter is unused, either utilize it robustly (e.g., in a validation assertion, logging, or error-throwing guard clause) or restructure the function signature.
+- Fix the underlying type structure or code logic rather than suppressing warnings.
+
 ### Always Validate/Parse External Data
 
 - Responses from external calls (API)
@@ -208,6 +231,9 @@ const themeConfig = {
 
 ## Zod Advanced Patterns
 
+> [!NOTE]
+> This project has been upgraded to **Zod v4**. In Zod v4, the standard `.passthrough()` method for objects has been replaced by `.loose()`. Always use `.loose()` to allow additional properties from external responses without throwing validation errors.
+
 ### `.transform()` for API Response Mapping
 
 ```typescript
@@ -229,6 +255,19 @@ const passwordSchema = z.string().refine((val) => val.length >= 8, {
   message: "Password must be at least 8 characters long",
 });
 ```
+
+### `.nullish().transform()` for API Response Null Safety
+
+When consuming API data from backend systems, optional fields may return `null` instead of `undefined`. Since our domain layer strictly forbids `null`, use `.nullish().transform(val => val ?? undefined)` inside infrastructure API schemas to normalize the data cleanly at the boundary:
+
+```typescript
+// Private API Schema in infrastructure repo
+const apiCustomerSchema = z.object({
+  id: z.string(),
+  phone: z.string().nullish().transform((val) => val ?? undefined),
+});
+```
+
 
 ---
 

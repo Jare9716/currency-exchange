@@ -39,7 +39,6 @@ export interface PaginatedTransactions {
 
 export interface TransactionRepository {
   save(payload: CreateTransactionPayload): Promise<Transaction>;
-  findByCustomerId(customerId: string): Promise<Transaction[]>;
   findAll(filters?: {
     page?: number;
     size?: number;
@@ -47,5 +46,6 @@ export interface TransactionRepository {
     iso_code?: string;
     start_date?: string;
     end_date?: string;
+    customer_id?: string;
   }): Promise<PaginatedTransactions>;
 }

@@ -2,7 +2,7 @@
 
 import { createTheme } from "@mui/material/styles";
 
-const theme = createTheme({
+export const theme = createTheme({
   palette: {
     primary: {
       main: "#1976d2", // components/button/primary
@@ -43,6 +43,11 @@ const theme = createTheme({
     },
     h3: {
       fontSize: "16px", // font/size/md
+      fontWeight: 500,
+      letterSpacing: "0.15px",
+    },
+    h4: {
+      fontSize: "20px",
       fontWeight: 500,
       letterSpacing: "0.15px",
     },
@@ -100,4 +105,3 @@ const theme = createTheme({
   },
 });
 
-export default theme;

@@ -18,6 +18,8 @@ import PersonIcon from "@mui/icons-material/Person";
 import SettingsIcon from "@mui/icons-material/Settings";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/presentation/stores/auth.store";
+import { useCustomersStore } from "@/presentation/stores/customers.store";
+import { useTransactionsStore } from "@/presentation/stores/transactions.store";
 
 export function Header() {
   const router = useRouter();
@@ -36,6 +38,8 @@ export function Header() {
   const handleLogout = () => {
     handleMenuClose();
     clearTokens();
+    useCustomersStore.getState().resetCustomers();
+    useTransactionsStore.getState().resetTransactions();
     router.push("/login");
   };
 

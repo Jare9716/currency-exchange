@@ -10,6 +10,8 @@ import { useAuthStore } from "@/presentation/stores/auth.store";
 import { to } from "@/utils/async";
 import { ApiError } from "@/domain/Errors";
 
+const authenticateUser = new AuthenticateUser(authService);
+
 export function useLoginForm() {
   const router = useRouter();
   const [formData, setFormData] = useState<LoginFormData>({
@@ -61,7 +63,6 @@ export function useLoginForm() {
     }
 
     // 2. Call Use Case
-    const authenticateUser = new AuthenticateUser(authService);
     const [err, tokens] = await to(
       authenticateUser.execute({
         email: validation.data.email,
@@ -73,7 +74,7 @@ export function useLoginForm() {
 
     if (err) {
       if (err instanceof ApiError) {
-        setGeneralError(err.detail || "Credenciales inválidas");
+        setGeneralError(err.detail ?? "Credenciales inválidas");
       } else {
         setGeneralError("Error de conexión al iniciar sesión");
       }
@@ -83,7 +84,7 @@ export function useLoginForm() {
     // Success! Redirect to dashboard
     if (tokens) {
       useAuthStore.getState().setTokens(tokens.accessToken, tokens.refreshToken);
-      router.push("/dashboard/customers");
+      router.push("/dashboard/transactions");
     }
   };
 

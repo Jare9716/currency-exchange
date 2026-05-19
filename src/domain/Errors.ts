@@ -24,7 +24,8 @@ export class ApiError extends Error {
 export type ErrorCode =
   | "validation_error"
   | "internal_error"
-  | "unauthorized";
+  | "unauthorized"
+  | "exchange_rate_unavailable";
 
 export class DomainError extends Error {
   constructor(

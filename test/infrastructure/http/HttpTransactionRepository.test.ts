@@ -21,7 +21,12 @@ describe('HttpTransactionRepository', () => {
     };
 
     const mockResponse = {
-      json: jest.fn().mockResolvedValue({ id: 'txn-1', ...payload }),
+      json: jest.fn().mockResolvedValue({
+        id: 'txn-1',
+        ...payload,
+        exchange_rate: '4000',
+        cop_amount: '400000',
+      }),
     };
     (HttpClient.post as jest.Mock).mockResolvedValue(mockResponse);
 
@@ -31,24 +36,10 @@ describe('HttpTransactionRepository', () => {
     expect(result.id).toBe('txn-1');
   });
 
-  it('should find transactions by customer id', async () => {
-    const customerId = 'cust-1';
-    const mockResponse = {
-      json: jest.fn().mockResolvedValue({ items: [{ id: 'txn-1' }] }),
-    };
-    (HttpClient.get as jest.Mock).mockResolvedValue(mockResponse);
-
-    const result = await repository.findByCustomerId(customerId);
-
-    expect(HttpClient.get).toHaveBeenCalledWith(`/api/v1/fx/transactions?customer_id=${customerId}`);
-    expect(result.length).toBe(1);
-    expect(result[0].id).toBe('txn-1');
-  });
-
   it('should fetch all transactions with filters', async () => {
     const filters = { page: 1, size: 10 };
     const mockResponse = {
-      json: jest.fn().mockResolvedValue({ items: [], total: 0 }),
+      json: jest.fn().mockResolvedValue({ items: [], total: 0, page: 1, size: 10 }),
     };
     (HttpClient.get as jest.Mock).mockResolvedValue(mockResponse);
 
