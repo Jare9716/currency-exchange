@@ -9,7 +9,6 @@ describe('ExecuteTransaction', () => {
   beforeEach(() => {
     transactionRepository = {
       save: jest.fn(),
-      findByCustomerId: jest.fn(),
       findAll: jest.fn(),
     } as unknown as jest.Mocked<TransactionRepository>;
     executeTransaction = new ExecuteTransaction(transactionRepository);

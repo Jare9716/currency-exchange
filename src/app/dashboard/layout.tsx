@@ -2,6 +2,7 @@ import { Sidebar } from "@/presentation/components/layout/Sidebar";
 import { Header } from "@/presentation/components/layout/Header";
 import { Footer } from "@/presentation/components/layout/Footer";
 import { Box } from "@mui/material";
+import { AuthGuard } from "@/presentation/components/features/auth/AuthGuard";
 
 export default function DashboardLayout({
   children,
@@ -9,17 +10,18 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        height: "100vh", // Force total viewport height
-        width: "100vw",
-        bgcolor: "background.default",
-        overflow: "hidden", // Disable global scroll
-      }}
-    >
-      <Header />
+    <AuthGuard>
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          height: "100vh", // Force total viewport height
+          width: "100vw",
+          bgcolor: "background.default",
+          overflow: "hidden", // Disable global scroll
+        }}
+      >
+        <Header />
       
       <Box
         sx={{
@@ -53,5 +55,6 @@ export default function DashboardLayout({
         </Box>
       </Box>
     </Box>
+    </AuthGuard>
   );
 }

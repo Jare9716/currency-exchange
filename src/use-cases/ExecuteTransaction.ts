@@ -7,9 +7,10 @@ export class ExecuteTransaction {
   async execute(
     customerId: string,
     amountUSD: number,
+    description?: string,
   ): Promise<Transaction> {
     if (amountUSD <= 0) {
-      throw new DomainError("validation_error", "Transaction amount must be strictly positive");
+      throw new DomainError("validation_error", "El monto de la transacción debe ser estrictamente positivo");
     }
 
     const transaction = await this.transactionRepository.save({
@@ -17,7 +18,7 @@ export class ExecuteTransaction {
       transaction_type: "buy", // Assuming buy for now based on USD -> COP flow
       iso_code: "USD",
       foreign_amount: amountUSD.toString(),
-      description: "Exchange via frontend",
+      description: description ?? "Exchange via frontend",
     });
 
     return transaction;

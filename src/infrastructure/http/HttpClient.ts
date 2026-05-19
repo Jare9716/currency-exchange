@@ -2,8 +2,14 @@ import { useAuthStore } from "@/presentation/stores/auth.store";
 import { ApiError, apiErrorSchema } from "@/domain/Errors";
 import { API_BASE_URL } from "@/config";
 import { to } from "@/utils/async";
+import { z } from "zod";
 
 const BASE_URL = API_BASE_URL;
+
+const apiRefreshResponseSchema = z.object({
+  access_token: z.string(),
+  refresh_token: z.string(),
+});
 
 type FetchOptions = RequestInit & {
   requireAuth?: boolean;
@@ -13,12 +19,66 @@ async function handleResponse(
   response: Response,
   url: string,
   options: FetchOptions,
-  headers: Headers
+  headers: Headers,
 ): Promise<Response> {
   if (response.ok) {
     return response;
   }
 
+  // 1. Check for Unauthorized / Token Expired (HTTP 401)
+  if (response.status === 401 && options.requireAuth) {
+    const state = useAuthStore.getState();
+
+    if (state.refreshToken) {
+      const refreshResponse = await fetch(`${BASE_URL}/api/v1/auth/refresh`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ refresh_token: state.refreshToken }),
+      });
+
+      if (refreshResponse.ok) {
+        const newTokensRaw = await refreshResponse.json();
+        const parsedTokens = apiRefreshResponseSchema.safeParse(newTokensRaw);
+
+        if (parsedTokens.success) {
+          state.setTokens(parsedTokens.data.access_token, parsedTokens.data.refresh_token);
+
+          // Retry original request with new token
+          headers.set("Authorization", `Bearer ${parsedTokens.data.access_token}`);
+          const retriedResponse = await fetch(url, { ...options, headers });
+
+          if (retriedResponse.ok) {
+            return retriedResponse;
+          }
+
+          // If retry also failed, update response to retriedResponse so it gets parsed below
+          response = retriedResponse;
+        } else {
+          // Refresh response parsed incorrectly — clear tokens and expire session
+          state.clearTokens();
+          if (typeof window !== "undefined") {
+            window.dispatchEvent(new CustomEvent("session:expired"));
+          }
+        }
+      } else {
+        // Refresh failed (refresh token expired/revoked)
+        state.clearTokens();
+        if (typeof window !== "undefined") {
+          window.dispatchEvent(new CustomEvent("session:expired"));
+        }
+      }
+    } else {
+      // No refresh token available
+      state.clearTokens();
+      if (typeof window !== "undefined") {
+        window.dispatchEvent(new CustomEvent("session:expired"));
+      }
+    }
+  }
+
+  // 2. Parse response body for errors
   const [jsonErr, parsedJson] = await to(response.json());
   const errorData = jsonErr ? {} : parsedJson;
   const parsedError = apiErrorSchema.safeParse(errorData);
@@ -26,43 +86,48 @@ async function handleResponse(
   if (parsedError.success) {
     const apiErr = parsedError.data;
 
-    // Refresh Token Interceptor
+    // Refresh Token Interceptor (fallback check in case TOKEN_INVALID code is returned on a different status)
     if (apiErr.error_code === "TOKEN_INVALID" && options.requireAuth) {
       const state = useAuthStore.getState();
 
       if (state.refreshToken) {
         const refreshResponse = await fetch(`${BASE_URL}/api/v1/auth/refresh`, {
           method: "POST",
-          headers: { 
+          headers: {
             "Content-Type": "application/json",
-            "ngrok-skip-browser-warning": "true"
           },
           body: JSON.stringify({ refresh_token: state.refreshToken }),
         });
 
         if (refreshResponse.ok) {
-          const newTokens = await refreshResponse.json();
-          state.setTokens(newTokens.access_token, newTokens.refresh_token);
+          const newTokensRaw = await refreshResponse.json();
+          const parsedTokens = apiRefreshResponseSchema.safeParse(newTokensRaw);
 
-          // Retry original request with new token
-          headers.set("Authorization", `Bearer ${newTokens.access_token}`);
-          const retriedResponse = await fetch(url, { ...options, headers });
+          if (parsedTokens.success) {
+            state.setTokens(parsedTokens.data.access_token, parsedTokens.data.refresh_token);
 
-          if (retriedResponse.ok) {
-            return retriedResponse;
-          }
+            // Retry original request with new token
+            headers.set("Authorization", `Bearer ${parsedTokens.data.access_token}`);
+            const retriedResponse = await fetch(url, { ...options, headers });
 
-          const [retryJsonErr, retryParsedJson] = await to(retriedResponse.json());
-          const retriedErrorData = retryJsonErr ? {} : retryParsedJson;
-          const retriedParsedError = apiErrorSchema.safeParse(retriedErrorData);
+            if (retriedResponse.ok) {
+              return retriedResponse;
+            }
 
-          if (retriedParsedError.success) {
-            throw new ApiError(
-              retriedParsedError.data.status_code,
-              retriedParsedError.data.error_code,
-              retriedParsedError.data.detail,
-              retriedParsedError.data.hint
+            const [retryJsonErr, retryParsedJson] = await to(
+              retriedResponse.json(),
             );
+            const retriedErrorData = retryJsonErr ? {} : retryParsedJson;
+            const retriedParsedError = apiErrorSchema.safeParse(retriedErrorData);
+
+            if (retriedParsedError.success) {
+              throw new ApiError(
+                retriedParsedError.data.status_code,
+                retriedParsedError.data.error_code,
+                retriedParsedError.data.detail,
+                retriedParsedError.data.hint,
+              );
+            }
           }
         }
       }
@@ -79,15 +144,32 @@ async function handleResponse(
       apiErr.status_code,
       apiErr.error_code,
       apiErr.detail,
-      apiErr.hint
+      apiErr.hint,
     );
   }
 
-  // Unknown error structure
-  throw new Error(errorData.message || "An unknown error occurred");
+  // 3. Fallback for non-standard or FastAPI-specific validation / HTTP exceptions
+  let detailMessage = "An unknown error occurred";
+  if (errorData && typeof errorData === "object") {
+    const errObj = errorData as Record<string, unknown>;
+    if (typeof errObj.detail === "string") {
+      detailMessage = errObj.detail;
+    } else if (Array.isArray(errObj.detail)) {
+      detailMessage = (errObj.detail as Array<{ loc?: string[]; msg?: string }>)
+        .map((err) => `${err.loc?.join(".") || "field"}: ${err.msg || "invalid value"}`)
+        .join("; ");
+    } else if (errObj.message) {
+      detailMessage = String(errObj.message);
+    }
+  }
+
+  throw new Error(detailMessage);
 }
 
-async function request(url: string, options: FetchOptions = {}): Promise<Response> {
+async function request(
+  url: string,
+  options: FetchOptions = {},
+): Promise<Response> {
   const { requireAuth = true, ...init } = options;
   const headers = new Headers(init.headers);
 
@@ -106,16 +188,19 @@ async function request(url: string, options: FetchOptions = {}): Promise<Respons
     headers.set("Accept", "application/json");
   }
 
-  headers.set("ngrok-skip-browser-warning", "true");
-
   const requestUrl = url.startsWith("http") ? url : `${BASE_URL}${url}`;
   const response = await fetch(requestUrl, { ...init, headers });
 
-  return handleResponse(response, requestUrl, { ...options, requireAuth }, headers);
+  return handleResponse(
+    response,
+    requestUrl,
+    { ...options, requireAuth },
+    headers,
+  );
 }
 
 const prepareBody = (body?: unknown) => {
-  if (body === undefined || body === null) return undefined;
+  if (body == null) return undefined;
   if (body instanceof FormData) return body;
   return JSON.stringify(body);
 };

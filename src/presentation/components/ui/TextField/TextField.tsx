@@ -1,3 +1,4 @@
+import { useId } from "react";
 import {
   TextField as MuiTextField,
   TextFieldProps as MuiTextFieldProps,
@@ -8,6 +9,7 @@ export type TextFieldProps = MuiTextFieldProps & {
 };
 
 export function TextField({
+  id,
   variant = "outlined",
   size = "small",
   fullWidth = true,
@@ -15,6 +17,9 @@ export function TextField({
   sx,
   ...props
 }: TextFieldProps) {
+  const defaultId = useId();
+  const inputId = id ?? defaultId;
+
   const mergedSlotProps: MuiTextFieldProps["slotProps"] = {
     ...slotProps,
     inputLabel: {
@@ -25,6 +30,7 @@ export function TextField({
 
   return (
     <MuiTextField
+      id={inputId}
       variant={variant}
       size={size}
       fullWidth={fullWidth}

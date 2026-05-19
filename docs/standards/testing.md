@@ -7,7 +7,7 @@
 - **Focus on Behavior:** Test inputs and outputs, not implementation details.
 - **Mock selectively:** Only mock external dependencies or expensive operations.
 - **Consistent Structure:** Always mirror the `src/` directory structure in `test/`.
-- **Pre-commit / Pre-push Hooks:** Code cannot be committed if linting fails, and cannot be pushed if tests fail (enforced by Husky + lint-staged).
+- **Pre-commit / Pre-push Hooks:** Running tests locally after every tiny edit is not strictly required. However, the full test suite and linters are automated and **must run and pass on every single commit or push** to our Git service (GitHub), enforced via Husky, lint-staged, and GitHub Actions CI.
 - **Minimum Coverage:** We aim for a strict minimum of 80% coverage across the `domain/` and `use-cases/` layers. No new features should be pushed without corresponding tests.
 - **Type Safety:** Tests must be strictly typed. Using `any` in tests is just as bad as using `any` in production code.
 
@@ -92,9 +92,11 @@ src/                                test/
 
 ## After Making Changes
 
-Always run linting before considering a change complete:
+Always run linting to ensure your changes comply with code standards:
 
 ```bash
 pnpm lint
-# pnpm test
 ```
+
+> [!NOTE]
+> Running the entire unit test suite locally for minor edits is optional and not required after every tiny change. However, all tests are automatically executed and **must pass successfully** on every commit and push to GitHub (enforced via local Husky hooks and GitHub Actions CI pipelines).

@@ -15,7 +15,7 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 interface TransactionReceiptModalProps {
   open: boolean;
   onClose: () => void;
-  transaction: Transaction | null;
+  transaction: Transaction | undefined;
   customerName: string;
 }
 
@@ -25,7 +25,7 @@ export function TransactionReceiptModal({
   transaction,
   customerName,
 }: TransactionReceiptModalProps) {
-  if (!transaction) return null;
+  if (!transaction) return undefined;
 
   const handlePrint = () => {
     window.print();

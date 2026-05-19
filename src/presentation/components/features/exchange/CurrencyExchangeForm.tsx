@@ -25,9 +25,10 @@ import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import { Customer } from "@/domain/Customer";
 import { Transaction } from "@/domain/Transaction";
+import { DomainError } from "@/domain/Errors";
 import { ExecuteTransaction } from "@/use-cases/ExecuteTransaction";
 import { transactionRepository } from "@/infrastructure/http/HttpTransactionRepository";
-import { useCustomersStore } from "@/presentation/stores/customers.store";
+import { customerRepository } from "@/infrastructure/http/HttpCustomerRepository";
 import { GetExchangeRate } from "@/use-cases/GetExchangeRate";
 import { ConvertCurrency } from "@/use-cases/ConvertCurrency";
 import { ValidateClintonList } from "@/use-cases/ValidateClintonList";
@@ -36,8 +37,12 @@ import { clintonListService } from "@/infrastructure/HttpClintonListService";
 import { useNotificationStore } from "@/presentation/stores/notification.store";
 import { TransactionReceiptModal } from "./TransactionReceiptModal";
 
+const getExchangeRate = new GetExchangeRate(currencyService);
+const convertCurrency = new ConvertCurrency(currencyService);
+const validateClintonList = new ValidateClintonList(clintonListService);
+const executeTransaction = new ExecuteTransaction(transactionRepository);
+
 export function CurrencyExchangeForm() {
-  const { customers, setCustomers } = useCustomersStore();
   const { showNotification } = useNotificationStore();
 
   const [loadingRate, setLoadingRate] = useState(false);
@@ -68,17 +73,23 @@ export function CurrencyExchangeForm() {
     const fetchExchangeRate = async () => {
       try {
         setLoadingRate(true);
-        const getExchangeRate = new GetExchangeRate(currencyService);
         const rate = await getExchangeRate.execute("USD");
         setExchangeRate(rate);
       } catch (error) {
-        console.error("Error fetching exchange rate", error);
+        let errMsg = "Error al obtener tasa de cambio";
+        if (error instanceof DomainError && error.code === "exchange_rate_unavailable") {
+          const currency = (error.details?.currency as string) || "USD";
+          errMsg = `La tasa de cambio para la moneda ${currency} no está disponible en este momento`;
+        } else if (error instanceof Error) {
+          errMsg = error.message;
+        }
+        showNotification(errMsg, "error", "Error de Tasa");
       } finally {
         setLoadingRate(false);
       }
     };
     fetchExchangeRate();
-  }, []);
+  }, [showNotification]);
 
   // Handle conversion
   useEffect(() => {
@@ -90,11 +101,11 @@ export function CurrencyExchangeForm() {
     const fetchConversion = async (usd: number) => {
       try {
         setLoadingConversion(true);
-        const convertCurrency = new ConvertCurrency(currencyService);
         const cop = await convertCurrency.execute(usd, "USD", "COP");
         setCalculatedCOP(cop);
       } catch (error) {
-        console.error("Error converting currency", error);
+        const errMsg = error instanceof Error ? error.message : "Error al realizar conversión";
+        showNotification(errMsg, "error", "Error de Conversión");
       } finally {
         setLoadingConversion(false);
       }
@@ -105,7 +116,7 @@ export function CurrencyExchangeForm() {
     }, 400);
 
     return () => clearTimeout(timeout);
-  }, [amountUSD]);
+  }, [amountUSD, showNotification]);
 
   const handleCheckCustomer = async () => {
     const validation = searchCustomerSchema.safeParse({ documentInput });
@@ -119,13 +130,20 @@ export function CurrencyExchangeForm() {
     }
 
     setLookupAttempted(true);
-    const customer = customers.find(
-      (c) => c.document_number === documentInput.trim(),
-    );
-    setFoundCustomer(customer ?? undefined);
+    try {
+      const customer = await customerRepository.findByDocument(documentInput.trim());
 
-    if (customer?.first_name && customer?.document_number) {
-      const validateClintonList = new ValidateClintonList(clintonListService);
+      if (!customer) {
+        setFoundCustomer(undefined);
+        showNotification(
+          `No se encontró ningún cliente con documento ${documentInput}.`,
+          "error",
+          "Cliente no encontrado",
+        );
+        return;
+      }
+
+      // Check Clinton List
       const fullName =
         `${customer.first_name} ${customer.first_surname || ""}`.trim();
       const isListed = await validateClintonList.execute(
@@ -133,26 +151,15 @@ export function CurrencyExchangeForm() {
         customer.document_number,
       );
 
-      // Update store state
-      setCustomers((prev) =>
-        prev.map((c) =>
-          c.document_number === customer.document_number
-            ? {
-                ...c,
-                isClintonListed: isListed,
-                status: isListed ? "Reportado" : "Activo",
-              }
-            : c,
-        ),
-      );
-    }
+      const updatedCustomer: Customer = {
+        ...customer,
+        isClintonListed: isListed,
+        status: isListed ? "Reportado" : "Activo",
+      };
 
-    if (!customer) {
-      showNotification(
-        `No se encontró ningún cliente con documento ${documentInput}.`,
-        "error",
-        "Cliente no encontrado",
-      );
+      setFoundCustomer(updatedCustomer);
+    } catch (error) {
+      showNotification("Error al verificar el cliente", "error", "Error");
     }
   };
 
@@ -174,15 +181,14 @@ export function CurrencyExchangeForm() {
     }
 
     try {
-      const executeTransaction = new ExecuteTransaction(transactionRepository);
       const txn = await executeTransaction.execute(
         foundCustomer.id || foundCustomer.document_number,
         Number(amountUSD),
+        observations,
       );
 
       setLastTransaction(txn);
       handleCancel(); // Clear form
-      setLastTransaction(txn); // Keep txn for modal
       setReceiptModalOpen(true);
     } catch (error) {
       const errorMessage =
@@ -208,10 +214,10 @@ export function CurrencyExchangeForm() {
       </Typography>
 
       <Grid container spacing={3}>
-        {/* Lado Izquierdo: Formulario */}
+        {/* Left Side: Form */}
         <Grid size={{ xs: 12, md: 8 }}>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-            {/* Sección 1: Cliente */}
+            {/* Section 1: Customer */}
             <Paper
               sx={{
                 p: 3,
@@ -282,7 +288,7 @@ export function CurrencyExchangeForm() {
               )}
             </Paper>
 
-            {/* Sección 2: Montos */}
+            {/* Section 2: Amounts */}
             <Paper
               sx={{
                 p: 3,
@@ -352,7 +358,7 @@ export function CurrencyExchangeForm() {
               </Grid>
             </Paper>
 
-            {/* Sección 3: Observaciones */}
+            {/* Section 3: Observations */}
             <Paper
               sx={{
                 p: 3,
@@ -376,7 +382,7 @@ export function CurrencyExchangeForm() {
           </Box>
         </Grid>
 
-        {/* Lado Derecho: Resumen y Acciones */}
+        {/* Right Side: Summary and Actions */}
         <Grid size={{ xs: 12, md: 4 }}>
           <Paper
             sx={{
@@ -454,7 +460,7 @@ export function CurrencyExchangeForm() {
       <TransactionReceiptModal
         open={receiptModalOpen}
         onClose={() => setReceiptModalOpen(false)}
-        transaction={lastTransaction || null}
+        transaction={lastTransaction}
         customerName={
           foundCustomer
             ? `${foundCustomer.first_name} ${foundCustomer.first_surname || ""}`.trim()

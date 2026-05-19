@@ -25,15 +25,16 @@ src/
 
 Read the relevant standard before writing code (files in `docs/standards/` TBA):
 
-| Topic                  | Description                                                                            |
-| ---------------------- | -------------------------------------------------------------------------------------- |
-| **Clean Architecture** | Layers, dependency inversion, and DDD patterns                                         |
-| **Frontend Standards** | [Next.js App Router, React, and MUI best practices](docs/standards/webapp-frontend.md) |
-| **Styling & Theming**  | Strict MUI theming rules and design token management                                   |
-| **Git & Commits**      | Conventional Commits and branching workflow                                            |
-| **TypeScript & JS**    | [Types, error handling, and deps](docs/standards/typescript-javascript.md)             |
-| **Testing**            | [Jest, AAA pattern, and structure](docs/standards/testing.md)                          |
-| **UI / UX**            | [Usability, proportions, and alignment](docs/standards/ui-ux.md)                       |
+| Topic                       | Description                                                                                                       |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| **Clean Architecture**      | Layers, dependency inversion, and DDD patterns                                                                    |
+| **Frontend Standards**      | [Next.js App Router, React, and MUI best practices](docs/standards/webapp-frontend.md)                            |
+| **Styling & Theming**       | Strict MUI theming rules and design token management                                                              |
+| **Git & Commits**           | Conventional Commits and branching workflow                                                                       |
+| **TypeScript & JS**         | [Types, error handling, and deps](docs/standards/typescript-javascript.md)                                        |
+| **Testing**                 | [Jest, AAA pattern, and structure](docs/standards/testing.md)                                                     |
+| **UI / UX**                 | [Usability, proportions, and alignment](docs/standards/ui-ux.md)                                                  |
+| **Security & State**        | [PII safety, fail-closed compliance, store hygiene, and token refresh](docs/standards/security-and-state.md)      |
 
 ## Key Rules
 
@@ -50,12 +51,15 @@ Read the relevant standard before writing code (files in `docs/standards/` TBA):
 11. **Testing Structure:** `test/` directory MUST mirror `src/` structure (e.g., `test/domain/`, `test/use-cases/`).
 12. **Path Aliases:** Always use the `@/*` prefix for imports from the `src/` directory.
 13. **Git Hooks:** Automated linting (pre-commit) and testing (pre-push) are enforced via Husky. Never bypass these hooks.
+14. **No persistent caching of dynamic collections or PII:** NEVER persist dynamic collections (e.g., Customers, Transactions) or sensitive Personally Identifiable Information (PII) using Zustand's `persist` middleware or browser `localStorage`. Caching is strictly limited to transient authentication tokens or client-side UI configurations/preferences (e.g., Theme/Layout).
+15. **No `null` in component state or props:** Use `undefined` instead of `null` for optional state and props (e.g., `useState<Customer | undefined>(undefined)` not `useState<Customer | null>(null)`). See [Security & State Standards](docs/standards/security-and-state.md) for the full rationale.
+16. **API Schema Boundary:** Every infrastructure repository MUST define a private `apiXxxSchema` using `.nullish().transform(val => val ?? undefined)` for all nullable optional fields. Never use domain schemas directly to parse API responses. See [Security & State Standards §11](docs/standards/security-and-state.md).
 
 ## UI / UX Implementation Notes
 
 - **Login Flow:** Standard inputs for "Email Address" and "Password", plus a "Remember me" checkbox.
-- **Dashboard:** Handle complex state including a Client List and an active exchange interface (e.g., USD to COP ratio).
-- **User Validation:** "New client" modal must trigger a validation step (blocked state for Clinton List check).
+- **Dashboard:** Handle complex state including a Customer List and an active exchange interface (e.g., USD to COP ratio).
+- **User Validation:** "New customer" modal must trigger a validation step (blocked state for Clinton List check).
 
 ## Implementation Workflow
 

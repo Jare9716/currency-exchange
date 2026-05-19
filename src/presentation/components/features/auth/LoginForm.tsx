@@ -96,6 +96,7 @@ export function LoginForm() {
           )}
 
           <TextField
+            id="email"
             label="Correo"
             type="email"
             autoComplete="email"
@@ -107,6 +108,7 @@ export function LoginForm() {
           />
 
           <TextField
+            id="password"
             label="Contraseña"
             type={showPassword ? "text" : "password"}
             autoComplete="current-password"

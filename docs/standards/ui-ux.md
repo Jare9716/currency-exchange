@@ -77,6 +77,11 @@ To maintain architectural integrity with React 19 and Next.js 16, **deprecated p
 - **Buttons:** Use clear action verbs (Nuevo, Guardar, Realizar transacción, Cancelar).
 - **Placeholders:** Must provide clear examples (e.g., 10203040, Acme SAS).
 
+### Error Message Localization:
+- **Decoupled Boundary:** Do NOT hardcode error string translations in the core infrastructure layer (`HttpClient`). 
+- **Error Codes:** Rely strictly on standard backend `error_code` strings (e.g., `NO_OPEN_SHIFT`, `CUSTOMER_FLAGGED`) for programmatic checks.
+- **UI-Level Translations:** Localize error codes inside UI components or Presentation hooks (e.g., via localized dictionaries or internationalization helpers) to display the correct, human-readable Spanish feedback to the end-user.
+
 ## 5. Critical MUI + Next.js App Router Setup
 
 These rules MUST be followed to prevent rendering regressions:
