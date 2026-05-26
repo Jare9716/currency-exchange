@@ -2,32 +2,49 @@
 
 import { createTheme } from "@mui/material/styles";
 
+// Module augmentation to allow custom header and sidebar background fields in typescript
+declare module "@mui/material/styles" {
+  interface TypeBackground {
+    header: string;
+    sidebar: string;
+  }
+}
+
 export const theme = createTheme({
-  palette: {
-    primary: {
-      main: "#1976d2", // components/button/primary
-      contrastText: "#ffffff", // Use white for better contrast on dark blue instead of Figma's components/icon/on-primary which was dark gray
+  cssVariables: {
+    colorSchemeSelector: "class",
+  },
+  colorSchemes: {
+    light: {
+      palette: {
+        primary: {
+          main: "#1976d2", // components/button/primary
+          dark: "#1565c0", // primary-dark
+          light: "#e3f2fd", // primary-light
+        },
+        background: {
+          default: "#f2f2f2", // surface/secondary
+          paper: "#ffffff", // surface/primary
+          header: "#0d1b2a", // Navy brand top bar background
+          sidebar: "#1a2744", // Medium navy brand sidebar background
+        },
+        text: {
+          primary: "#202020", // text/primary
+          secondary: "#979797", // text/contrast
+        },
+      },
     },
-    background: {
-      default: "#f2f2f2", // surface/secondary
-      paper: "#ffffff", // surface/primary
+    dark: {
+      palette: {
+        background: {
+          header: "#0a1120", // Dark mode navy header
+          sidebar: "#121b2d", // Dark mode deep navy-gray sidebar
+        },
+      },
     },
-    text: {
-      primary: "#202020", // text/primary
-      secondary: "#979797", // text/contrast
-    },
-    success: {
-      main: "#388e3c", // components/chip/succes
-      contrastText: "#ffffff",
-    },
-    error: {
-      main: "#d32f2f", // components/chip/error
-      contrastText: "#ffffff",
-    },
-    warning: {
-      main: "#e64a19", // components/chip/warning
-      contrastText: "#ffffff",
-    },
+  },
+  shape: {
+    borderRadius: 8, // Cards, Dialogs, Modals get 8px radius
   },
   typography: {
     fontFamily: '"Roboto", "Inter", "Helvetica", "Arial", sans-serif',
@@ -42,8 +59,8 @@ export const theme = createTheme({
       letterSpacing: "0.1px",
     },
     h3: {
-      fontSize: "16px", // font/size/md
-      fontWeight: 500,
+      fontSize: "15px", // Matches card/box titles (.card-title)
+      fontWeight: 600,
       letterSpacing: "0.15px",
     },
     h4: {
@@ -60,19 +77,19 @@ export const theme = createTheme({
       fontWeight: 600,
     },
     body1: {
-      fontSize: "16px",
-      fontWeight: 400,
-      letterSpacing: "0.5px",
-    },
-    body2: {
-      fontSize: "14px",
+      fontSize: "14px", // Scales standard text to mockup's 14px default
       fontWeight: 400,
       letterSpacing: "0.25px",
     },
+    body2: {
+      fontSize: "13px", // Scales tables & secondary text to mockup's 13px default
+      fontWeight: 400,
+      letterSpacing: "0.2px",
+    },
     button: {
-      fontSize: "16px",
+      fontSize: "14px", // Scales button labels to mockup's 14px default
       fontWeight: 600,
-      textTransform: "none", // Typical for modern designs to not force uppercase
+      textTransform: "none",
     },
   },
   components: {
@@ -82,6 +99,13 @@ export const theme = createTheme({
         variant: "outlined",
       },
     },
+    MuiOutlinedInput: {
+      styleOverrides: {
+        root: {
+          borderRadius: "6px", // Inputs get 6px radius
+        },
+      },
+    },
     MuiButton: {
       defaultProps: {
         size: "medium",
@@ -89,6 +113,7 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           boxShadow: "none",
+          borderRadius: "6px", // Buttons get 6px radius
         },
         contained: {
           boxShadow: "0px 1px 5px 0px rgba(0,0,0,0.12)",
@@ -99,9 +124,11 @@ export const theme = createTheme({
       styleOverrides: {
         root: {
           backgroundImage: "none",
+          "&.MuiPaper-elevation1": {
+            boxShadow: "0 1px 4px rgba(0,0,0,0.10)", // Soft premium shadow from design system
+          },
         },
       },
     },
   },
 });
-

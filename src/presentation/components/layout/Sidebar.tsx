@@ -32,14 +32,14 @@ export function Sidebar() {
     <Box
       sx={{
         width: { xs: 72, sm: 240 },
-        bgcolor: "background.paper",
+        bgcolor: "background.sidebar",
         height: "100%",
         display: "flex",
         flexDirection: "column",
         flexShrink: 0,
         transition: "width 0.2s ease",
         borderRight: "1px solid",
-        borderColor: "divider",
+        borderColor: "rgba(255, 255, 255, 0.08)",
         zIndex: 1200,
       }}
     >
@@ -62,6 +62,20 @@ export function Sidebar() {
                     minHeight: 48,
                     justifyContent: { xs: "center", sm: "initial" },
                     px: 2.5,
+                    color: isActive ? "#ffffff" : "#b0bec5",
+                    borderLeft: "3px solid",
+                    borderColor: isActive ? "primary.main" : "transparent",
+                    bgcolor: isActive ? "rgba(25, 118, 210, 0.15) !important" : "transparent",
+                    "&:hover": {
+                      bgcolor: "rgba(255, 255, 255, 0.05)",
+                      color: "#ffffff",
+                      "& .MuiListItemIcon-root": {
+                        color: "#ffffff",
+                      },
+                    },
+                    "&.Mui-selected": {
+                      bgcolor: "rgba(25, 118, 210, 0.15) !important",
+                    },
                   }}
                 >
                   <ListItemIcon
@@ -69,12 +83,21 @@ export function Sidebar() {
                       minWidth: 0,
                       mr: { xs: 0, sm: 3 },
                       justifyContent: "center",
+                      color: isActive ? "#ffffff" : "#b0bec5",
                     }}
                   >
-                    <Icon color={isActive ? "primary" : "inherit"} />
+                    <Icon />
                   </ListItemIcon>
                   <ListItemText 
                     primary={item.label} 
+                    slotProps={{
+                      primary: {
+                        sx: {
+                          fontWeight: isActive ? 600 : 500,
+                          fontSize: "13px",
+                        }
+                      }
+                    }}
                     sx={{ 
                       opacity: { xs: 0, sm: 1 },
                       display: { xs: "none", sm: "block" }

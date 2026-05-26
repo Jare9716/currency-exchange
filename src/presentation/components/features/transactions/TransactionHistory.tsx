@@ -101,9 +101,14 @@ export function TransactionHistory() {
     <Box
       sx={{ width: "100%", display: "flex", flexDirection: "column", gap: 3 }}
     >
-      <Typography variant="h1" sx={{ color: "text.primary" }}>
-        Historial de Transacciones
-      </Typography>
+      <Box>
+        <Typography variant="h2" sx={{ fontWeight: 700, color: "text.primary" }}>
+          Historial de Transacciones
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+          Consulta de operaciones y emisión de recibos del turno actual.
+        </Typography>
+      </Box>
 
       <Paper
         sx={{

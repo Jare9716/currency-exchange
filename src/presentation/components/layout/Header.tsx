@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   AppBar,
   Toolbar,
@@ -16,16 +16,27 @@ import {
 import LogoutIcon from "@mui/icons-material/Logout";
 import PersonIcon from "@mui/icons-material/Person";
 import SettingsIcon from "@mui/icons-material/Settings";
+import DarkModeIcon from "@mui/icons-material/DarkMode";
+import LightModeIcon from "@mui/icons-material/LightMode";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/presentation/stores/auth.store";
 import { useCustomersStore } from "@/presentation/stores/customers.store";
 import { useTransactionsStore } from "@/presentation/stores/transactions.store";
+import { useColorScheme } from "@mui/material/styles";
 
 export function Header() {
   const router = useRouter();
   const { clearTokens } = useAuthStore();
   const [anchorEl, setAnchorEl] = useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
+
+  const { mode, setMode } = useColorScheme();
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMounted(true);
+  }, []);
 
   const handleMenuOpen = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
@@ -48,21 +59,28 @@ export function Header() {
       position="sticky"
       elevation={0}
       sx={{
-        bgcolor: "background.paper",
+        bgcolor: "background.header",
         borderBottom: "1px solid",
-        borderColor: "divider",
-        color: "text.primary",
+        borderColor: "rgba(255, 255, 255, 0.08)",
+        color: "#ffffff",
         zIndex: 1100,
       }}
     >
-      <Toolbar sx={{ justifyContent: "space-between" }}>
+      <Toolbar
+        sx={{
+          minHeight: "52px !important",
+          height: "52px",
+          justifyContent: "space-between",
+          px: "16px !important",
+        }}
+      >
         <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
           <Typography
-            variant="h4"
             sx={{
-              fontWeight: 800,
+              fontWeight: 700,
+              fontSize: "18px", // Matches .logo branding size in mockups
               letterSpacing: "-0.5px",
-              color: "primary.main",
+              color: "#ffffff",
             }}
           >
             JokerLabs
@@ -123,6 +141,19 @@ export function Header() {
             </ListItemIcon>
             Configuración
           </MenuItem>
+          {mounted && (
+            <MenuItem
+              onClick={() => {
+                setMode(mode === "light" ? "dark" : "light");
+                handleMenuClose();
+              }}
+            >
+              <ListItemIcon>
+                {mode === "light" ? <DarkModeIcon fontSize="small" /> : <LightModeIcon fontSize="small" />}
+              </ListItemIcon>
+              {mode === "light" ? "Modo Oscuro" : "Modo Claro"}
+            </MenuItem>
+          )}
           <Divider />
           <MenuItem onClick={handleLogout} sx={{ color: "error.main" }}>
             <ListItemIcon>

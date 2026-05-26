@@ -122,9 +122,14 @@ export function CustomerList() {
     <Box
       sx={{ width: "100%", display: "flex", flexDirection: "column", gap: 3 }}
     >
-      <Typography variant="h1" sx={{ color: "text.primary" }}>
-        Clientes
-      </Typography>
+      <Box>
+        <Typography variant="h2" sx={{ fontWeight: 700, color: "text.primary" }}>
+          Clientes
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+          Buscar, crear y administrar clientes de la casa de cambio.
+        </Typography>
+      </Box>
 
       {fetchError && (
         <Alert severity="error" sx={{ border: "1px solid", borderColor: "error.main" }}>
