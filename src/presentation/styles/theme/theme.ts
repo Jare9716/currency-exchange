@@ -2,11 +2,12 @@
 
 import { createTheme } from "@mui/material/styles";
 
-// Module augmentation to allow custom header and sidebar background fields in typescript
+// Module augmentation to allow custom header, sidebar, and headerBorder background fields in typescript
 declare module "@mui/material/styles" {
   interface TypeBackground {
     header: string;
     sidebar: string;
+    headerBorder: string;
   }
 }
 
@@ -27,6 +28,7 @@ export const theme = createTheme({
           paper: "#ffffff", // surface/primary
           header: "#0d1b2a", // Navy brand top bar background
           sidebar: "#1a2744", // Medium navy brand sidebar background
+          headerBorder: "#1e3a5f", // Mockup steel blue top bar bottom border
         },
         text: {
           primary: "#202020", // text/primary
@@ -39,6 +41,7 @@ export const theme = createTheme({
         background: {
           header: "#0a1120", // Dark mode navy header
           sidebar: "#121b2d", // Dark mode deep navy-gray sidebar
+          headerBorder: "#1e3a5f", // Mockup steel blue top bar bottom border
         },
       },
     },

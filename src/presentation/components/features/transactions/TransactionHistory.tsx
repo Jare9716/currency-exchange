@@ -163,7 +163,7 @@ export function TransactionHistory() {
           </Button>
         </Box>
 
-        <TableContainer sx={{ position: "relative", maxHeight: "calc(100vh - 300px)", overflowY: "auto", overflowX: "auto" }}>
+        <TableContainer sx={{ position: "relative", maxHeight: "calc(100vh - 360px)", overflowY: "auto", overflowX: "auto" }}>
           {fetchError && (
             <Box
               sx={{

@@ -61,7 +61,7 @@ export function Header() {
       sx={{
         bgcolor: "background.header",
         borderBottom: "1px solid",
-        borderColor: "rgba(255, 255, 255, 0.08)",
+        borderColor: "background.headerBorder",
         color: "#ffffff",
         zIndex: 1100,
       }}

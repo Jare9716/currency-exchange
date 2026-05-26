@@ -27,7 +27,7 @@ export default function DashboardLayout({
         sx={{
           display: "flex",
           flexGrow: 1,
-          height: "calc(100vh - 64px)", // Remaining height after Header
+          height: "calc(100vh - 52px)", // Remaining height after Header
           overflow: "hidden",
         }}
       >
