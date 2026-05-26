@@ -141,8 +141,6 @@ export function CustomerList() {
         sx={{
           width: "100%",
           overflow: "hidden",
-          borderRadius: 0,
-          boxShadow: "none",
           border: "1px solid",
           borderColor: "divider",
         }}
@@ -184,7 +182,7 @@ export function CustomerList() {
           </Button>
         </Box>
 
-        <TableContainer sx={{ position: "relative" }}>
+        <TableContainer sx={{ position: "relative", maxHeight: "calc(100vh - 300px)", overflowY: "auto", overflowX: "auto" }}>
           {isLoading && (
             <Box
               sx={{
@@ -204,19 +202,19 @@ export function CustomerList() {
               <Typography variant="body2">Buscando...</Typography>
             </Box>
           )}
-          <Table sx={{ minWidth: 650 }}>
+          <Table sx={{ minWidth: 650 }} stickyHeader>
             <TableHead>
-              <TableRow sx={{ bgcolor: "background.paper" }}>
-                <TableCell sx={{ typography: "subtitle2" }}>
+              <TableRow>
+                <TableCell>
                   Nombre / Razón Social
                 </TableCell>
-                <TableCell sx={{ typography: "subtitle2" }}>Email</TableCell>
-                <TableCell sx={{ typography: "subtitle2" }}>
+                <TableCell>Email</TableCell>
+                <TableCell>
                   Documento
                 </TableCell>
-                <TableCell sx={{ typography: "subtitle2" }}>Teléfono</TableCell>
-                <TableCell sx={{ typography: "subtitle2" }}>Estado</TableCell>
-                <TableCell sx={{ typography: "subtitle2" }} align="center">
+                <TableCell>Teléfono</TableCell>
+                <TableCell>Estado</TableCell>
+                <TableCell align="center">
                   Acciones
                 </TableCell>
               </TableRow>

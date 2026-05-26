@@ -120,6 +120,22 @@ export const theme = createTheme({
         },
       },
     },
+    MuiTableCell: {
+      styleOverrides: {
+        head: {
+          backgroundColor: "var(--mui-palette-background-default)", // Adapts automatically in light/dark!
+          fontSize: "11px",
+          fontWeight: 600,
+          textTransform: "uppercase",
+          letterSpacing: "0.5px",
+          padding: "10px 16px",
+        },
+        body: {
+          padding: "11px 16px",
+          fontSize: "13px",
+        },
+      },
+    },
     MuiPaper: {
       styleOverrides: {
         root: {
