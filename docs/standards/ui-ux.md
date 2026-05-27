@@ -96,3 +96,11 @@ These rules MUST be followed to prevent rendering regressions:
   <ThemeRegistry>{children}</ThemeRegistry>
 </AppRouterCacheProvider>
 ```
+
+## 6. MUI Icon Compliance and Stats Card Aesthetics
+
+To maintain bank-grade professional aesthetics and visual consistency:
+
+- **No Custom Emojis in UI:** System-level or platform-dependent custom emojis (e.g., `🟢`, `⚠️`, `🚨`) are strictly prohibited in the UI. Emojis render inconsistently across different operating systems and browsers. Developers MUST exclusively use standard, high-density icons from `@mui/icons-material` (such as `CheckCircleIcon`, `WarningIcon`, `ErrorIcon`) or no icons at all.
+- **Unified Card Borders:** Statistics and KPI cards in dashboards must NOT use solid colored left accent borders (e.g., `borderLeft: "4px solid success.main"`). Instead, standard cards must remain clean, either borderless with premium shadows or thin borders (`border: "1px solid"`, `borderColor: "divider"`) to ensure visual harmony across all views.
+

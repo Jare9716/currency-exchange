@@ -237,3 +237,31 @@ export class HttpTransactionRepository implements TransactionRepository {
 }
 ```
 
+---
+
+## 12. Mandatory Request Body on POST Requests
+
+**Rationale:**
+FastAPI and Pydantic backends enforce strict validation on JSON request bodies. If a POST route is declared with a request body model (even if all its properties are optional or if it has no properties), the backend expects a valid JSON payload at the root.
+
+Sending `undefined` or a missing body payload in `HttpClient.post(url)` causes the backend to fail with a `422 Unprocessable Content` error:
+```json
+{
+  "type": "missing",
+  "loc": ["body"],
+  "msg": "Field required"
+}
+```
+
+**Rule:**
+For all POST requests targeted at backend endpoints that declare a request body (such as closing a shift), developers MUST pass an explicit empty JSON object `{}` as the payload instead of calling the function with `undefined` or omitting the body.
+
+```typescript
+// ❌ FORBIDDEN — triggers 422 validation error on strict backends
+const response = await HttpClient.post(`/api/v1/fx/shifts/${id}/close`);
+
+// ✅ CORRECT — sends empty body to satisfy backend body payload requirement
+const response = await HttpClient.post(`/api/v1/fx/shifts/${id}/close`, {});
+```
+
+
