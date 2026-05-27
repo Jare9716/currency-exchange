@@ -195,9 +195,13 @@ export function OpenShiftModal({ open, onClose }: OpenShiftModalProps) {
               </Box>
             ) : proposalError ? (
               <Alert severity="warning">{proposalError}</Alert>
+            ) : !proposal || proposal.currencies.length === 0 ? (
+              <Alert severity="warning">
+                No hay divisas de operación configuradas o cargadas. No es posible abrir un turno de caja sin divisas registradas.
+              </Alert>
             ) : (
               <Box sx={{ display: "flex", flexDirection: "column", gap: 3 }}>
-                {proposal?.currencies.map((c) => {
+                {proposal.currencies.map((c) => {
                   const isFlagged = c.volatility_flagged;
                   return (
                     <Box
@@ -339,7 +343,7 @@ export function OpenShiftModal({ open, onClose }: OpenShiftModalProps) {
           variant="contained"
           color="success"
           onClick={handleSubmit}
-          disabled={submitting || loadingProposal}
+          disabled={submitting || loadingProposal || !proposal || proposal.currencies.length === 0}
         >
           {submitting ? "Abriendo..." : "Confirmar Apertura"}
         </Button>

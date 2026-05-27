@@ -84,7 +84,7 @@ describe("Shift Use Cases", () => {
       const result = await useCase.execute({
         branch_code: "BOG01",
         opening_cash_cop: "2000000.00",
-        currencies: [],
+        currencies: [{ iso_code: "USD" }],
       });
 
       expect(result).toBe(mockShift);
@@ -92,6 +92,7 @@ describe("Shift Use Cases", () => {
         expect.objectContaining({
           branch_code: "BOG01",
           opening_cash_cop: "2000000.00",
+          currencies: [{ iso_code: "USD" }],
         })
       );
     });
@@ -102,7 +103,7 @@ describe("Shift Use Cases", () => {
         useCase.execute({
           branch_code: "",
           opening_cash_cop: "2000000",
-          currencies: [],
+          currencies: [{ iso_code: "USD" }],
         })
       ).rejects.toThrow(DomainError);
     });
@@ -113,6 +114,17 @@ describe("Shift Use Cases", () => {
         useCase.execute({
           branch_code: "BOG01",
           opening_cash_cop: "-500",
+          currencies: [{ iso_code: "USD" }],
+        })
+      ).rejects.toThrow(DomainError);
+    });
+
+    it("should throw DomainError if currencies is empty", async () => {
+      const useCase = new OpenShift(shiftRepository);
+      await expect(
+        useCase.execute({
+          branch_code: "BOG01",
+          opening_cash_cop: "2000000",
           currencies: [],
         })
       ).rejects.toThrow(DomainError);
