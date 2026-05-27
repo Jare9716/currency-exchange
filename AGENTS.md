@@ -34,7 +34,8 @@ Read the relevant standard before writing code (files in `docs/standards/` TBA):
 | **TypeScript & JS**         | [Types, error handling, and deps](docs/standards/typescript-javascript.md)                                        |
 | **Testing**                 | [Jest, AAA pattern, and structure](docs/standards/testing.md)                                                     |
 | **UI / UX**                 | [Usability, proportions, and alignment](docs/standards/ui-ux.md)                                                  |
-| **Security & State**        | [PII safety, fail-closed compliance, store hygiene, and token refresh](docs/standards/security-and-state.md)      |
+| **Security**                | [PII safety, compliance checks, query encoding, and centralized token refresh](docs/standards/security.md)        |
+| **State Management**        | [Store hygiene, minimal write surface, and Zod API schema boundary](docs/standards/state-management.md)             |
 
 ## Key Rules
 
@@ -51,9 +52,9 @@ Read the relevant standard before writing code (files in `docs/standards/` TBA):
 11. **Testing Structure:** `test/` directory MUST mirror `src/` structure (e.g., `test/domain/`, `test/use-cases/`).
 12. **Path Aliases:** Always use the `@/*` prefix for imports from the `src/` directory.
 13. **Git Hooks:** Automated linting (pre-commit) and testing (pre-push) are enforced via Husky. Never bypass these hooks.
-14. **No persistent caching of dynamic collections or PII:** NEVER persist dynamic collections (e.g., Customers, Transactions) or sensitive Personally Identifiable Information (PII) using Zustand's `persist` middleware or browser `localStorage`. Caching is strictly limited to transient authentication tokens or client-side UI configurations/preferences (e.g., Theme/Layout).
-15. **No `null` in component state or props:** Use `undefined` instead of `null` for optional state and props (e.g., `useState<Customer | undefined>(undefined)` not `useState<Customer | null>(null)`). See [Security & State Standards](docs/standards/security-and-state.md) for the full rationale.
-16. **API Schema Boundary:** Every infrastructure repository MUST define a private `apiXxxSchema` using `.nullish().transform(val => val ?? undefined)` for all nullable optional fields. Never use domain schemas directly to parse API responses. See [Security & State Standards §11](docs/standards/security-and-state.md).
+14. **No persistent caching of dynamic collections or PII:** NEVER persist dynamic collections (e.g., Customers, Transactions) or sensitive Personally Identifiable Information (PII) using Zustand's `persist` middleware or browser `localStorage`. Caching is strictly limited to transient authentication tokens or client-side UI configurations/preferences (e.g., Theme/Layout). See [Security Standards](docs/standards/security.md) for full context.
+15. **No `null` in component state or props:** Use `undefined` instead of `null` for optional state and props (e.g., `useState<Customer | undefined>(undefined)` not `useState<Customer | null>(null)`). See [State Management Standards](docs/standards/state-management.md) for the full rationale.
+16. **API Schema Boundary:** Every infrastructure repository MUST define a private `apiXxxSchema` using `.nullish().transform(val => val ?? undefined)` for all nullable optional fields. Never use domain schemas directly to parse API responses. See [State Management Standards §6](docs/standards/state-management.md).
 17. **No Client-Side Filtering:** Never perform client-side/in-memory filtering as a workaround for backend query issues. All data filtering, pagination, and sorting must be driven strictly by the backend endpoints.
 
 ## UI / UX Implementation Notes
