@@ -18,6 +18,9 @@ import { TextField } from "@/presentation/components/ui/TextField/TextField";
 import { useShiftStore } from "@/presentation/stores/shift.store";
 import { useNotificationStore } from "@/presentation/stores/notification.store";
 import { PhysicalCount } from "@/domain/Shift";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import WarningIcon from "@mui/icons-material/Warning";
+import ErrorIcon from "@mui/icons-material/Error";
 
 interface CloseShiftModalProps {
   open: boolean;
@@ -206,21 +209,30 @@ export function CloseShiftModal({ open, onClose }: CloseShiftModalProps) {
                       />
                     </Grid>
                     <Grid size={{ xs: 12, sm: 6 }}>
-                      <Box sx={{ textAlign: { sm: "right" } }}>
+                      <Box sx={{ display: "flex", alignItems: "center", justifyContent: { sm: "flex-end" }, gap: 0.5 }}>
                         {diff === 0 ? (
-                          <Typography variant="caption" sx={{ color: "success.main", fontWeight: 600 }}>
-                            🟢 Caja Conciliada (Diferencia: {c.symbol}0)
-                          </Typography>
+                          <>
+                            <CheckCircleIcon color="success" sx={{ fontSize: 16 }} />
+                            <Typography variant="caption" sx={{ color: "success.main", fontWeight: 600 }}>
+                              Caja Conciliada (Diferencia: {c.symbol}0)
+                            </Typography>
+                          </>
                         ) : diff > 0 ? (
-                          <Typography variant="caption" sx={{ color: "warning.main", fontWeight: 600 }}>
-                            ⚠️ Sobrante de {c.symbol}
-                            {diff.toLocaleString("es-CO")}
-                          </Typography>
+                          <>
+                            <WarningIcon color="warning" sx={{ fontSize: 16 }} />
+                            <Typography variant="caption" sx={{ color: "warning.main", fontWeight: 600 }}>
+                              Sobrante de {c.symbol}
+                              {diff.toLocaleString("es-CO")}
+                            </Typography>
+                          </>
                         ) : (
-                          <Typography variant="caption" sx={{ color: "error.main", fontWeight: 600 }}>
-                            🚨 Faltante de {c.symbol}
-                            {Math.abs(diff).toLocaleString("es-CO")}
-                          </Typography>
+                          <>
+                            <ErrorIcon color="error" sx={{ fontSize: 16 }} />
+                            <Typography variant="caption" sx={{ color: "error.main", fontWeight: 600 }}>
+                              Faltante de {c.symbol}
+                              {Math.abs(diff).toLocaleString("es-CO")}
+                            </Typography>
+                          </>
                         )}
                       </Box>
                     </Grid>

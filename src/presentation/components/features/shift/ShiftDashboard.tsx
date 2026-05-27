@@ -105,8 +105,8 @@ export function ShiftDashboard() {
           <Card
             sx={{
               p: 2.5,
-              borderLeft: "4px solid",
-              borderLeftColor: "success.main",
+              border: "1px solid",
+              borderColor: "divider",
               boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
             }}
           >
@@ -130,8 +130,8 @@ export function ShiftDashboard() {
           <Card
             sx={{
               p: 2.5,
-              borderLeft: "4px solid",
-              borderLeftColor: "primary.main",
+              border: "1px solid",
+              borderColor: "divider",
               boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
             }}
           >
@@ -163,8 +163,8 @@ export function ShiftDashboard() {
           <Card
             sx={{
               p: 2.5,
-              borderLeft: "4px solid",
-              borderLeftColor: "warning.main",
+              border: "1px solid",
+              borderColor: "divider",
               boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
             }}
           >
@@ -188,8 +188,8 @@ export function ShiftDashboard() {
           <Card
             sx={{
               p: 2.5,
-              borderLeft: "4px solid",
-              borderLeftColor: "info.main",
+              border: "1px solid",
+              borderColor: "divider",
               boxShadow: "0 1px 4px rgba(0,0,0,0.1)",
             }}
           >
