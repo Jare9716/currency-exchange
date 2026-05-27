@@ -82,10 +82,19 @@ export interface OpenShiftPayload {
   currencies: OpenShiftCurrencyPayload[];
 }
 
+export interface PhysicalCount {
+  iso_code: string;
+  amount: number;
+}
+
+export interface CloseShiftPayload {
+  physical_counts: PhysicalCount[];
+}
+
 export interface ShiftRepository {
   getCurrent(branchCode: string): Promise<Shift | undefined>;
   getRateProposal(date?: string): Promise<RateProposal>;
   open(payload: OpenShiftPayload): Promise<Shift>;
-  close(shiftId: string): Promise<Shift>;
+  close(shiftId: string, payload: CloseShiftPayload): Promise<Shift>;
   getSummary(shiftId: string): Promise<ShiftSummary>;
 }

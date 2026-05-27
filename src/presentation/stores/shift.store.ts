@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { Shift, RateProposal, ShiftSummary, OpenShiftPayload } from "@/domain/Shift";
+import { Shift, RateProposal, ShiftSummary, OpenShiftPayload, CloseShiftPayload } from "@/domain/Shift";
 import { getCurrentShift } from "@/use-cases/GetCurrentShift";
 import { getRateProposal } from "@/use-cases/GetRateProposal";
 import { openShift as openShiftUseCase } from "@/use-cases/OpenShift";
@@ -15,7 +15,7 @@ interface ShiftState {
   fetchActiveShift: (branchCode: string) => Promise<void>;
   fetchRateProposal: () => Promise<void>;
   openShift: (payload: OpenShiftPayload) => Promise<void>;
-  closeActiveShift: () => Promise<void>;
+  closeActiveShift: (payload: CloseShiftPayload) => Promise<void>;
   fetchSummary: () => Promise<void>;
   resetShift: () => void;
 }
@@ -63,7 +63,7 @@ export const useShiftStore = create<ShiftState>((set, get) => ({
       set({ isLoading: false });
     }
   },
-  closeActiveShift: async () => {
+  closeActiveShift: async (payload) => {
     const { activeShift } = get();
     if (!activeShift) {
       set({ error: "No hay un turno activo para cerrar" });
@@ -71,7 +71,7 @@ export const useShiftStore = create<ShiftState>((set, get) => ({
     }
     set({ isLoading: true, error: undefined });
     try {
-      await closeShiftUseCase.execute(activeShift.id);
+      await closeShiftUseCase.execute(activeShift.id, payload);
       set({ activeShift: undefined, summary: undefined, error: undefined });
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : "Error al cerrar el turno";

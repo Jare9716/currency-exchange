@@ -120,7 +120,7 @@ describe("Shift Use Cases", () => {
   });
 
   describe("CloseShift", () => {
-    it("should successfully close shift", async () => {
+    it("should successfully close shift when payload is valid", async () => {
       const mockShift: Shift = {
         id: "shift-123",
         date: "2026-05-12",
@@ -132,18 +132,28 @@ describe("Shift Use Cases", () => {
         closed_at: new Date().toISOString(),
         currencies: [],
       };
+      const mockPayload = {
+        physical_counts: [{ iso_code: "COP", amount: 2000000 }],
+      };
       shiftRepository.close.mockResolvedValue(mockShift);
 
       const useCase = new CloseShift(shiftRepository);
-      const result = await useCase.execute("shift-123");
+      const result = await useCase.execute("shift-123", mockPayload);
 
       expect(result).toBe(mockShift);
-      expect(shiftRepository.close).toHaveBeenCalledWith("shift-123");
+      expect(shiftRepository.close).toHaveBeenCalledWith("shift-123", mockPayload);
+    });
+
+    it("should throw DomainError if physical_counts is missing", async () => {
+      const useCase = new CloseShift(shiftRepository);
+      await expect(useCase.execute("shift-123", { physical_counts: [] })).rejects.toThrow(DomainError);
     });
 
     it("should throw DomainError if shiftId is missing", async () => {
       const useCase = new CloseShift(shiftRepository);
-      await expect(useCase.execute("")).rejects.toThrow(DomainError);
+      await expect(
+        useCase.execute("", { physical_counts: [{ iso_code: "COP", amount: 2000000 }] })
+      ).rejects.toThrow(DomainError);
     });
   });
 

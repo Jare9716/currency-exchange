@@ -19,15 +19,14 @@ import {
 import { Button } from "@/presentation/components/ui/Button/Button";
 import { useShiftStore } from "@/presentation/stores/shift.store";
 import { useTransactionsStore } from "@/presentation/stores/transactions.store";
-import { useNotificationStore } from "@/presentation/stores/notification.store";
 import { Chip } from "@mui/material";
+import { CloseShiftModal } from "./CloseShiftModal";
 
 export function ShiftDashboard() {
   const {
     activeShift,
     summary,
     fetchSummary,
-    closeActiveShift,
   } = useShiftStore();
 
   const {
@@ -36,8 +35,7 @@ export function ShiftDashboard() {
     fetchTransactions,
   } = useTransactionsStore();
 
-  const { showNotification } = useNotificationStore();
-  const [closing, setClosing] = useState(false);
+  const [closeModalOpen, setCloseModalOpen] = useState(false);
 
   useEffect(() => {
     if (activeShift) {
@@ -46,29 +44,6 @@ export function ShiftDashboard() {
       fetchTransactions({ size: 5 });
     }
   }, [activeShift, fetchSummary, fetchTransactions]);
-
-  const handleCloseShift = async () => {
-    if (!window.confirm("¿Estás seguro de que deseas cerrar el turno actual? Se conciliarán los saldos de caja.")) {
-      return;
-    }
-    setClosing(true);
-    try {
-      await closeActiveShift();
-      showNotification(
-        "El turno se ha cerrado exitosamente. Caja conciliada.",
-        "success",
-        "Turno Cerrado"
-      );
-    } catch (err) {
-      showNotification(
-        err instanceof Error ? err.message : "Error al cerrar el turno",
-        "error",
-        "Error"
-      );
-    } finally {
-      setClosing(false);
-    }
-  };
 
   if (!activeShift) {
     return null;
@@ -111,10 +86,9 @@ export function ShiftDashboard() {
           variant="contained"
           color="error"
           size="small"
-          onClick={handleCloseShift}
-          disabled={closing}
+          onClick={() => setCloseModalOpen(true)}
         >
-          {closing ? "Cerrando..." : "Cerrar Turno"}
+          Cerrar Turno
         </Button>
       </Box>
 
@@ -390,6 +364,8 @@ export function ShiftDashboard() {
           </Paper>
         </Grid>
       </Grid>
+
+      <CloseShiftModal open={closeModalOpen} onClose={() => setCloseModalOpen(false)} />
     </Box>
   );
 }

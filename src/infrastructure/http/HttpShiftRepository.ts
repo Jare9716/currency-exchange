@@ -3,6 +3,7 @@ import {
   ShiftSummary,
   RateProposal,
   OpenShiftPayload,
+  CloseShiftPayload,
   ShiftRepository,
 } from "@/domain/Shift";
 import { HttpClient } from "@/infrastructure/http/HttpClient";
@@ -100,10 +101,10 @@ export class HttpShiftRepository implements ShiftRepository {
     return apiShiftSchema.parse(data);
   }
 
-  async close(shiftId: string): Promise<Shift> {
+  async close(shiftId: string, payload: CloseShiftPayload): Promise<Shift> {
     const response = await HttpClient.post(
       `/api/v1/fx/shifts/${encodeURIComponent(shiftId)}/close`,
-      {}
+      payload
     );
     const data = await response.json();
     return apiShiftSchema.parse(data);
