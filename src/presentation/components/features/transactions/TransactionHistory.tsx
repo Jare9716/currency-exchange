@@ -86,7 +86,7 @@ export function TransactionHistory() {
           ? `${customer.first_name} ${customer.first_surname || ""}`.trim()
           : `ID: ${transaction.customer_id.substring(0, 8)}...`
       );
-    } catch (e) {
+    } catch {
       showNotification(
         "No se pudo cargar el nombre del cliente para el recibo. Mostrando ID en su lugar.",
         "warning",

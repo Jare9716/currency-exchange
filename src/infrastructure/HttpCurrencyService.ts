@@ -37,7 +37,7 @@ export class HttpCurrencyService implements CurrencyService {
           return parseFloat(product.buy_rate);
         }
       }
-    } catch (e) {
+    } catch {
       // Failed to fetch rate from FX products, try TRM fallback silently
     }
 
@@ -53,7 +53,7 @@ export class HttpCurrencyService implements CurrencyService {
           return parseFloat(trmData.data.rate);
         }
       }
-    } catch (e) {
+    } catch {
       // Silently proceed to throw standard error
     }
 
@@ -69,6 +69,12 @@ export class HttpCurrencyService implements CurrencyService {
     fromCurrency: string,
     toCurrency: string,
   ): Promise<number> {
+    if (toCurrency.toUpperCase() !== "COP") {
+      throw new DomainError(
+        "validation_error",
+        `La moneda de destino ${toCurrency} no está soportada. Solo se admite COP.`
+      );
+    }
     const rate = await this.getExchangeRate(fromCurrency);
     return amount * rate;
   }

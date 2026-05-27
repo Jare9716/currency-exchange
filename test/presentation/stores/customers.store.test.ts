@@ -1,5 +1,4 @@
 import { useCustomersStore } from '@/presentation/stores/customers.store';
-import { Customer } from '@/domain/Customer';
 
 jest.mock('@/use-cases/GetCustomers', () => ({
   GetCustomers: jest.fn().mockImplementation(() => ({

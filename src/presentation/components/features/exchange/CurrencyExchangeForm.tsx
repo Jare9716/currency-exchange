@@ -158,7 +158,7 @@ export function CurrencyExchangeForm() {
       };
 
       setFoundCustomer(updatedCustomer);
-    } catch (error) {
+    } catch {
       showNotification("Error al verificar el cliente", "error", "Error");
     }
   };
