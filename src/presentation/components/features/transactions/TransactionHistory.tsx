@@ -104,7 +104,7 @@ export function TransactionHistory() {
 
   return (
     <Box
-      sx={{ width: "100%", display: "flex", flexDirection: "column", gap: 3 }}
+      sx={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", gap: 3, overflow: "hidden" }}
     >
       <Box>
         <Typography variant="h2" sx={{ fontWeight: 700, color: "text.primary" }}>
@@ -118,6 +118,10 @@ export function TransactionHistory() {
       <Paper
         sx={{
           width: "100%",
+          flexGrow: 1,
+          minHeight: 0, // Allow card to shrink
+          display: "flex",
+          flexDirection: "column",
           overflow: "hidden",
           border: "1px solid",
           borderColor: "divider",
@@ -129,6 +133,7 @@ export function TransactionHistory() {
             display: "flex",
             gap: 2,
             alignItems: "center",
+            flexShrink: 0,
           }}
         >
           <TextField
@@ -163,7 +168,7 @@ export function TransactionHistory() {
           </Button>
         </Box>
 
-        <TableContainer sx={{ position: "relative", maxHeight: "calc(100vh - 360px)", overflowY: "auto", overflowX: "auto" }}>
+        <TableContainer sx={{ position: "relative", flexGrow: 1, overflowY: "auto", overflowX: "auto" }}>
           {fetchError && (
             <Box
               sx={{
@@ -252,7 +257,6 @@ export function TransactionHistory() {
                           tx.transaction_type === "buy" ? "success" : "info"
                         }
                         size="small"
-                        variant="outlined"
                       />
                     </TableCell>
                     <TableCell>{tx.iso_code}</TableCell>
@@ -293,6 +297,7 @@ export function TransactionHistory() {
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
           labelRowsPerPage="Filas por página"
+          sx={{ flexShrink: 0 }}
           labelDisplayedRows={({ from, to, count }) =>
             `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`
           }

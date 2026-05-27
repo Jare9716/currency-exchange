@@ -7,12 +7,10 @@ export function Footer() {
     <Box
       component="footer"
       sx={{
-        py: 2,
+        py: 1,
         px: 3,
         mt: "auto",
-        borderTop: "1px solid",
-        borderColor: "divider",
-        bgcolor: "background.paper",
+        bgcolor: "transparent",
       }}
     >
       <Container maxWidth={false}>

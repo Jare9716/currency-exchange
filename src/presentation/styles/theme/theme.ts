@@ -34,6 +34,7 @@ export const theme = createTheme({
           primary: "#202020", // text/primary
           secondary: "#979797", // text/contrast
         },
+        divider: "#e0e0e0", // Design border color
       },
     },
     dark: {
@@ -43,6 +44,7 @@ export const theme = createTheme({
           sidebar: "#121b2d", // Dark mode deep navy-gray sidebar
           headerBorder: "#1e3a5f", // Mockup steel blue top bar bottom border
         },
+        divider: "rgba(255, 255, 255, 0.12)", // Dark mode divider
       },
     },
   },
@@ -127,8 +129,9 @@ export const theme = createTheme({
       styleOverrides: {
         head: {
           backgroundColor: "var(--mui-palette-background-default)", // Adapts automatically in light/dark!
+          color: "var(--mui-palette-text-secondary)", // High contrast column headers
           fontSize: "11px",
-          fontWeight: 600,
+          fontWeight: 700, // Bold column titles
           textTransform: "uppercase",
           letterSpacing: "0.5px",
           padding: "10px 16px",
@@ -145,6 +148,39 @@ export const theme = createTheme({
           backgroundImage: "none",
           "&.MuiPaper-elevation1": {
             boxShadow: "0 1px 4px rgba(0,0,0,0.10)", // Soft premium shadow from design system
+          },
+        },
+      },
+    },
+    MuiChip: {
+      styleOverrides: {
+        root: {
+          fontWeight: 600,
+          fontSize: "11px",
+          borderRadius: "12px",
+          height: "22px",
+          padding: "3px 4px",
+          "&.MuiChip-filled": {
+            "&.MuiChip-colorSuccess": {
+              backgroundColor: "#e8f5e9",
+              color: "#388e3c",
+            },
+            "&.MuiChip-colorError": {
+              backgroundColor: "#ffebee",
+              color: "#d32f2f",
+            },
+            "&.MuiChip-colorWarning": {
+              backgroundColor: "#fbe9e7",
+              color: "#e64a19",
+            },
+            "&.MuiChip-colorInfo": {
+              backgroundColor: "#e1f5fe",
+              color: "#0288d1",
+            },
+            "&.MuiChip-colorPrimary": {
+              backgroundColor: "#e3f2fd",
+              color: "#1976d2",
+            },
           },
         },
       },
