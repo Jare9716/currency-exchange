@@ -63,7 +63,6 @@ export class HttpCustomerRepository implements CustomerRepository {
     if (filters) {
       Object.entries(filters).forEach(([key, value]) => {
         if (value !== undefined) {
-          // Normalize name parameter to match what the backend's query param expectations might be
           params.append(key, String(value));
         }
       });

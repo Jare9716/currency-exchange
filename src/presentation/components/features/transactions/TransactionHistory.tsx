@@ -15,9 +15,13 @@ import {
   TablePagination,
   IconButton,
   Tooltip,
+  InputAdornment,
 } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
 import ReceiptIcon from "@mui/icons-material/Receipt";
+import SearchIcon from "@mui/icons-material/Search";
+import { Button } from "@/presentation/components/ui/Button/Button";
+import { TextField } from "@/presentation/components/ui/TextField/TextField";
 import { useTransactionsStore } from "@/presentation/stores/transactions.store";
 import { useNotificationStore } from "@/presentation/stores/notification.store";
 import { TransactionReceiptModal } from "@/presentation/components/features/exchange/TransactionReceiptModal";
@@ -34,6 +38,7 @@ export function TransactionHistory() {
     useState<Transaction | undefined>(undefined);
   const [receiptModalOpen, setReceiptModalOpen] = useState(false);
   const [selectedCustomerName, setSelectedCustomerName] = useState("");
+  const [searchQuery, setSearchQuery] = useState("");
 
   useEffect(() => {
     setLocalLoading(true);
@@ -99,18 +104,25 @@ export function TransactionHistory() {
 
   return (
     <Box
-      sx={{ width: "100%", display: "flex", flexDirection: "column", gap: 3 }}
+      sx={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", gap: 3, overflow: "hidden" }}
     >
-      <Typography variant="h1" sx={{ color: "text.primary" }}>
-        Historial de Transacciones
-      </Typography>
+      <Box>
+        <Typography variant="h2" sx={{ fontWeight: 700, color: "text.primary" }}>
+          Historial de Transacciones
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+          Consulta de operaciones y emisión de recibos del turno actual.
+        </Typography>
+      </Box>
 
       <Paper
         sx={{
           width: "100%",
+          flexGrow: 1,
+          minHeight: 0, // Allow card to shrink
+          display: "flex",
+          flexDirection: "column",
           overflow: "hidden",
-          borderRadius: 0,
-          boxShadow: "none",
           border: "1px solid",
           borderColor: "divider",
         }}
@@ -119,27 +131,44 @@ export function TransactionHistory() {
           sx={{
             p: 3,
             display: "flex",
-            justifyContent: "flex-end",
+            gap: 2,
             alignItems: "center",
+            flexShrink: 0,
           }}
         >
-          <Tooltip title="Actualizar">
-            <IconButton
-              onClick={handleRefresh}
-              disabled={isLoading || localLoading}
-              sx={{
-                color: "primary.main",
-                border: "1px solid",
-                borderColor: "divider",
-                borderRadius: 1,
-              }}
-            >
-              <RefreshIcon />
-            </IconButton>
-          </Tooltip>
+          <TextField
+            placeholder="Buscar por cliente, documento o recibo..."
+            variant="outlined"
+            label="Buscar"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            slotProps={{
+              inputLabel: { shrink: true },
+              input: {
+                startAdornment: (
+                  <InputAdornment position="start">
+                    <SearchIcon sx={{ color: "text.secondary" }} />
+                  </InputAdornment>
+                ),
+              },
+            }}
+            sx={{ flex: 1 }}
+          />
+
+          <Button
+            variant="contained"
+            fullWidth={false}
+            onClick={handleRefresh}
+            disabled={isLoading || localLoading}
+            sx={{ minWidth: "120px" }}
+            size="small"
+            startIcon={<RefreshIcon />}
+          >
+            Actualizar
+          </Button>
         </Box>
 
-        <TableContainer sx={{ position: "relative", minHeight: 200 }}>
+        <TableContainer sx={{ position: "relative", flexGrow: 1, overflowY: "auto", overflowX: "auto" }}>
           {fetchError && (
             <Box
               sx={{
@@ -177,25 +206,25 @@ export function TransactionHistory() {
             </Box>
           )}
 
-          <Table sx={{ minWidth: 650 }}>
+          <Table sx={{ minWidth: 650 }} stickyHeader>
             <TableHead>
-              <TableRow sx={{ bgcolor: "background.paper" }}>
-                <TableCell sx={{ typography: "subtitle2" }}>
+              <TableRow>
+                <TableCell>
                   Fecha / Hora
                 </TableCell>
-                <TableCell sx={{ typography: "subtitle2" }}>Ticket</TableCell>
-                <TableCell sx={{ typography: "subtitle2" }}>Tipo</TableCell>
-                <TableCell sx={{ typography: "subtitle2" }}>Divisa</TableCell>
-                <TableCell sx={{ typography: "subtitle2" }} align="right">
+                <TableCell>Ticket</TableCell>
+                <TableCell>Tipo</TableCell>
+                <TableCell>Divisa</TableCell>
+                <TableCell align="right">
                   Monto Extranjero
                 </TableCell>
-                <TableCell sx={{ typography: "subtitle2" }} align="right">
+                <TableCell align="right">
                   Tasa
                 </TableCell>
-                <TableCell sx={{ typography: "subtitle2" }} align="right">
+                <TableCell align="right">
                   Total COP
                 </TableCell>
-                <TableCell sx={{ typography: "subtitle2" }} align="center">
+                <TableCell align="center">
                   Acciones
                 </TableCell>
               </TableRow>
@@ -228,7 +257,6 @@ export function TransactionHistory() {
                           tx.transaction_type === "buy" ? "success" : "info"
                         }
                         size="small"
-                        variant="outlined"
                       />
                     </TableCell>
                     <TableCell>{tx.iso_code}</TableCell>
@@ -269,6 +297,7 @@ export function TransactionHistory() {
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
           labelRowsPerPage="Filas por página"
+          sx={{ flexShrink: 0 }}
           labelDisplayedRows={({ from, to, count }) =>
             `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`
           }

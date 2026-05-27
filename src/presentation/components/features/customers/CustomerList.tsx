@@ -120,11 +120,16 @@ export function CustomerList() {
 
   return (
     <Box
-      sx={{ width: "100%", display: "flex", flexDirection: "column", gap: 3 }}
+      sx={{ width: "100%", height: "100%", display: "flex", flexDirection: "column", gap: 3, overflow: "hidden" }}
     >
-      <Typography variant="h1" sx={{ color: "text.primary" }}>
-        Clientes
-      </Typography>
+      <Box>
+        <Typography variant="h2" sx={{ fontWeight: 700, color: "text.primary" }}>
+          Clientes
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+          Buscar, crear y administrar clientes de la casa de cambio.
+        </Typography>
+      </Box>
 
       {fetchError && (
         <Alert severity="error" sx={{ border: "1px solid", borderColor: "error.main" }}>
@@ -135,9 +140,11 @@ export function CustomerList() {
       <Paper
         sx={{
           width: "100%",
+          flexGrow: 1,
+          minHeight: 0, // Allow card to shrink
+          display: "flex",
+          flexDirection: "column",
           overflow: "hidden",
-          borderRadius: 0,
-          boxShadow: "none",
           border: "1px solid",
           borderColor: "divider",
         }}
@@ -148,6 +155,7 @@ export function CustomerList() {
             display: "flex",
             gap: 2,
             alignItems: "center",
+            flexShrink: 0,
           }}
         >
           <TextField
@@ -179,7 +187,7 @@ export function CustomerList() {
           </Button>
         </Box>
 
-        <TableContainer sx={{ position: "relative" }}>
+        <TableContainer sx={{ position: "relative", flexGrow: 1, overflowY: "auto", overflowX: "auto" }}>
           {isLoading && (
             <Box
               sx={{
@@ -199,19 +207,19 @@ export function CustomerList() {
               <Typography variant="body2">Buscando...</Typography>
             </Box>
           )}
-          <Table sx={{ minWidth: 650 }}>
+          <Table sx={{ minWidth: 650 }} stickyHeader>
             <TableHead>
-              <TableRow sx={{ bgcolor: "background.paper" }}>
-                <TableCell sx={{ typography: "subtitle2" }}>
+              <TableRow>
+                <TableCell>
                   Nombre / Razón Social
                 </TableCell>
-                <TableCell sx={{ typography: "subtitle2" }}>Email</TableCell>
-                <TableCell sx={{ typography: "subtitle2" }}>
+                <TableCell>Email</TableCell>
+                <TableCell>
                   Documento
                 </TableCell>
-                <TableCell sx={{ typography: "subtitle2" }}>Teléfono</TableCell>
-                <TableCell sx={{ typography: "subtitle2" }}>Estado</TableCell>
-                <TableCell sx={{ typography: "subtitle2" }} align="center">
+                <TableCell>Teléfono</TableCell>
+                <TableCell>Estado</TableCell>
+                <TableCell align="center">
                   Acciones
                 </TableCell>
               </TableRow>
@@ -283,6 +291,7 @@ export function CustomerList() {
           onPageChange={handleChangePage}
           onRowsPerPageChange={handleChangeRowsPerPage}
           labelRowsPerPage="Clientes por página"
+          sx={{ flexShrink: 0 }}
           labelDisplayedRows={({ from, to, count }) =>
             `${from}-${to} de ${count !== -1 ? count : `más de ${to}`}`
           }

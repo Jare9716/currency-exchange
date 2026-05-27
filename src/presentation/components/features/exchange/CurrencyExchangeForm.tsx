@@ -209,9 +209,14 @@ export function CurrencyExchangeForm() {
 
   return (
     <Box sx={{ width: "100%", maxWidth: 1400, mx: "auto" }}>
-      <Typography variant="h1" sx={{ mb: 4 }}>
-        Nueva Transacción
-      </Typography>
+      <Box sx={{ mb: 3 }}>
+        <Typography variant="h2" sx={{ fontWeight: 700, color: "text.primary" }}>
+          Nueva Transacción
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
+          Compra o venta de divisas con validación KYC previa.
+        </Typography>
+      </Box>
 
       <Grid container spacing={3}>
         {/* Left Side: Form */}
