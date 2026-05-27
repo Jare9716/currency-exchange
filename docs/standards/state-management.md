@@ -149,6 +149,33 @@ export class HttpTransactionRepository implements TransactionRepository {
 }
 ```
 
+### Outgoing Request Mapping Boundary
+
+The API Schema Boundary pattern also applies to outgoing request bodies. If the API contract requires specific naming conventions, casing, or data shapes that differ from our clean Domain models, the translation MUST happen exclusively at the infrastructure boundary (within the Repository method).
+
+**Example:**
+The Domain layer uses `amount` to describe physical counts (`{ iso_code: "USD", amount: 1500 }`), but the backend API expects `{ iso_code: "USD", count: 1500 }`. The repository maps this cleanly before sending the HTTP POST:
+
+```typescript
+// src/infrastructure/http/HttpShiftRepository.ts
+
+async close(shiftId: string, payload: CloseShiftPayload): Promise<Shift> {
+  const apiPayload = {
+    physical_counts: payload.physical_counts.map((c) => ({
+      iso_code: c.iso_code,
+      count: c.amount, // Maps domain 'amount' to API-expected 'count' at the boundary
+    })),
+  };
+  
+  const response = await HttpClient.post(
+    `/api/v1/fx/shifts/${encodeURIComponent(shiftId)}/close`,
+    apiPayload
+  );
+  const data = await response.json();
+  return apiShiftSchema.parse(data);
+}
+```
+
 ---
 
 ## 7. Mandatory Request Body on POST Requests
