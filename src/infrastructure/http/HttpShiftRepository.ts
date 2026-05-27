@@ -102,7 +102,8 @@ export class HttpShiftRepository implements ShiftRepository {
 
   async close(shiftId: string): Promise<Shift> {
     const response = await HttpClient.post(
-      `/api/v1/fx/shifts/${encodeURIComponent(shiftId)}/close`
+      `/api/v1/fx/shifts/${encodeURIComponent(shiftId)}/close`,
+      {}
     );
     const data = await response.json();
     return apiShiftSchema.parse(data);
