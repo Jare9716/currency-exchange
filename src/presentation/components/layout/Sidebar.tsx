@@ -14,6 +14,7 @@ import {
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import PeopleIcon from "@mui/icons-material/People";
 import ReceiptIcon from "@mui/icons-material/Receipt";
+import AccessTimeIcon from "@mui/icons-material/AccessTime";
 import { usePathname, useRouter } from "next/navigation";
 
 export function Sidebar() {
@@ -23,6 +24,7 @@ export function Sidebar() {
   const router = useRouter();
 
   const navItems = [
+    { label: "Turno", path: "/dashboard/shift", icon: AccessTimeIcon },
     { label: "Transacción", path: "/dashboard", icon: SwapHorizIcon },
     { label: "Clientes", path: "/dashboard/customers", icon: PeopleIcon },
     { label: "Transacciones", path: "/dashboard/transactions", icon: ReceiptIcon },

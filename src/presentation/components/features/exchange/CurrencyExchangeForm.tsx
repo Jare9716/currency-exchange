@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   searchCustomerSchema,
   exchangeSchema,
@@ -17,6 +18,7 @@ import {
   InputAdornment,
   CircularProgress,
   Grid,
+  Alert,
 } from "@mui/material";
 import { Button } from "@/presentation/components/ui/Button/Button";
 import { TextField } from "@/presentation/components/ui/TextField/TextField";
@@ -35,6 +37,8 @@ import { ValidateClintonList } from "@/use-cases/ValidateClintonList";
 import { currencyService } from "@/infrastructure/HttpCurrencyService";
 import { clintonListService } from "@/infrastructure/HttpClintonListService";
 import { useNotificationStore } from "@/presentation/stores/notification.store";
+import { useShiftStore } from "@/presentation/stores/shift.store";
+import { getOperatorDetails } from "@/utils/jwt";
 import { TransactionReceiptModal } from "./TransactionReceiptModal";
 
 const getExchangeRate = new GetExchangeRate(currencyService);
@@ -43,7 +47,9 @@ const validateClintonList = new ValidateClintonList(clintonListService);
 const executeTransaction = new ExecuteTransaction(transactionRepository);
 
 export function CurrencyExchangeForm() {
+  const router = useRouter();
   const { showNotification } = useNotificationStore();
+  const { activeShift, fetchActiveShift } = useShiftStore();
 
   const [loadingRate, setLoadingRate] = useState(false);
   const [exchangeRate, setExchangeRate] = useState<number>(0.0);
@@ -67,6 +73,14 @@ export function CurrencyExchangeForm() {
     Transaction | undefined
   >(undefined);
   const [receiptModalOpen, setReceiptModalOpen] = useState(false);
+
+  // Fetch active shift on mount
+  useEffect(() => {
+    if (!activeShift) {
+      const operator = getOperatorDetails();
+      fetchActiveShift(operator.branch);
+    }
+  }, [activeShift, fetchActiveShift]);
 
   // Fetch initial data
   useEffect(() => {
@@ -217,6 +231,24 @@ export function CurrencyExchangeForm() {
           Compra o venta de divisas con validación KYC previa.
         </Typography>
       </Box>
+
+      {!activeShift && (
+        <Alert
+          severity="warning"
+          sx={{ mb: 3 }}
+          action={
+            <Button
+              color="warning"
+              size="small"
+              onClick={() => router.push("/dashboard/shift")}
+            >
+              Abrir Turno
+            </Button>
+          }
+        >
+          <strong>Atención:</strong> No hay un turno de caja abierto para esta sucursal. Debes abrir un turno antes de realizar transacciones.
+        </Alert>
+      )}
 
       <Grid container spacing={3}>
         {/* Left Side: Form */}
@@ -439,6 +471,7 @@ export function CurrencyExchangeForm() {
                 size="medium"
                 onClick={handleMakeTransaction}
                 disabled={
+                  !activeShift ||
                   !foundCustomer ||
                   foundCustomer.status === "Reportado" ||
                   !amountUSD ||

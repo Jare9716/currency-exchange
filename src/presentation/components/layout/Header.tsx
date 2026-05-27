@@ -22,6 +22,7 @@ import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/presentation/stores/auth.store";
 import { useCustomersStore } from "@/presentation/stores/customers.store";
 import { useTransactionsStore } from "@/presentation/stores/transactions.store";
+import { useShiftStore } from "@/presentation/stores/shift.store";
 import { useColorScheme } from "@mui/material/styles";
 
 export function Header() {
@@ -51,6 +52,7 @@ export function Header() {
     clearTokens();
     useCustomersStore.getState().resetCustomers();
     useTransactionsStore.getState().resetTransactions();
+    useShiftStore.getState().resetShift();
     router.push("/login");
   };
 
