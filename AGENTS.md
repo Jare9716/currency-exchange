@@ -57,11 +57,7 @@ Read the relevant standard before writing code (files in `docs/standards/` TBA):
 15. **No `null` in component state or props:** Use `undefined` instead of `null` for optional state and props (e.g., `useState<Customer | undefined>(undefined)` not `useState<Customer | null>(null)`). See [State Management Standards](docs/standards/state-management.md) for the full rationale.
 16. **API Schema Boundary:** Every infrastructure repository MUST define a private `apiXxxSchema` using `.nullish().transform(val => val ?? undefined)` for all nullable optional fields. Never use domain schemas directly to parse API responses. See [State Management Standards §6](docs/standards/state-management.md).
 17. **No Client-Side Filtering:** Never perform client-side/in-memory filtering as a workaround for backend query issues. All data filtering, pagination, and sorting must be driven strictly by the backend endpoints.
-18. **Spec-Driven Development (SDD):** All new features, business rules, or behavioral modifications MUST follow the OpenSpec SDD workflow. No code changes or logic should be introduced without registering a corresponding change proposal or behavioral spec in the `openspec/` directory. See [OpenSpec SDD Guide](openspec/README.md) and the active specifications:
-    * [Shift Management Specification](openspec/specs/shift/spec.md)
-    * [Authentication & Session Specification](openspec/specs/auth-session/spec.md)
-    * [Compliance & Sanction Screening Specification](openspec/specs/compliance/spec.md)
-    * [FX Operations & Transactions Specification](openspec/specs/fx-operations/spec.md)
+18. **Spec-Driven Development (SDD):** All new features, business rules, or behavioral modifications MUST follow the OpenSpec SDD workflow. No code changes or logic should be introduced without registering a corresponding change proposal or behavioral spec in the `openspec/` directory. See [OpenSpec SDD Guide & Active Specifications Directory](openspec/README.md).
 
 ## UI / UX Implementation Notes
 

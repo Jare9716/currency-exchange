@@ -18,6 +18,16 @@ openspec/
         └── specs/
 ```
 
+## Active Specifications
+
+The core behavioral capabilities of our system are governed by the following authoritative specs:
+
+- **[Shift Management](specs/shift/spec.md)**: Box turnos, rate overrides, volatility controls, cash reconciliation.
+- **[Authentication & Session](specs/auth-session/spec.md)**: Secure logins, token refresh logic, session hygiene.
+- **[Compliance & Sanction Screening](specs/compliance/spec.md)**: Clinton list checks, fail-closed boundaries, name encoding.
+- **[FX Operations & Transactions](specs/fx-operations/spec.md)**: Exchange calculations, stock check validations, transaction logs.
+- **[Spec Template](specs/_template.md)**: Standard template for new specification files.
+
 ## Workflow
 
 1. **Propose**: `openspec propose <description>` — generates a change proposal
@@ -39,7 +49,7 @@ openspec/
 ## Install
 
 ```bash
-npm install -g @fission-ai/openspec@latest
+pnpm add -g @fission-ai/openspec@latest
 ```
 
 More info: https://openspec.dev
