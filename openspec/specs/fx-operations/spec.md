@@ -90,8 +90,8 @@ The system SHALL enforce transaction volume thresholds (SARLAFT) on customer acc
 ## Implementation Context
 
 Relevant skills:
-- [docs/standards/security.md](../../docs/standards/security.md)
-- [docs/standards/state-management.md](../../docs/standards/state-management.md)
+- [docs/standards/security.md](../../../docs/standards/security.md)
+- [docs/standards/state-management.md](../../../docs/standards/state-management.md)
 
 Relevant endpoints:
 - `POST /api/v1/fx/transactions` — execute and register a currency transaction

@@ -99,9 +99,9 @@ The system SHALL safely execute shift closure with mapped payloads and clean up 
 ## Implementation Context
 
 Relevant skills:
-- [docs/standards/security.md](../../docs/standards/security.md)
-- [docs/standards/state-management.md](../../docs/standards/state-management.md)
-- [docs/standards/typescript-javascript.md](../../docs/standards/typescript-javascript.md)
+- [docs/standards/security.md](../../../docs/standards/security.md)
+- [docs/standards/state-management.md](../../../docs/standards/state-management.md)
+- [docs/standards/typescript-javascript.md](../../../docs/standards/typescript-javascript.md)
 
 Relevant endpoints:
 - `GET /api/v1/fx/shifts/current` — retrieve branch active shift

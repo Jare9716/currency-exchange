@@ -53,7 +53,7 @@ The system SHALL URL-encode all query parameters when making screening lookups t
 ## Implementation Context
 
 Relevant skills:
-- [docs/standards/security.md](../../docs/standards/security.md)
+- [docs/standards/security.md](../../../docs/standards/security.md)
 
 Relevant endpoints:
 - `GET /api/v1/sanction-lists/screening` — query clinton list sanction records

@@ -68,8 +68,8 @@ The system SHALL wipe all sensitive in-memory data, state registers, and transac
 ## Implementation Context
 
 Relevant skills:
-- [docs/standards/security.md](../../docs/standards/security.md)
-- [docs/standards/state-management.md](../../docs/standards/state-management.md)
+- [docs/standards/security.md](../../../docs/standards/security.md)
+- [docs/standards/state-management.md](../../../docs/standards/state-management.md)
 
 Relevant endpoints:
 - `POST /api/v1/auth/login` — authenticate user credentials
