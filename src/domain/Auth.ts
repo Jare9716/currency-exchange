@@ -12,6 +12,68 @@ export type AuthTokens = {
   refreshToken: string;
 };
 
+export type TenantMembership = {
+  membershipId: string;
+  tenantId: string;
+  tenantName: string;
+  tenantSlug: string;
+  role: string;
+};
+
+export type TwoFactorSetup = {
+  secret: string;
+  otpauthUri: string;
+};
+
+export type TwoFactorBackupCodes = {
+  backupCodes: string[];
+};
+
+export type AuthenticatedResult = { type: "authenticated" } & AuthTokens & {
+  mustChangePassword?: boolean;
+  passwordExpiresInDays?: number;
+};
+
+export type TwoFactorRequiredResult = {
+  type: "two_factor_required";
+  stateToken: string;
+};
+
+export type LoginResult =
+  | AuthenticatedResult
+  | {
+      type: "tenant_selection_required";
+      sessionToken: string;
+      memberships: TenantMembership[];
+    }
+  | TwoFactorRequiredResult;
+
+export type TenantSelectionResult = AuthenticatedResult | TwoFactorRequiredResult;
+
 export interface AuthService {
-  login(credentials: LoginCredentials): Promise<AuthTokens>;
+  login(credentials: LoginCredentials): Promise<LoginResult>;
+  selectTenant(payload: {
+    sessionToken: string;
+    membershipId: string;
+  }): Promise<TenantSelectionResult>;
+  acceptInvite(payload: {
+    token: string;
+    newPassword: string;
+  }): Promise<AuthTokens>;
+  forgotPassword(email: string): Promise<void>;
+  resetPassword(payload: {
+    token: string;
+    newPassword: string;
+  }): Promise<void>;
+  setupTwoFactor(): Promise<TwoFactorSetup>;
+  enableTwoFactor(payload: {
+    code: string;
+  }): Promise<TwoFactorBackupCodes>;
+  disableTwoFactor(payload: {
+    code: string;
+  }): Promise<void>;
+  verifyTwoFactor(payload: {
+    stateToken: string;
+    code: string;
+  }): Promise<AuthenticatedResult>;
 }

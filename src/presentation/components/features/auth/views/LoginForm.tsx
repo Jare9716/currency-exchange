@@ -13,7 +13,7 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { Button } from "@/presentation/components/ui/Button/Button";
 import { TextField } from "@/presentation/components/ui/TextField/TextField";
-import { useLoginForm } from "@/presentation/components/features/auth/useLoginForm";
+import { useLoginForm } from "@/presentation/components/features/auth/hooks/useLoginForm";
 
 export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
@@ -145,7 +145,7 @@ export function LoginForm() {
             }}
           >
             <Link
-              href="#"
+              href="/forgot-password"
               underline="none"
               sx={{
                 color: "primary.main",

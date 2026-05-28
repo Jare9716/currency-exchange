@@ -46,6 +46,11 @@ export function Header() {
     setAnchorEl(null);
   };
 
+  const handleOpenSettings = () => {
+    handleMenuClose();
+    router.push("/dashboard/configuracion");
+  };
+
   const handleLogout = () => {
     handleMenuClose();
     clearTokens();
@@ -135,7 +140,7 @@ export function Header() {
             </ListItemIcon>
             Mi Perfil
           </MenuItem>
-          <MenuItem onClick={handleMenuClose}>
+          <MenuItem onClick={handleOpenSettings}>
             <ListItemIcon>
               <SettingsIcon fontSize="small" />
             </ListItemIcon>
