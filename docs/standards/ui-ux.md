@@ -48,6 +48,8 @@ All screens displaying lists (Customers, Transactions, etc.) must follow this he
 - Use `display: "flex"` or `Grid` with `gap: 3` to group fields in the same row.
 - **The Label Gap:** Modals must have a `pt: 6` (48px) on `DialogContent` to prevent floating labels from being clipped by the modal's top boundary.
 - **Consistency:** All inputs in a form MUST share the same `size` (usually `"small"`).
+- **No Arbitrary Hardcoded Defaults:** Do NOT hardcode arbitrary, non-zero mock values (e.g., `2000000` for opening cash) as the default state of form inputs. Use standard clean defaults (`"0"`), empty states (`""`), or values fetched dynamically from the API/context.
+- **Toggle Buttons Rule**: Do NOT use dropdowns (`<Select>`) for selectors with less than 4 options. Use `<ToggleButtonGroup>` with `<ToggleButton>` to keep the layout direct and responsive.
 
 ## 3. MUI v6/v7 Deprecation Policy
 
@@ -96,3 +98,11 @@ These rules MUST be followed to prevent rendering regressions:
   <ThemeRegistry>{children}</ThemeRegistry>
 </AppRouterCacheProvider>
 ```
+
+## 6. MUI Icon Compliance and Stats Card Aesthetics
+
+To maintain bank-grade professional aesthetics and visual consistency:
+
+- **No Custom Emojis in UI:** System-level or platform-dependent custom emojis (e.g., `🟢`, `⚠️`, `🚨`) are strictly prohibited in the UI. Emojis render inconsistently across different operating systems and browsers. Developers MUST exclusively use standard, high-density icons from `@mui/icons-material` (such as `CheckCircleIcon`, `WarningIcon`, `ErrorIcon`) or no icons at all.
+- **Unified Card Borders:** Statistics and KPI cards in dashboards must NOT use solid colored left accent borders (e.g., `borderLeft: "4px solid success.main"`). Instead, standard cards must remain clean, either borderless with premium shadows or thin borders (`border: "1px solid"`, `borderColor: "divider"`) to ensure visual harmony across all views.
+

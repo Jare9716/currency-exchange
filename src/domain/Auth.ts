@@ -12,6 +12,18 @@ export type AuthTokens = {
   refreshToken: string;
 };
 
+export interface UserProfile {
+  id: string;
+  email: string;
+  fullName: string;
+  role: string;
+  branchCode?: string;
+  tenantId: string;
+  isActive: boolean;
+  companyName: string;
+}
+
 export interface AuthService {
   login(credentials: LoginCredentials): Promise<AuthTokens>;
+  getCurrentUser(): Promise<UserProfile>;
 }

@@ -5,12 +5,14 @@ import {
   LoginFormData,
 } from "@/presentation/components/features/auth/login.schema";
 import { AuthenticateUser } from "@/use-cases/AuthenticateUser";
+import { GetCurrentUser } from "@/use-cases/GetCurrentUser";
 import { authService } from "@/infrastructure/auth/HttpAuthService";
 import { useAuthStore } from "@/presentation/stores/auth.store";
 import { to } from "@/utils/async";
 import { ApiError } from "@/domain/Errors";
 
 const authenticateUser = new AuthenticateUser(authService);
+const getCurrentUser = new GetCurrentUser(authService);
 
 export function useLoginForm() {
   const router = useRouter();
@@ -70,9 +72,8 @@ export function useLoginForm() {
       })
     );
 
-    setIsSubmitting(false);
-
     if (err) {
+      setIsSubmitting(false);
       if (err instanceof ApiError) {
         setGeneralError(err.detail ?? "Credenciales inválidas");
       } else {
@@ -81,10 +82,28 @@ export function useLoginForm() {
       return;
     }
 
-    // Success! Redirect to dashboard
+    // Success! Fetch Profile before redirecting
     if (tokens) {
       useAuthStore.getState().setTokens(tokens.accessToken, tokens.refreshToken);
-      router.push("/dashboard/transactions");
+
+      const [profileErr, profile] = await to(getCurrentUser.execute());
+
+      setIsSubmitting(false);
+
+      if (profileErr || !profile) {
+        useAuthStore.getState().clearTokens();
+        setGeneralError("Error al obtener la información de perfil");
+        return;
+      }
+
+      useAuthStore.getState().setUserProfile(profile);
+
+      // Set active branch context
+      if (profile.branchCode) {
+        useAuthStore.getState().setActiveBranchCode(profile.branchCode);
+      }
+
+      router.push("/dashboard");
     }
   };
 
