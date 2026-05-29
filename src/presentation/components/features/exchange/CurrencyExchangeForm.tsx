@@ -38,6 +38,7 @@ import { currencyService } from "@/infrastructure/HttpCurrencyService";
 import { clintonListService } from "@/infrastructure/HttpClintonListService";
 import { useNotificationStore } from "@/presentation/stores/notification.store";
 import { useShiftStore } from "@/presentation/stores/shift.store";
+import { useAuthStore } from "@/presentation/stores/auth.store";
 import { getOperatorDetails } from "@/utils/jwt";
 import { TransactionReceiptModal } from "./TransactionReceiptModal";
 
@@ -195,9 +196,11 @@ export function CurrencyExchangeForm() {
     }
 
     try {
+      const branchCode = useAuthStore.getState().activeBranchCode || "001";
       const txn = await executeTransaction.execute(
         foundCustomer.id || foundCustomer.document_number,
         Number(amountUSD),
+        branchCode,
         observations,
       );
 

@@ -27,6 +27,7 @@ export interface CreateTransactionPayload {
   transaction_type: "buy" | "sell";
   iso_code: string;
   foreign_amount: string;
+  branch_code: string;
   description?: string;
 }
 

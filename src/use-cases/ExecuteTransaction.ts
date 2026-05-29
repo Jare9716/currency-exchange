@@ -7,6 +7,7 @@ export class ExecuteTransaction {
   async execute(
     customerId: string,
     amountUSD: number,
+    branchCode: string,
     description?: string,
   ): Promise<Transaction> {
     if (amountUSD <= 0) {
@@ -18,6 +19,7 @@ export class ExecuteTransaction {
       transaction_type: "buy", // Assuming buy for now based on USD -> COP flow
       iso_code: "USD",
       foreign_amount: amountUSD.toString(),
+      branch_code: branchCode,
       description: description ?? "Exchange via frontend",
     });
 
