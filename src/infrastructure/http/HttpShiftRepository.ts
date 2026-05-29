@@ -108,7 +108,8 @@ export class HttpShiftRepository implements ShiftRepository {
       apiPayload
     );
     const data = await response.json();
-    return apiShiftSchema.parse(data);
+    const shiftData = data && typeof data === "object" && "shift" in data ? data.shift : data;
+    return apiShiftSchema.parse(shiftData);
   }
 
 
