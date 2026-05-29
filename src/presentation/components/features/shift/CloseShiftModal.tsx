@@ -16,6 +16,7 @@ import {
 import { Button } from "@/presentation/components/ui/Button/Button";
 import { TextField } from "@/presentation/components/ui/TextField/TextField";
 import { useShiftStore } from "@/presentation/stores/shift.store";
+import { useTransactionsStore } from "@/presentation/stores/transactions.store";
 import { useNotificationStore } from "@/presentation/stores/notification.store";
 import { PhysicalCount } from "@/domain/Shift";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
@@ -28,7 +29,7 @@ interface CloseShiftModalProps {
 }
 
 export function CloseShiftModal({ open, onClose }: CloseShiftModalProps) {
-  const { activeShift, summary, closeActiveShift } = useShiftStore();
+  const { activeShift, closeActiveShift } = useShiftStore();
   const { showNotification } = useNotificationStore();
 
   const [submitting, setSubmitting] = useState(false);
@@ -42,14 +43,22 @@ export function CloseShiftModal({ open, onClose }: CloseShiftModalProps) {
   const getOperatedCurrencies = () => {
     if (!activeShift) return [];
 
+    const txs = useTransactionsStore.getState().transactions;
+    const totalCopSold = txs
+      .filter((t) => t.transaction_type === "sell")
+      .reduce((sum, t) => sum + Number(t.cop_amount), 0);
+    const totalCopPurchased = txs
+      .filter((t) => t.transaction_type === "buy")
+      .reduce((sum, t) => sum + Number(t.cop_amount), 0);
+
     const list = [
       {
         iso_code: "COP",
         name: "Pesos Colombianos",
         expected:
           Number(activeShift.opening_cash_cop) +
-          Number(summary?.total_cop_sold || 0) -
-          Number(summary?.total_cop_purchased || 0),
+          totalCopSold -
+          totalCopPurchased,
         symbol: "$",
       },
       ...activeShift.currencies.map((c) => ({
@@ -90,7 +99,7 @@ export function CloseShiftModal({ open, onClose }: CloseShiftModalProps) {
       setErrorMsg(undefined);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open, activeShift, summary]);
+  }, [open, activeShift]);
 
   const handleAmountChange = (isoCode: string, value: string) => {
     setPhysicalAmounts((prev) => ({
