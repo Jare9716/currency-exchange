@@ -20,6 +20,7 @@ export interface UserProfile {
   branchCode?: string;
   tenantId: string;
   isActive: boolean;
+  companyName: string;
 }
 
 export interface AuthService {

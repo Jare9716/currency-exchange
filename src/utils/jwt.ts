@@ -30,7 +30,7 @@ export function getOperatorDetails(): OperatorDetails {
       name: "",
       branch: branch || "",
       role: "",
-      company: "Cambios Express SAS",
+      company: "",
     };
   }
 
@@ -38,6 +38,6 @@ export function getOperatorDetails(): OperatorDetails {
     name: profile.fullName,
     branch: branch || profile.branchCode || "",
     role: profile.role,
-    company: "Cambios Express SAS",
+    company: profile.companyName,
   };
 }

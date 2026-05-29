@@ -48,8 +48,6 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
           setUserProfile(profile);
           if (profile.branchCode) {
             setActiveBranchCode(profile.branchCode);
-          } else {
-            setActiveBranchCode("001");
           }
         }
         setLoadingProfile(false);

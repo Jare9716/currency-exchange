@@ -41,14 +41,48 @@ export class HttpAuthService implements AuthService {
     const data = await response.json();
     const parsed = apiUserProfileSchema.parse(data);
 
+    // Fetch company details dynamically to get the real company name
+    let companyName = "Cambios Express SAS";
+    try {
+      const companyResponse = await HttpClient.get("/api/v1/company");
+      const companyData = await companyResponse.json();
+      if (companyData && companyData.name) {
+        companyName = companyData.name;
+      }
+    } catch {
+      // Keep fallback if endpoint fails
+    }
+
+    // Fetch active branches dynamically if the user has no branch_code assigned (owner/admin roles)
+    let branchCode = parsed.branch_code;
+    if (!branchCode) {
+      try {
+        const branchesResponse = await HttpClient.get("/api/v1/branches");
+        const branchesData = (await branchesResponse.json()) as Array<{
+          code: string;
+          is_active: boolean;
+        }>;
+        if (Array.isArray(branchesData) && branchesData.length > 0) {
+          const activeBranch =
+            branchesData.find((b) => b.is_active) || branchesData[0];
+          if (activeBranch && activeBranch.code) {
+            branchCode = activeBranch.code;
+          }
+        }
+      } catch {
+        // Keep undefined if endpoint fails
+      }
+    }
+
     return {
       id: parsed.id,
       email: parsed.email,
       fullName: parsed.full_name,
       role: parsed.role,
-      branchCode: parsed.branch_code,
+      branchCode: branchCode || undefined,
       tenantId: parsed.tenant_id,
       isActive: parsed.is_active,
+      companyName,
     };
   }
 }
