@@ -21,7 +21,7 @@ const apiShiftCurrencySchema = z.object({
   approved_sell_rate: z.string(),
   rate_status: z.string(),
   volatility_flagged: z.boolean(),
-  volatility_pct: z.string(),
+  volatility_pct: z.string().nullish().transform((val) => val ?? "0.00"),
   base_units: z.string().nullish().transform((val) => val ?? "0.00"),
   units_purchased: z.string().nullish().transform((val) => val ?? "0.00"),
   units_sold: z.string().nullish().transform((val) => val ?? "0.00"),
