@@ -5,6 +5,7 @@ import {
   LoginFormData,
 } from "@/presentation/components/features/auth/schemas/login.schema";
 import { AuthenticateUser } from "@/use-cases/AuthenticateUser";
+import { GetCurrentUser } from "@/use-cases/GetCurrentUser";
 import { authService } from "@/infrastructure/auth/HttpAuthService";
 import { useAuthStore } from "@/presentation/stores/auth.store";
 import { to } from "@/utils/async";
@@ -13,6 +14,7 @@ import { saveTwoFactorSession } from "@/presentation/components/features/auth/ut
 import { getSpanishAuthErrorMessage } from "@/presentation/components/features/auth/utils/auth-error-message";
 
 const authenticateUser = new AuthenticateUser(authService);
+const getCurrentUser = new GetCurrentUser(authService);
 
 export function useLoginForm() {
   const router = useRouter();
@@ -69,14 +71,16 @@ export function useLoginForm() {
       }),
     );
 
-    setIsSubmitting(false);
-
     if (err) {
       setGeneralError(getSpanishAuthErrorMessage(err, "Error de conexion al iniciar sesion"));
+      setIsSubmitting(false);
       return;
     }
 
-    if (!result) return;
+    if (!result) {
+      setIsSubmitting(false);
+      return;
+    }
 
     if (result.type === "tenant_selection_required") {
       sessionStorage.setItem(
@@ -101,7 +105,17 @@ export function useLoginForm() {
       return;
     }
 
-    useAuthStore.getState().setTokens(result.accessToken, result.refreshToken);
+    const authState = useAuthStore.getState();
+    authState.setTokens(result.accessToken, result.refreshToken);
+
+    const [profileErr, profile] = await to(getCurrentUser.execute());
+    if (!profileErr && profile) {
+      authState.setUserProfile(profile);
+      if (profile.branchCode) {
+        authState.setActiveBranchCode(profile.branchCode);
+      }
+    }
+
     savePasswordExpiryWarning({
       mustChangePassword: !!result.mustChangePassword,
       passwordExpiresInDays: result.passwordExpiresInDays,

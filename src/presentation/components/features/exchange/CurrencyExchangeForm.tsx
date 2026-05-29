@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import {
   searchCustomerSchema,
   exchangeSchema,
@@ -15,8 +16,10 @@ import {
   MenuItem,
   Divider,
   InputAdornment,
-  CircularProgress,
   Grid,
+  Alert,
+  ToggleButton,
+  ToggleButtonGroup,
 } from "@mui/material";
 import { Button } from "@/presentation/components/ui/Button/Button";
 import { TextField } from "@/presentation/components/ui/TextField/TextField";
@@ -25,28 +28,24 @@ import CheckCircleOutlineIcon from "@mui/icons-material/CheckCircleOutline";
 import ErrorOutlineIcon from "@mui/icons-material/ErrorOutline";
 import { Customer } from "@/domain/Customer";
 import { Transaction } from "@/domain/Transaction";
-import { DomainError } from "@/domain/Errors";
 import { ExecuteTransaction } from "@/use-cases/ExecuteTransaction";
 import { transactionRepository } from "@/infrastructure/http/HttpTransactionRepository";
 import { customerRepository } from "@/infrastructure/http/HttpCustomerRepository";
-import { GetExchangeRate } from "@/use-cases/GetExchangeRate";
-import { ConvertCurrency } from "@/use-cases/ConvertCurrency";
 import { ValidateClintonList } from "@/use-cases/ValidateClintonList";
-import { currencyService } from "@/infrastructure/HttpCurrencyService";
 import { clintonListService } from "@/infrastructure/HttpClintonListService";
 import { useNotificationStore } from "@/presentation/stores/notification.store";
+import { useShiftStore } from "@/presentation/stores/shift.store";
+import { useAuthStore } from "@/presentation/stores/auth.store";
+import { getOperatorDetails } from "@/utils/jwt";
 import { TransactionReceiptModal } from "./TransactionReceiptModal";
 
-const getExchangeRate = new GetExchangeRate(currencyService);
-const convertCurrency = new ConvertCurrency(currencyService);
 const validateClintonList = new ValidateClintonList(clintonListService);
 const executeTransaction = new ExecuteTransaction(transactionRepository);
 
 export function CurrencyExchangeForm() {
+  const router = useRouter();
   const { showNotification } = useNotificationStore();
-
-  const [loadingRate, setLoadingRate] = useState(false);
-  const [exchangeRate, setExchangeRate] = useState<number>(0.0);
+  const { activeShift, fetchActiveShift } = useShiftStore();
 
   const [documentInput, setDocumentInput] = useState("");
   const [foundCustomer, setFoundCustomer] = useState<Customer | undefined>(
@@ -56,67 +55,44 @@ export function CurrencyExchangeForm() {
 
   const [amountUSD, setAmountUSD] = useState<string>("");
   const [amountError, setAmountError] = useState<string | undefined>(undefined);
-  const [fromCurrency] = useState("USD");
+  const [transactionType, setTransactionType] = useState<"buy" | "sell">("buy");
+  const [fromCurrency, setFromCurrency] = useState<string>("");
   const [toCurrency] = useState("COP");
   const [observations, setObservations] = useState("");
-
-  const [calculatedCOP, setCalculatedCOP] = useState<number>(0);
-  const [loadingConversion, setLoadingConversion] = useState(false);
 
   const [lastTransaction, setLastTransaction] = useState<
     Transaction | undefined
   >(undefined);
   const [receiptModalOpen, setReceiptModalOpen] = useState(false);
 
-  // Fetch initial data
+  // Fetch active shift on mount
   useEffect(() => {
-    const fetchExchangeRate = async () => {
-      try {
-        setLoadingRate(true);
-        const rate = await getExchangeRate.execute("USD");
-        setExchangeRate(rate);
-      } catch (error) {
-        let errMsg = "Error al obtener tasa de cambio";
-        if (error instanceof DomainError && error.code === "exchange_rate_unavailable") {
-          const currency = (error.details?.currency as string) || "USD";
-          errMsg = `La tasa de cambio para la moneda ${currency} no está disponible en este momento`;
-        } else if (error instanceof Error) {
-          errMsg = error.message;
-        }
-        showNotification(errMsg, "error", "Error de Tasa");
-      } finally {
-        setLoadingRate(false);
-      }
-    };
-    fetchExchangeRate();
-  }, [showNotification]);
-
-  // Handle conversion
-  useEffect(() => {
-    if (!amountUSD || isNaN(Number(amountUSD))) {
-      setCalculatedCOP(0);
-      return;
+    if (!activeShift) {
+      const operator = getOperatorDetails();
+      fetchActiveShift(operator.branch);
     }
+  }, [activeShift, fetchActiveShift]);
 
-    const fetchConversion = async (usd: number) => {
-      try {
-        setLoadingConversion(true);
-        const cop = await convertCurrency.execute(usd, "USD", "COP");
-        setCalculatedCOP(cop);
-      } catch (error) {
-        const errMsg = error instanceof Error ? error.message : "Error al realizar conversión";
-        showNotification(errMsg, "error", "Error de Conversión");
-      } finally {
-        setLoadingConversion(false);
-      }
-    };
+  // Determine current active currency code
+  const currentCurrency = fromCurrency || activeShift?.currencies?.[0]?.iso_code || "USD";
 
-    const timeout = setTimeout(() => {
-      fetchConversion(Number(amountUSD));
-    }, 400);
+  // Dynamically get exchange rate and calculate COP amount
+  const activeCurrencyConfig = activeShift?.currencies.find(
+    (c) => c.iso_code === currentCurrency
+  );
 
-    return () => clearTimeout(timeout);
-  }, [amountUSD, showNotification]);
+  const exchangeRate = activeCurrencyConfig
+    ? Number(
+        transactionType === "buy"
+          ? activeCurrencyConfig.approved_buy_rate
+          : activeCurrencyConfig.approved_sell_rate
+      )
+    : 0;
+
+  const calculatedCOP =
+    amountUSD && !isNaN(Number(amountUSD))
+      ? Number(amountUSD) * exchangeRate
+      : 0;
 
   const handleCheckCustomer = async () => {
     const validation = searchCustomerSchema.safeParse({ documentInput });
@@ -181,9 +157,13 @@ export function CurrencyExchangeForm() {
     }
 
     try {
+      const branchCode = useAuthStore.getState().activeBranchCode || "001";
       const txn = await executeTransaction.execute(
         foundCustomer.id || foundCustomer.document_number,
         Number(amountUSD),
+        currentCurrency,
+        transactionType,
+        branchCode,
         observations,
       );
 
@@ -203,7 +183,6 @@ export function CurrencyExchangeForm() {
     setFoundCustomer(undefined);
     setDocumentInput("");
     setLookupAttempted(false);
-    setCalculatedCOP(0);
     setAmountError(undefined);
   };
 
@@ -217,6 +196,24 @@ export function CurrencyExchangeForm() {
           Compra o venta de divisas con validación KYC previa.
         </Typography>
       </Box>
+
+      {!activeShift && (
+        <Alert
+          severity="warning"
+          sx={{ mb: 3 }}
+          action={
+            <Button
+              color="warning"
+              size="small"
+              onClick={() => router.push("/dashboard/shift")}
+            >
+              Abrir Turno
+            </Button>
+          }
+        >
+          <strong>Atención:</strong> No hay un turno de caja abierto para esta sucursal. Debes abrir un turno antes de realizar transacciones.
+        </Alert>
+      )}
 
       <Grid container spacing={3}>
         {/* Left Side: Form */}
@@ -306,17 +303,58 @@ export function CurrencyExchangeForm() {
                 Conversión
               </Typography>
               <Grid container spacing={2}>
+                <Grid size={{ xs: 12 }}>
+                  <ToggleButtonGroup
+                    value={transactionType}
+                    exclusive
+                    onChange={(_, value) => value && setTransactionType(value)}
+                    fullWidth
+                    color="primary"
+                  >
+                    <ToggleButton value="buy">
+                      Compra
+                    </ToggleButton>
+                    <ToggleButton value="sell">
+                      Venta
+                    </ToggleButton>
+                  </ToggleButtonGroup>
+                </Grid>
                 <Grid size={{ xs: 12, sm: 6 }}>
-                  <FormControl fullWidth size="small">
-                    <InputLabel shrink>Desde</InputLabel>
-                    <Select value={fromCurrency} label="Desde" notched>
-                      <MenuItem value="USD">Dólares (USD)</MenuItem>
-                    </Select>
-                  </FormControl>
+                  {activeShift && activeShift.currencies.length > 0 && activeShift.currencies.length < 4 ? (
+                    <ToggleButtonGroup
+                      value={currentCurrency}
+                      exclusive
+                      onChange={(_, value) => value && setFromCurrency(value)}
+                      fullWidth
+                      color="primary"
+                    >
+                      {activeShift.currencies.map((c) => (
+                        <ToggleButton key={c.iso_code} value={c.iso_code}>
+                          {c.iso_code}
+                        </ToggleButton>
+                      ))}
+                    </ToggleButtonGroup>
+                  ) : (
+                    <FormControl fullWidth size="small">
+                      <InputLabel shrink>Moneda Extranjera</InputLabel>
+                      <Select
+                        value={currentCurrency}
+                        onChange={(e) => setFromCurrency(e.target.value)}
+                        label="Moneda Extranjera"
+                        notched
+                      >
+                        {activeShift?.currencies.map((c) => (
+                          <MenuItem key={c.iso_code} value={c.iso_code}>
+                            {c.iso_code}
+                          </MenuItem>
+                        )) || <MenuItem value="USD">USD</MenuItem>}
+                      </Select>
+                    </FormControl>
+                  )}
                   <TextField
                     sx={{ mt: 2 }}
                     type="number"
-                    label="Monto USD"
+                    label={`Monto ${currentCurrency || ""}`}
                     value={amountUSD}
                     onChange={(e) => setAmountUSD(e.target.value)}
                     error={!!amountError}
@@ -340,21 +378,16 @@ export function CurrencyExchangeForm() {
                   <TextField
                     sx={{ mt: 2 }}
                     disabled
-                    label="Resultado COP"
+                    label={transactionType === "buy" ? "Total COP a entregar" : "Total COP a recibir"}
                     value={
-                      loadingConversion
-                        ? "Calculando..."
-                        : calculatedCOP > 0
-                          ? calculatedCOP.toLocaleString("es-CO")
-                          : ""
+                      calculatedCOP > 0
+                        ? calculatedCOP.toLocaleString("es-CO")
+                        : ""
                     }
                     slotProps={{
                       input: {
                         startAdornment: (
                           <InputAdornment position="start">$</InputAdornment>
-                        ),
-                        endAdornment: loadingConversion && (
-                          <CircularProgress size={16} />
                         ),
                       },
                     }}
@@ -410,9 +443,7 @@ export function CurrencyExchangeForm() {
                 Tasa Aplicada
               </Typography>
               <Typography variant="body2" sx={{ fontWeight: 600 }}>
-                {loadingRate
-                  ? "..."
-                  : `$${exchangeRate.toLocaleString("es-CO")}`}
+                {`$${exchangeRate.toLocaleString("es-CO")}`}
               </Typography>
             </Box>
 
@@ -426,7 +457,9 @@ export function CurrencyExchangeForm() {
                 mb: 4,
               }}
             >
-              <Typography variant="subtitle1">Total a entregar</Typography>
+              <Typography variant="subtitle1">
+                {transactionType === "buy" ? "Total a entregar" : "Total a recibir"}
+              </Typography>
               <Typography variant="h2" color="primary.main">
                 ${calculatedCOP.toLocaleString("es-CO")}
               </Typography>
@@ -439,11 +472,11 @@ export function CurrencyExchangeForm() {
                 size="medium"
                 onClick={handleMakeTransaction}
                 disabled={
+                  !activeShift ||
                   !foundCustomer ||
                   foundCustomer.status === "Reportado" ||
                   !amountUSD ||
-                  calculatedCOP <= 0 ||
-                  loadingConversion
+                  calculatedCOP <= 0
                 }
               >
                 Confirmar Transacción

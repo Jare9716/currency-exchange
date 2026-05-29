@@ -18,6 +18,7 @@ describe('HttpTransactionRepository', () => {
       transaction_type: 'buy',
       iso_code: 'USD',
       foreign_amount: '100',
+      branch_code: '001',
     };
 
     const mockResponse = {

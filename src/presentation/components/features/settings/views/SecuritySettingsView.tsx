@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useRef, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
 import {
   Alert,
@@ -15,11 +15,12 @@ import {
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import LockOpenIcon from "@mui/icons-material/LockOpen";
-import QrCode2Icon from "@mui/icons-material/QrCode2";
 import SecurityIcon from "@mui/icons-material/Security";
 import { TwoFactorSetup } from "@/domain/Auth";
+import { ApiError } from "@/domain/Errors";
 import { authService } from "@/infrastructure/auth/HttpAuthService";
 import { Button } from "@/presentation/components/ui/Button/Button";
+import { useAuthStore } from "@/presentation/stores/auth.store";
 import { TotpInput } from "@/presentation/components/features/auth/components/AuthHelpers";
 import {
   totpSetupSchema,
@@ -34,7 +35,7 @@ const setupSteps = [
   "Ingresa el codigo de 6 digitos para confirmar la activacion.",
 ];
 
-type SettingsMode = "main" | "two_factor" | "setup" | "disable" | "disable_success";
+type SettingsMode = "main" | "setup" | "disable" | "disable_success";
 
 export function SecuritySettingsView() {
   const [mode, setMode] = useState<SettingsMode>("main");
@@ -46,6 +47,13 @@ export function SecuritySettingsView() {
   const [success, setSuccess] = useState<string | undefined>(undefined);
   const [isLoadingSetup, setIsLoadingSetup] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const hasRequestedSetup = useRef(false);
+  const twoFactorEnabled = useAuthStore((state) =>
+    state.twoFactorEnabled ?? state.userProfile?.twoFactorEnabled ?? false,
+  );
+  const setTwoFactorEnabled = useAuthStore(
+    (state) => state.setTwoFactorEnabled,
+  );
 
   const copyToClipboard = async (value: string) => {
     if (typeof navigator === "undefined" || !navigator.clipboard) return;
@@ -59,7 +67,7 @@ export function SecuritySettingsView() {
 
   const handleBackToSection = () => {
     clearMessages();
-    setMode("two_factor");
+    setMode("main");
     setSetupCode("");
     setDisableCode("");
     setBackupCodes([]);
@@ -67,33 +75,50 @@ export function SecuritySettingsView() {
 
   const handleOpenTwoFactor = () => {
     clearMessages();
-    setMode("two_factor");
+    if (twoFactorEnabled) {
+      setMode("disable");
+      setDisableCode("");
+      return;
+    }
+
+    void handleStartSetup();
   };
 
   const handleStartSetup = async () => {
     clearMessages();
-    setMode("setup");
     setBackupCodes([]);
     setSetupCode("");
 
-    if (setup) return;
+    if (twoFactorEnabled) {
+      if (backupCodes.length > 0) return;
+      setMode("disable");
+      setSuccess("La autenticacion de dos factores ya esta activada.");
+      return;
+    }
 
+    setMode("setup");
+
+    if (setup || hasRequestedSetup.current) return;
+
+    hasRequestedSetup.current = true;
     setIsLoadingSetup(true);
     const [err, result] = await to(authService.setupTwoFactor());
     setIsLoadingSetup(false);
 
     if (err) {
+      if (err instanceof ApiError && err.errorCode === "TWO_FA_ALREADY_ENABLED") {
+        setTwoFactorEnabled(true);
+        setMode("disable");
+        setSuccess("La autenticacion de dos factores ya esta activada.");
+        return;
+      }
+
+      hasRequestedSetup.current = false;
       setError(getSpanishAuthErrorMessage(err, "No se pudo preparar la configuracion 2FA"));
       return;
     }
 
     setSetup(result);
-  };
-
-  const handleStartDisable = () => {
-    clearMessages();
-    setMode("disable");
-    setDisableCode("");
   };
 
   const handleEnableSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -122,6 +147,7 @@ export function SecuritySettingsView() {
     }
 
     setBackupCodes(result.backupCodes);
+    setTwoFactorEnabled(true);
     setSuccess("La autenticacion de dos factores fue activada correctamente.");
   };
 
@@ -147,6 +173,9 @@ export function SecuritySettingsView() {
     setDisableCode("");
     setSetupCode("");
     setBackupCodes([]);
+    setSetup(undefined);
+    hasRequestedSetup.current = false;
+    setTwoFactorEnabled(false);
     setMode("disable_success");
     setSuccess("La autenticacion de dos factores fue deshabilitada correctamente.");
   };
@@ -213,7 +242,7 @@ export function SecuritySettingsView() {
         <Box sx={{ bgcolor: "background.paper", border: "1px solid", borderColor: "divider", p: { xs: 2.5, md: 3 }, display: "flex", flexDirection: "column", gap: 2.5 }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
             {mode !== "disable_success" && (
-              <IconButton aria-label="Volver a configuracion" size="small" onClick={() => setMode("main")}>
+              <IconButton aria-label="Volver a configuracion" size="small" onClick={handleBackToSection}>
                 <ArrowBackIcon fontSize="small" />
               </IconButton>
             )}
@@ -223,7 +252,7 @@ export function SecuritySettingsView() {
                 Verificacion de dos factores
               </Typography>
               <Typography variant="body2" sx={{ color: "text.secondary" }}>
-                Selecciona una accion para administrar 2FA.
+                Administra la proteccion con app autenticadora.
               </Typography>
             </Box>
           </Box>
@@ -232,94 +261,6 @@ export function SecuritySettingsView() {
 
           {error && <Alert severity="error">{error}</Alert>}
           {success && mode !== "disable_success" && <Alert severity="success">{success}</Alert>}
-
-          {mode === "two_factor" && (
-            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "repeat(2, minmax(0, 1fr))" }, gap: 2, width: "100%", maxWidth: 880, alignSelf: "center" }}>
-              <Box
-                component="button"
-                type="button"
-                onClick={handleStartSetup}
-                sx={{
-                  bgcolor: "background.paper",
-                  border: "1px solid",
-                  borderColor: "divider",
-                  p: { xs: 2.5, md: 3 },
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 1.5,
-                  textAlign: "center",
-                  cursor: "pointer",
-                  minHeight: 190,
-                  transition: "background-color 0.2s ease, border-color 0.2s ease",
-                  "&:hover": {
-                    bgcolor: "action.hover",
-                    borderColor: "primary.main",
-                  },
-                  "&:focus-visible": {
-                    outline: "2px solid",
-                    outlineColor: "primary.main",
-                    outlineOffset: 2,
-                  },
-                }}
-              >
-                <Box sx={{ width: 52, height: 52, borderRadius: 1, bgcolor: "action.hover", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <QrCode2Icon color="primary" fontSize="medium" />
-                </Box>
-                <Box sx={{ minWidth: 0, maxWidth: 300 }}>
-                  <Typography variant="subtitle1" component="span" sx={{ color: "text.primary", fontWeight: 700, display: "block", mb: 0.5 }}>
-                    Configurar / activar 2FA
-                  </Typography>
-                  <Typography variant="body2" component="span" sx={{ color: "text.secondary", display: "block" }}>
-                    Genera un QR, vincula tu app autenticadora y guarda tus codigos de respaldo.
-                  </Typography>
-                </Box>
-              </Box>
-
-              <Box
-                component="button"
-                type="button"
-                onClick={handleStartDisable}
-                sx={{
-                  bgcolor: "background.paper",
-                  border: "1px solid",
-                  borderColor: "divider",
-                  p: { xs: 2.5, md: 3 },
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: 1.5,
-                  textAlign: "center",
-                  cursor: "pointer",
-                  minHeight: 190,
-                  transition: "background-color 0.2s ease, border-color 0.2s ease",
-                  "&:hover": {
-                    bgcolor: "action.hover",
-                    borderColor: "error.main",
-                  },
-                  "&:focus-visible": {
-                    outline: "2px solid",
-                    outlineColor: "error.main",
-                    outlineOffset: 2,
-                  },
-                }}
-              >
-                <Box sx={{ width: 52, height: 52, borderRadius: 1, bgcolor: "action.hover", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
-                  <LockOpenIcon color="error" fontSize="medium" />
-                </Box>
-                <Box sx={{ minWidth: 0, maxWidth: 300 }}>
-                  <Typography variant="subtitle1" component="span" sx={{ color: "text.primary", fontWeight: 700, display: "block", mb: 0.5 }}>
-                    Deshabilitar 2FA
-                  </Typography>
-                  <Typography variant="body2" component="span" sx={{ color: "text.secondary", display: "block" }}>
-                    Confirma con un codigo actual o de respaldo para retirar la verificacion.
-                  </Typography>
-                </Box>
-              </Box>
-            </Box>
-          )}
 
           {mode === "setup" && (
             <Box component="form" onSubmit={handleEnableSubmit} sx={{ display: "flex", flexDirection: "column", gap: 3 }}>

@@ -1,37 +1,10 @@
-# Security & State Management Standards
+# State Management & Architecture Standards
 
-> Bank-grade guardrails for data safety, API security, and Zustand state hygiene.
-> These rules were distilled from multiple audit sweeps on this codebase.
-
----
-
-## 1. PII & Dynamic Collections: NEVER Persist to Storage
-
-**Rule 14 (AGENTS.md) — Full Expansion:**
-
-Dynamic collections containing customer data or transaction history MUST NEVER be persisted to `localStorage`, `sessionStorage`, or Zustand's `persist` middleware.
-
-```typescript
-// ❌ FORBIDDEN — leaks PII to disk across sessions
-export const useCustomersStore = create(
-  persist(
-    (set) => ({ customers: [] }),
-    { name: "customers-storage", storage: createJSONStorage(() => localStorage) }
-  )
-);
-
-// ✅ CORRECT — in-memory only, wiped on logout or tab close
-export const useCustomersStore = create((set) => ({
-  customers: [],
-  resetCustomers: () => set({ customers: [] }),
-}));
-```
-
-**Allowed persist targets:** Only transient auth tokens (`auth-storage`) and UI preferences (theme/layout).
+> Zustand store hygiene, strict TypeScript types, and Clean Architecture guidelines.
 
 ---
 
-## 2. Always Reset Sensitive Stores on Logout
+## 1. Always Reset Sensitive Stores on Logout
 
 When a user logs out, all in-memory sensitive collections MUST be cleared to prevent PII leakage across multiple sessions on the same browser tab.
 
@@ -41,82 +14,16 @@ const handleLogout = () => {
   useAuthStore.getState().clearTokens();
   useCustomersStore.getState().resetCustomers();
   useTransactionsStore.getState().resetTransactions();
+  useShiftStore.getState().resetShift();
   router.push("/login");
 };
 ```
 
-Failure to call `resetCustomers()` and `resetTransactions()` means the next user who logs in on the same tab will see the previous user's data until the first fetch completes.
+Failure to call the reset actions means the next user who logs in on the same tab will see the previous user's data until the first fetch completes.
 
 ---
 
-## 3. Fail-Closed for All Compliance Checks
-
-Any operation that involves a compliance screening (Clinton List, SARLAFT) MUST be wrapped in a `try-catch-finally` block that **blocks the operation if the check fails**, never silently passes it.
-
-```typescript
-// ✅ Fail-closed pattern
-setIsSubmitting(true);
-try {
-  const isListed = await validateClintonList.execute(name, document);
-  if (isListed) {
-    // Block the transaction — DO NOT proceed
-    showNotification("Customer is flagged.", "error");
-    return;
-  }
-  await customerRepository.save(customerData);
-} catch (err) {
-  // Network failure, timeout, or service error → block it
-  showNotification("Compliance check failed. Operation blocked.", "error");
-} finally {
-  setIsSubmitting(false); // Always release the UI
-}
-```
-
-**Never** let a compliance check network error silently pass as "not listed". The default must always be: **if uncertain, block**.
-
----
-
-## 4. URL-Encode All Query Parameters
-
-Never interpolate user-facing strings directly into URL query strings. Always use `encodeURIComponent` or `URLSearchParams` (which encodes automatically).
-
-```typescript
-// ❌ DANGEROUS — breaks with accented names or spaces
-const url = `/api/v1/clinton-list/persons/by-name?name=${name}&idNumber=${id}`;
-
-// ✅ CORRECT — safe for compound names, accents, and special characters
-const url = `/api/v1/clinton-list/persons/by-name?name=${encodeURIComponent(name)}&idNumber=${encodeURIComponent(id)}`;
-
-// ✅ ALSO CORRECT — URLSearchParams encodes automatically
-const params = new URLSearchParams({ name, idNumber: id });
-const url = `/api/v1/clinton-list/persons/by-name?${params.toString()}`;
-```
-
----
-
-## 5. Always Validate External API Responses with Zod
-
-Every response from an external API call MUST be parsed through a Zod schema before use. Never trust raw `response.json()` directly.
-
-```typescript
-// ❌ DANGEROUS — no validation, runtime crash if backend changes
-const data = await response.json();
-const customer = data as Customer;
-
-// ✅ CORRECT — throws ZodError with a clear message if contract is violated
-const data = await response.json();
-const customer = customerSchema.parse(data);
-```
-
-This applies to: `save`, `findAll`, `findByDocument`, `findAll` for transactions, and all currency/TRM endpoints.
-
-**Exception:** The Clinton List `isBlocked` endpoint returns a simple `{ matchCount: number }` shape that is validated via a direct property check. A Zod schema should be added when the contract is formalized.
-
-**Critical Note:** When writing schemas for external API parsing, you must follow the **Infrastructure API Schema Boundary** standard outlined in **Section 11**. Never parse incoming API responses directly using pure domain schemas.
-
----
-
-## 6. Minimal Store Write Surface
+## 2. Minimal Store Write Surface
 
 Expose only the actions that are actually called. Dead or speculative store actions (e.g., `addCustomer`, `setCustomers`) expand the mutable API surface and create confusion about intent.
 
@@ -138,7 +45,7 @@ interface CustomersState {
 
 ---
 
-## 7. Use-Cases Must Have Active Callers
+## 3. Use-Cases Must Have Active Callers
 
 Every use-case class in `src/use-cases/` MUST be imported and called by at least one presentation component or hook. Orphaned use-cases that duplicate repository calls made directly from components are dead code and must be deleted.
 
@@ -151,7 +58,7 @@ Every use-case class in `src/use-cases/` MUST be imported and called by at least
 
 ---
 
-## 8. `null` Is Forbidden — Use `undefined`
+## 4. `null` Is Forbidden — Use `undefined`
 
 Per AGENTS.md Rule 5: prefer `undefined` over `null`. This eliminates `typeof null === 'object'` bugs and keeps the type system consistent.
 
@@ -166,19 +73,9 @@ const [selectedTransaction, setSelectedTransaction] = useState<Transaction | und
 **Exception (MUI Popover / Menu Anchor):**
 MUI's `Menu`, `Popover`, and `Popper` components require their `anchorEl` property to be typed as `HTMLElement | null` due to their internal types. Typing state as `HTMLElement | undefined` will fail TypeScript compiling. Thus, `useState<null | HTMLElement>(null)` is the **only** permitted exception to the `undefined`-over-`null` rule. All other UI and state logic must strictly use `undefined`.
 
-**Compliance:** As of the eighth audit sweep, zero known exceptions remain in the codebase. All components, props, states, and stores are 100% compliant with the `undefined` type standard.
-
 ---
 
-## 9. Token Refresh Is Centralized in HttpClient
-
-Token refresh logic MUST live exclusively in `HttpClient.ts`. No individual repository, use-case, or component should manually retry requests or refresh tokens. This prevents scattered, inconsistent retry logic.
-
-The session expiry event (`session:expired`) MUST be listened to in the global `ThemeRegistry` only — not in individual components.
-
----
-
-## 10. Use-Case Instances Must Be Module-Level Singletons
+## 5. Use-Case Instances Must Be Module-Level Singletons
 
 Use-case instances that are stateless (no instance variables that change) MUST be created once at module level, not inside React hooks, callbacks, or render functions.
 
@@ -201,9 +98,24 @@ export function CurrencyExchangeForm() {
 
 ---
 
-## 11. Infrastructure API Schema Boundary Pattern
+## 6. Always Validate External API Responses with Zod
 
-**Rationale:**
+Every response from an external API call MUST be parsed through a Zod schema before use. Never trust raw `response.json()` directly.
+
+```typescript
+// ❌ DANGEROUS — no validation, runtime crash if backend changes
+const data = await response.json();
+const customer = data as Customer;
+
+// ✅ CORRECT — throws ZodError with a clear message if contract is violated
+const data = await response.json();
+const customer = customerSchema.parse(data);
+```
+
+This applies to: `save`, `findAll`, `findByDocument`, `findAll` for transactions, and all currency/TRM endpoints.
+
+### Infrastructure API Schema Boundary Pattern
+
 Domain schemas (e.g. `customerSchema`, `transactionSchema`) are pure representations of our domain model. They utilize `.optional()` for optional fields, which resolves to `type | undefined`. This is clean and matches React state and TypeScript's `?` property modifiers.
 
 However, backends frequently return `null` for absent or nullable database values in JSON payloads. Zod's `.optional()` **does not accept `null`** and will throw a runtime `ZodError` when parsing backend responses containing `null`.
@@ -214,7 +126,7 @@ To prevent runtime parser crashes without contaminating our clean domain definit
 2. **Nullish Transform:** In the private API schema, any field that is optional or nullable in the database MUST use `.nullish().transform(val => val ?? undefined)`.
 3. **Domain Mapping:** The repository parses raw API JSON using the private API schema (which cleanly translates `null` and `undefined` to `undefined`), then returns the parsed object mapped directly to the clean domain model type.
 
-### Example
+#### Example
 
 ```typescript
 // src/infrastructure/http/HttpTransactionRepository.ts
@@ -237,3 +149,55 @@ export class HttpTransactionRepository implements TransactionRepository {
 }
 ```
 
+### Outgoing Request Mapping Boundary
+
+The API Schema Boundary pattern also applies to outgoing request bodies. If the API contract requires specific naming conventions, casing, or data shapes that differ from our clean Domain models, the translation MUST happen exclusively at the infrastructure boundary (within the Repository method).
+
+**Example:**
+The Domain layer uses `amount` to describe physical counts (`{ iso_code: "USD", amount: 1500 }`), but the backend API expects `{ iso_code: "USD", count: 1500 }`. The repository maps this cleanly before sending the HTTP POST:
+
+```typescript
+// src/infrastructure/http/HttpShiftRepository.ts
+
+async close(shiftId: string, payload: CloseShiftPayload): Promise<Shift> {
+  const apiPayload = {
+    physical_counts: payload.physical_counts.map((c) => ({
+      iso_code: c.iso_code,
+      count: c.amount, // Maps domain 'amount' to API-expected 'count' at the boundary
+    })),
+  };
+  
+  const response = await HttpClient.post(
+    `/api/v1/fx/shifts/${encodeURIComponent(shiftId)}/close`,
+    apiPayload
+  );
+  const data = await response.json();
+  return apiShiftSchema.parse(data);
+}
+```
+
+---
+
+## 7. Mandatory Request Body on POST Requests
+
+FastAPI and Pydantic backends enforce strict validation on JSON request bodies. If a POST route is declared with a request body model (even if all its properties are optional or if it has no properties), the backend expects a valid JSON payload at the root.
+
+Sending `undefined` or a missing body payload in `HttpClient.post(url)` causes the backend to fail with a `422 Unprocessable Content` error:
+```json
+{
+  "type": "missing",
+  "loc": ["body"],
+  "msg": "Field required"
+}
+```
+
+**Rule:**
+For all POST requests targeted at backend endpoints that declare a request body (such as closing a shift), developers MUST pass an explicit empty JSON object `{}` as the payload instead of calling the function with `undefined` or omitting the body.
+
+```typescript
+// ❌ FORBIDDEN — triggers 422 validation error on strict backends
+const response = await HttpClient.post(`/api/v1/fx/shifts/${id}/close`);
+
+// ✅ CORRECT — sends empty body to satisfy backend body payload requirement
+const response = await HttpClient.post(`/api/v1/fx/shifts/${id}/close`, {});
+```

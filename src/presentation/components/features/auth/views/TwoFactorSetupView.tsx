@@ -15,8 +15,10 @@ import {
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import SecurityIcon from "@mui/icons-material/Security";
 import { TwoFactorSetup } from "@/domain/Auth";
+import { ApiError } from "@/domain/Errors";
 import { authService } from "@/infrastructure/auth/HttpAuthService";
 import { Button } from "@/presentation/components/ui/Button/Button";
+import { useAuthStore } from "@/presentation/stores/auth.store";
 import { TotpInput } from "@/presentation/components/features/auth/components/AuthHelpers";
 import { totpSetupSchema } from "@/presentation/components/features/auth/schemas/auth-flow.schema";
 import { getSpanishAuthErrorMessage } from "@/presentation/components/features/auth/utils/auth-error-message";
@@ -37,13 +39,30 @@ export function TwoFactorSetupView() {
   const [success, setSuccess] = useState<string | undefined>(undefined);
   const [loadingSetup, setLoadingSetup] = useState(true);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const twoFactorEnabled = useAuthStore((state) =>
+    state.twoFactorEnabled ?? state.userProfile?.twoFactorEnabled ?? false,
+  );
+  const setTwoFactorEnabled = useAuthStore(
+    (state) => state.setTwoFactorEnabled,
+  );
 
   useEffect(() => {
     const loadSetup = async () => {
+      if (twoFactorEnabled) {
+        router.replace("/dashboard/configuracion");
+        return;
+      }
+
       const [err, result] = await to(authService.setupTwoFactor());
       setLoadingSetup(false);
 
       if (err) {
+        if (err instanceof ApiError && err.errorCode === "TWO_FA_ALREADY_ENABLED") {
+          setTwoFactorEnabled(true);
+          router.replace("/dashboard/configuracion");
+          return;
+        }
+
         setError(getSpanishAuthErrorMessage(err, "No se pudo iniciar la configuracion 2FA"));
         return;
       }
@@ -52,7 +71,7 @@ export function TwoFactorSetupView() {
     };
 
     loadSetup();
-  }, []);
+  }, [router, setTwoFactorEnabled, twoFactorEnabled]);
 
   const copyToClipboard = async (value: string) => {
     if (typeof navigator === "undefined" || !navigator.clipboard) return;
@@ -86,6 +105,7 @@ export function TwoFactorSetupView() {
     }
 
     setBackupCodes(result.backupCodes);
+    setTwoFactorEnabled(true);
     setSuccess("La autenticacion de dos factores fue activada correctamente.");
   };
 

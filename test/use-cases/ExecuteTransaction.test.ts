@@ -35,7 +35,7 @@ describe('ExecuteTransaction', () => {
       transactionRepository.save.mockResolvedValue(mockTransaction);
 
       // Act
-      const result = await executeTransaction.execute(customerId, amountUSD);
+      const result = await executeTransaction.execute(customerId, amountUSD, 'USD', 'buy', '001');
 
       // Assert
       expect(result.cop_amount).toBe('400000');
@@ -43,6 +43,9 @@ describe('ExecuteTransaction', () => {
       expect(transactionRepository.save).toHaveBeenCalledWith(expect.objectContaining({
         customer_id: customerId,
         foreign_amount: '100',
+        iso_code: 'USD',
+        transaction_type: 'buy',
+        branch_code: '001',
       }));
     });
 
@@ -52,7 +55,7 @@ describe('ExecuteTransaction', () => {
       const amountUSD = 0;
 
       // Act & Assert
-      await expect(executeTransaction.execute(customerId, amountUSD))
+      await expect(executeTransaction.execute(customerId, amountUSD, 'USD', 'buy', '001'))
         .rejects
         .toThrow(DomainError);
     });

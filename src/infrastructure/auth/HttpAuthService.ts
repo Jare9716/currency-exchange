@@ -4,6 +4,7 @@ import {
   LoginCredentials,
   LoginResult,
   TenantSelectionResult,
+  UserProfile,
   TwoFactorBackupCodes,
   TwoFactorSetup,
 } from "@/domain/Auth";
@@ -76,6 +77,25 @@ const mapAuthenticatedResult = (data: z.infer<typeof apiTokenPairSchema>) => ({
 const mapTokens = (data: z.infer<typeof apiTokenPairSchema>): AuthTokens => ({
   accessToken: data.access_token,
   refreshToken: data.refresh_token,
+});
+
+const apiUserProfileSchema = z.object({
+  id: z.string(),
+  email: z.string(),
+  full_name: z.string(),
+  role: z.string(),
+  branch_code: z.string().nullish().transform((val) => val ?? undefined),
+  tenant_id: z.string(),
+  is_active: z.boolean(),
+  two_factor_enabled: z.boolean().nullish().transform((val) => val ?? undefined),
+  is_two_factor_enabled: z.boolean().nullish().transform((val) => val ?? undefined),
+  two_factor_auth_enabled: z.boolean().nullish().transform((val) => val ?? undefined),
+  is_2fa_enabled: z.boolean().nullish().transform((val) => val ?? undefined),
+  two_fa_enabled: z.boolean().nullish().transform((val) => val ?? undefined),
+  mfa_enabled: z.boolean().nullish().transform((val) => val ?? undefined),
+  is_mfa_enabled: z.boolean().nullish().transform((val) => val ?? undefined),
+  totp_enabled: z.boolean().nullish().transform((val) => val ?? undefined),
+  is_totp_enabled: z.boolean().nullish().transform((val) => val ?? undefined),
 });
 
 export class HttpAuthService implements AuthService {
@@ -230,6 +250,66 @@ export class HttpAuthService implements AuthService {
 
     const data = await response.json();
     return mapAuthenticatedResult(apiTokenPairSchema.parse(data));
+  }
+
+  async getCurrentUser(): Promise<UserProfile> {
+    const response = await HttpClient.get("/api/v1/auth/me");
+    const data = await response.json();
+    const parsed = apiUserProfileSchema.parse(data);
+
+    // Fetch company details dynamically to get the real company name
+    let companyName = "Cambios Express SAS";
+    try {
+      const companyResponse = await HttpClient.get("/api/v1/company");
+      const companyData = await companyResponse.json();
+      if (companyData && companyData.name) {
+        companyName = companyData.name;
+      }
+    } catch {
+      // Keep fallback if endpoint fails
+    }
+
+    // Fetch active branches dynamically if the user has no branch_code assigned (owner/admin roles)
+    let branchCode = parsed.branch_code;
+    if (!branchCode) {
+      try {
+        const branchesResponse = await HttpClient.get("/api/v1/branches");
+        const branchesData = (await branchesResponse.json()) as Array<{
+          code: string;
+          is_active: boolean;
+        }>;
+        if (Array.isArray(branchesData) && branchesData.length > 0) {
+          const activeBranch =
+            branchesData.find((b) => b.is_active) || branchesData[0];
+          if (activeBranch && activeBranch.code) {
+            branchCode = activeBranch.code;
+          }
+        }
+      } catch {
+        // Keep undefined if endpoint fails
+      }
+    }
+
+    return {
+      id: parsed.id,
+      email: parsed.email,
+      fullName: parsed.full_name,
+      role: parsed.role,
+      branchCode: branchCode || undefined,
+      tenantId: parsed.tenant_id,
+      isActive: parsed.is_active,
+      companyName,
+      twoFactorEnabled:
+        parsed.two_factor_enabled ??
+        parsed.is_two_factor_enabled ??
+        parsed.two_factor_auth_enabled ??
+        parsed.is_2fa_enabled ??
+        parsed.two_fa_enabled ??
+        parsed.mfa_enabled ??
+        parsed.is_mfa_enabled ??
+        parsed.totp_enabled ??
+        parsed.is_totp_enabled,
+    };
   }
 }
 

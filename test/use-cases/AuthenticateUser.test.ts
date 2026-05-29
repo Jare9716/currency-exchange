@@ -9,6 +9,7 @@ describe('AuthenticateUser', () => {
   beforeEach(() => {
     authService = {
       login: jest.fn(),
+      getCurrentUser: jest.fn(),
       selectTenant: jest.fn(),
       acceptInvite: jest.fn(),
       forgotPassword: jest.fn(),

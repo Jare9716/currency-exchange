@@ -29,6 +29,18 @@ export type TwoFactorBackupCodes = {
   backupCodes: string[];
 };
 
+export interface UserProfile {
+  id: string;
+  email: string;
+  fullName: string;
+  role: string;
+  branchCode?: string;
+  tenantId: string;
+  isActive: boolean;
+  companyName: string;
+  twoFactorEnabled?: boolean;
+}
+
 export type AuthenticatedResult = { type: "authenticated" } & AuthTokens & {
   mustChangePassword?: boolean;
   passwordExpiresInDays?: number;
@@ -52,6 +64,7 @@ export type TenantSelectionResult = AuthenticatedResult | TwoFactorRequiredResul
 
 export interface AuthService {
   login(credentials: LoginCredentials): Promise<LoginResult>;
+  getCurrentUser(): Promise<UserProfile>;
   selectTenant(payload: {
     sessionToken: string;
     membershipId: string;

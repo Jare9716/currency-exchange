@@ -71,7 +71,9 @@ export function TwoFactorVerifyView() {
       return;
     }
 
-    useAuthStore.getState().setTokens(result.accessToken, result.refreshToken);
+    const authState = useAuthStore.getState();
+    authState.setTokens(result.accessToken, result.refreshToken);
+    authState.setTwoFactorEnabled(true);
     clearTwoFactorSession();
     savePasswordExpiryWarning({
       mustChangePassword: !!result.mustChangePassword,

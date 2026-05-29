@@ -33,9 +33,9 @@ export function TransactionReceiptModal({
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle sx={{ textAlign: "center", pt: 4, pb: 1 }}>
+      <DialogTitle component="div" sx={{ textAlign: "center", pt: 4, pb: 1 }}>
         <CheckCircleIcon sx={{ fontSize: 64, color: "success.main", mb: 2 }} />
-        <Typography variant="h4" sx={{ fontWeight: "bold" }}>
+        <Typography variant="h4" component="h2" sx={{ fontWeight: "bold" }}>
           Transacción Exitosa
         </Typography>
       </DialogTitle>
