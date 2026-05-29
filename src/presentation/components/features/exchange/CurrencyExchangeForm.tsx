@@ -309,13 +309,12 @@ export function CurrencyExchangeForm() {
                     exclusive
                     onChange={(_, value) => value && setTransactionType(value)}
                     fullWidth
-                    size="small"
                     color="primary"
                   >
-                    <ToggleButton value="buy" sx={{ py: 1 }}>
+                    <ToggleButton value="buy">
                       Compra
                     </ToggleButton>
-                    <ToggleButton value="sell" sx={{ py: 1 }}>
+                    <ToggleButton value="sell">
                       Venta
                     </ToggleButton>
                   </ToggleButtonGroup>
@@ -327,11 +326,10 @@ export function CurrencyExchangeForm() {
                       exclusive
                       onChange={(_, value) => value && setFromCurrency(value)}
                       fullWidth
-                      size="small"
                       color="primary"
                     >
                       {activeShift.currencies.map((c) => (
-                        <ToggleButton key={c.iso_code} value={c.iso_code} sx={{ py: 1 }}>
+                        <ToggleButton key={c.iso_code} value={c.iso_code}>
                           {c.iso_code}
                         </ToggleButton>
                       ))}
