@@ -92,7 +92,7 @@ The system SHALL safely execute shift closure with mapped payloads and clean up 
 #### Scenario: secure store reset on shift close
 - GIVEN a shift is successfully closed
 - WHEN the store clears the shift session
-- THEN all active in-memory shifts, summaries, and operated cash states are reset to `undefined`
+- THEN all active in-memory shifts and operated cash states are reset to `undefined`
 
 ---
 
@@ -108,7 +108,6 @@ Relevant endpoints:
 - `GET /api/v1/fx/shifts/rate-proposal` — retrieve exchange rate proposals
 - `POST /api/v1/fx/shifts/open` — open branch cashier shift
 - `POST /api/v1/fx/shifts/{id}/close` — close active cashier shift
-- `GET /api/v1/fx/shifts/{id}/summary` — retrieve daily shift summary
 
 ## Notes
 - Outgoing close shift request body requires `count` (API) instead of `amount` (domain).
