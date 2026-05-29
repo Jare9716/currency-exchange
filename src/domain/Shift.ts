@@ -37,16 +37,6 @@ export const shiftSchema = z.object({
 
 export type Shift = z.infer<typeof shiftSchema>;
 
-export const shiftSummarySchema = z.object({
-  shift: shiftSchema,
-  total_cop_purchased: z.string(),
-  total_cop_sold: z.string(),
-  total_profit_cop: z.string(),
-  transaction_count: z.number(),
-});
-
-export type ShiftSummary = z.infer<typeof shiftSummarySchema>;
-
 export const rateProposalCurrencySchema = z.object({
   iso_code: z.string(),
   name: z.string(),
@@ -96,5 +86,4 @@ export interface ShiftRepository {
   getRateProposal(date?: string): Promise<RateProposal>;
   open(payload: OpenShiftPayload): Promise<Shift>;
   close(shiftId: string, payload: CloseShiftPayload): Promise<Shift>;
-  getSummary(shiftId: string): Promise<ShiftSummary>;
 }

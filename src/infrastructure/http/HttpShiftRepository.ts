@@ -1,6 +1,5 @@
 import {
   Shift,
-  ShiftSummary,
   RateProposal,
   OpenShiftPayload,
   CloseShiftPayload,
@@ -41,14 +40,6 @@ const apiShiftSchema = z.object({
   opened_at: z.string(),
   closed_at: z.string().nullish().transform((val) => val ?? undefined),
   currencies: z.array(apiShiftCurrencySchema).nullish().transform((val) => val ?? []),
-});
-
-const apiShiftSummarySchema = z.object({
-  shift: apiShiftSchema,
-  total_cop_purchased: z.string().nullish().transform((val) => val ?? "0.00"),
-  total_cop_sold: z.string().nullish().transform((val) => val ?? "0.00"),
-  total_profit_cop: z.string().nullish().transform((val) => val ?? "0.00"),
-  transaction_count: z.number().nullish().transform((val) => val ?? 0),
 });
 
 const apiRateProposalCurrencySchema = z.object({
@@ -120,34 +111,7 @@ export class HttpShiftRepository implements ShiftRepository {
     return apiShiftSchema.parse(data);
   }
 
-  async getSummary(shiftId: string): Promise<ShiftSummary> {
-    try {
-      const response = await HttpClient.get(
-        `/api/v1/fx/shifts/${encodeURIComponent(shiftId)}/summary`
-      );
-      const data = await response.json();
-      return apiShiftSummarySchema.parse(data);
-    } catch {
-      // Catch 404/500 since this endpoint is not implemented on the server side
-      // Return a safe empty ShiftSummary structure to prevent frontend crashes
-      return {
-        shift: {
-          id: shiftId,
-          date: new Date().toISOString().split("T")[0],
-          operator_id: "",
-          branch_code: "001",
-          opening_cash_cop: "0.00",
-          status: "open",
-          opened_at: new Date().toISOString(),
-          currencies: [],
-        },
-        total_cop_purchased: "0.00",
-        total_cop_sold: "0.00",
-        total_profit_cop: "0.00",
-        transaction_count: 0,
-      };
-    }
-  }
+
 }
 
 export const shiftRepository = new HttpShiftRepository();

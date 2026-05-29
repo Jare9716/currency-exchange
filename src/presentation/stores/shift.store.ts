@@ -1,29 +1,25 @@
 import { create } from "zustand";
-import { Shift, RateProposal, ShiftSummary, OpenShiftPayload, CloseShiftPayload } from "@/domain/Shift";
+import { Shift, RateProposal, OpenShiftPayload, CloseShiftPayload } from "@/domain/Shift";
 import { getCurrentShift } from "@/use-cases/GetCurrentShift";
 import { getRateProposal } from "@/use-cases/GetRateProposal";
 import { openShift as openShiftUseCase } from "@/use-cases/OpenShift";
 import { closeShift as closeShiftUseCase } from "@/use-cases/CloseShift";
-import { getShiftSummary } from "@/use-cases/GetShiftSummary";
 
 interface ShiftState {
   activeShift?: Shift;
   rateProposal?: RateProposal;
-  summary?: ShiftSummary;
   isLoading: boolean;
   error?: string;
   fetchActiveShift: (branchCode: string) => Promise<void>;
   fetchRateProposal: () => Promise<void>;
   openShift: (payload: OpenShiftPayload) => Promise<void>;
   closeActiveShift: (payload: CloseShiftPayload) => Promise<void>;
-  fetchSummary: () => Promise<void>;
   resetShift: () => void;
 }
 
 export const useShiftStore = create<ShiftState>((set, get) => ({
   activeShift: undefined,
   rateProposal: undefined,
-  summary: undefined,
   isLoading: false,
   error: undefined,
   fetchActiveShift: async (branchCode) => {
@@ -72,7 +68,7 @@ export const useShiftStore = create<ShiftState>((set, get) => ({
     set({ isLoading: true, error: undefined });
     try {
       await closeShiftUseCase.execute(activeShift.id, payload);
-      set({ activeShift: undefined, summary: undefined, error: undefined });
+      set({ activeShift: undefined, error: undefined });
     } catch (err) {
       const errMsg = err instanceof Error ? err.message : "Error al cerrar el turno";
       set({ error: errMsg });
@@ -81,25 +77,10 @@ export const useShiftStore = create<ShiftState>((set, get) => ({
       set({ isLoading: false });
     }
   },
-  fetchSummary: async () => {
-    const { activeShift } = get();
-    if (!activeShift) return;
-    set({ isLoading: true, error: undefined });
-    try {
-      const summ = await getShiftSummary.execute(activeShift.id);
-      set({ summary: summ, error: undefined });
-    } catch (err) {
-      const errMsg = err instanceof Error ? err.message : "Error al obtener el resumen del turno";
-      set({ error: errMsg });
-    } finally {
-      set({ isLoading: false });
-    }
-  },
   resetShift: () =>
     set({
       activeShift: undefined,
       rateProposal: undefined,
-      summary: undefined,
       isLoading: false,
       error: undefined,
     }),

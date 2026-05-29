@@ -2,8 +2,7 @@ import { GetCurrentShift } from "@/use-cases/GetCurrentShift";
 import { GetRateProposal } from "@/use-cases/GetRateProposal";
 import { OpenShift } from "@/use-cases/OpenShift";
 import { CloseShift } from "@/use-cases/CloseShift";
-import { GetShiftSummary } from "@/use-cases/GetShiftSummary";
-import { ShiftRepository, Shift, RateProposal, ShiftSummary } from "@/domain/Shift";
+import { ShiftRepository, Shift, RateProposal } from "@/domain/Shift";
 import { DomainError } from "@/domain/Errors";
 
 describe("Shift Use Cases", () => {
@@ -15,7 +14,6 @@ describe("Shift Use Cases", () => {
       getRateProposal: jest.fn(),
       open: jest.fn(),
       close: jest.fn(),
-      getSummary: jest.fn(),
     } as unknown as jest.Mocked<ShiftRepository>;
   });
 
@@ -155,39 +153,6 @@ describe("Shift Use Cases", () => {
       await expect(
         useCase.execute("", { physical_counts: [{ iso_code: "COP", amount: 2000000 }] })
       ).rejects.toThrow(DomainError);
-    });
-  });
-
-  describe("GetShiftSummary", () => {
-    it("should successfully retrieve summary details", async () => {
-      const mockSummary: ShiftSummary = {
-        shift: {
-          id: "shift-123",
-          date: "2026-05-12",
-          operator_id: "operator-1",
-          branch_code: "BOG01",
-          opening_cash_cop: "2000000.00",
-          status: "open",
-          opened_at: new Date().toISOString(),
-          currencies: [],
-        },
-        total_cop_purchased: "100000",
-        total_cop_sold: "50000",
-        total_profit_cop: "5000",
-        transaction_count: 5,
-      };
-      shiftRepository.getSummary.mockResolvedValue(mockSummary);
-
-      const useCase = new GetShiftSummary(shiftRepository);
-      const result = await useCase.execute("shift-123");
-
-      expect(result).toBe(mockSummary);
-      expect(shiftRepository.getSummary).toHaveBeenCalledWith("shift-123");
-    });
-
-    it("should throw DomainError if shiftId is missing", async () => {
-      const useCase = new GetShiftSummary(shiftRepository);
-      await expect(useCase.execute("")).rejects.toThrow(DomainError);
     });
   });
 });

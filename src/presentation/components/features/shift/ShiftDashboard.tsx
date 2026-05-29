@@ -25,8 +25,6 @@ import { CloseShiftModal } from "./CloseShiftModal";
 export function ShiftDashboard() {
   const {
     activeShift,
-    summary,
-    fetchSummary,
   } = useShiftStore();
 
   const {
@@ -39,11 +37,10 @@ export function ShiftDashboard() {
 
   useEffect(() => {
     if (activeShift) {
-      fetchSummary();
       // Fetch transactions for the active shift
       fetchTransactions({ size: 5 });
     }
-  }, [activeShift, fetchSummary, fetchTransactions]);
+  }, [activeShift, fetchTransactions]);
 
   if (!activeShift) {
     return null;
@@ -117,7 +114,7 @@ export function ShiftDashboard() {
             >
               Transacciones
             </Typography>            <Typography variant="h2" sx={{ my: 1, fontWeight: 700 }}>
-              {summary?.transaction_count || transactions.length}
+              {transactions.length}
             </Typography>
             <Typography variant="caption" color="text.secondary">
               Registradas en este turno
@@ -143,18 +140,9 @@ export function ShiftDashboard() {
             </Typography>
             <Typography variant="h2" sx={{ my: 1, fontWeight: 700 }}>
               $
-              {Number(
-                summary &&
-                  (Number(summary.total_cop_purchased) > 0 ||
-                    Number(summary.total_cop_sold) > 0)
-                  ? (
-                      Number(summary.total_cop_purchased) +
-                      Number(summary.total_cop_sold)
-                    ).toFixed(0)
-                  : transactions
-                      .reduce((sum, t) => sum + Number(t.cop_amount), 0)
-                      .toFixed(0)
-              ).toLocaleString("es-CO")}
+              {transactions
+                .reduce((sum, t) => sum + Number(t.cop_amount), 0)
+                .toLocaleString("es-CO", { maximumFractionDigits: 0 })}
             </Typography>
             <Typography variant="caption" color="text.secondary">
               Total movilizado (Compra + Venta)
@@ -183,14 +171,9 @@ export function ShiftDashboard() {
               sx={{ my: 1, fontWeight: 700, color: "success.main" }}
             >
               $
-              {Number(
-                summary && Number(summary.total_profit_cop) > 0
-                  ? summary.total_profit_cop
-                  : activeShift.currencies.reduce(
-                      (sum, c) => sum + Number(c.profit_cop),
-                      0
-                    )
-              ).toLocaleString("es-CO")}
+              {activeShift.currencies
+                .reduce((sum, c) => sum + Number(c.profit_cop), 0)
+                .toLocaleString("es-CO", { maximumFractionDigits: 0 })}
             </Typography>
             <Typography variant="caption" color="text.secondary">
               Margen de intermediación obtenido
