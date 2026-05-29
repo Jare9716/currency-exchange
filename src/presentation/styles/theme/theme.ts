@@ -185,5 +185,29 @@ export const theme = createTheme({
         },
       },
     },
+    MuiToggleButtonGroup: {
+      styleOverrides: {
+        root: {
+          borderRadius: "6px",
+        },
+      },
+    },
+    MuiToggleButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: "6px",
+          textTransform: "none",
+          fontWeight: 600,
+          padding: "6px 16px", // MUI ToggleButton defaults to 11px; match MuiButton medium (6px 16px)
+          "&.Mui-selected": {
+            backgroundColor: "var(--mui-palette-primary-main)",
+            color: "#fff",
+            "&:hover": {
+              backgroundColor: "var(--mui-palette-primary-dark)",
+            },
+          },
+        },
+      },
+    },
   },
 });
