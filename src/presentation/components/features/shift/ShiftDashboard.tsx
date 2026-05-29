@@ -116,16 +116,15 @@ export function ShiftDashboard() {
               sx={{ fontWeight: 600, textTransform: "uppercase" }}
             >
               Transacciones
-            </Typography>
-            <Typography variant="h2" sx={{ my: 1, fontWeight: 700 }}>
-              {summary?.transaction_count ?? 0}
+            </Typography>            <Typography variant="h2" sx={{ my: 1, fontWeight: 700 }}>
+              {summary?.transaction_count || transactions.length}
             </Typography>
             <Typography variant="caption" color="text.secondary">
               Registradas en este turno
             </Typography>
           </Card>
         </Grid>
-
+ 
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card
             sx={{
@@ -145,12 +144,16 @@ export function ShiftDashboard() {
             <Typography variant="h2" sx={{ my: 1, fontWeight: 700 }}>
               $
               {Number(
-                summary
+                summary &&
+                  (Number(summary.total_cop_purchased) > 0 ||
+                    Number(summary.total_cop_sold) > 0)
                   ? (
                       Number(summary.total_cop_purchased) +
                       Number(summary.total_cop_sold)
                     ).toFixed(0)
-                  : 0
+                  : transactions
+                      .reduce((sum, t) => sum + Number(t.cop_amount), 0)
+                      .toFixed(0)
               ).toLocaleString("es-CO")}
             </Typography>
             <Typography variant="caption" color="text.secondary">
@@ -158,7 +161,7 @@ export function ShiftDashboard() {
             </Typography>
           </Card>
         </Grid>
-
+ 
         <Grid size={{ xs: 12, sm: 6, md: 3 }}>
           <Card
             sx={{
@@ -175,8 +178,19 @@ export function ShiftDashboard() {
             >
               Rentabilidad COP
             </Typography>
-            <Typography variant="h2" sx={{ my: 1, fontWeight: 700, color: "success.main" }}>
-              ${Number(summary?.total_profit_cop || 0).toLocaleString("es-CO")}
+            <Typography
+              variant="h2"
+              sx={{ my: 1, fontWeight: 700, color: "success.main" }}
+            >
+              $
+              {Number(
+                summary && Number(summary.total_profit_cop) > 0
+                  ? summary.total_profit_cop
+                  : activeShift.currencies.reduce(
+                      (sum, c) => sum + Number(c.profit_cop),
+                      0
+                    )
+              ).toLocaleString("es-CO")}
             </Typography>
             <Typography variant="caption" color="text.secondary">
               Margen de intermediación obtenido
