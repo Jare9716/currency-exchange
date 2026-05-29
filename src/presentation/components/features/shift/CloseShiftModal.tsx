@@ -117,9 +117,9 @@ export function CloseShiftModal({ open, onClose }: CloseShiftModalProps) {
         const inputVal = physicalAmounts[c.iso_code];
         const numVal = Number(inputVal);
 
-        if (inputVal === "" || isNaN(numVal)) {
+        if (inputVal === "" || isNaN(numVal) || numVal < 0) {
           throw new Error(
-            `Por favor, introduce un conteo físico válido para ${c.iso_code}.`
+            `Por favor, introduce un conteo físico válido (mayor o igual a cero) para ${c.iso_code}.`
           );
         }
 
