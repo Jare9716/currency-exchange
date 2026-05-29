@@ -103,7 +103,7 @@ export function useLoginForm() {
         useAuthStore.getState().setActiveBranchCode(profile.branchCode);
       } else {
         // Fallback for owners/admins to a starting context
-        useAuthStore.getState().setActiveBranchCode("BOG01");
+        useAuthStore.getState().setActiveBranchCode("001");
       }
 
       router.push("/dashboard");
