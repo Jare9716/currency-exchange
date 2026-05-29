@@ -79,7 +79,7 @@ export interface OpenShiftCurrencyPayload {
 export interface OpenShiftPayload {
   branch_code: string;
   opening_cash_cop: string;
-  currencies: OpenShiftCurrencyPayload[];
+  currencies?: OpenShiftCurrencyPayload[];
 }
 
 export interface PhysicalCount {

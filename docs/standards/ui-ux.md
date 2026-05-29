@@ -48,6 +48,7 @@ All screens displaying lists (Customers, Transactions, etc.) must follow this he
 - Use `display: "flex"` or `Grid` with `gap: 3` to group fields in the same row.
 - **The Label Gap:** Modals must have a `pt: 6` (48px) on `DialogContent` to prevent floating labels from being clipped by the modal's top boundary.
 - **Consistency:** All inputs in a form MUST share the same `size` (usually `"small"`).
+- **No Arbitrary Hardcoded Defaults:** Do NOT hardcode arbitrary, non-zero mock values (e.g., `2000000` for opening cash) as the default state of form inputs. Use standard clean defaults (`"0"`), empty states (`""`), or values fetched dynamically from the API/context.
 
 ## 3. MUI v6/v7 Deprecation Policy
 

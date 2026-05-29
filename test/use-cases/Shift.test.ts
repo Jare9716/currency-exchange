@@ -118,17 +118,6 @@ describe("Shift Use Cases", () => {
         })
       ).rejects.toThrow(DomainError);
     });
-
-    it("should throw DomainError if currencies is empty", async () => {
-      const useCase = new OpenShift(shiftRepository);
-      await expect(
-        useCase.execute({
-          branch_code: "BOG01",
-          opening_cash_cop: "2000000",
-          currencies: [],
-        })
-      ).rejects.toThrow(DomainError);
-    });
   });
 
   describe("CloseShift", () => {

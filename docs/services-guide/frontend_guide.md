@@ -40,11 +40,11 @@ API contract for the frontend team. Covers authentication flow, multi-tenant mod
 
 ## Base URLs
 
-| Environment | URL                     |
-| ----------- | ----------------------- |
-| Local dev   | `http://localhost:8000` |
-| Staging     | TBD                     |
-| Production  | TBD                     |
+| Environment | URL |
+|-------------|-----|
+| Local dev | `http://localhost:8000` |
+| Staging | TBD |
+| Production | TBD |
 
 ---
 
@@ -55,11 +55,11 @@ API contract for the frontend team. Covers authentication flow, multi-tenant mod
 The server is configured with `allow_credentials: true`. Your requests must include credentials when using cookie-based flows. The following headers are whitelisted:
 
 | Allowed request headers |
-| ----------------------- |
-| `Authorization`         |
-| `Content-Type`          |
-| `X-Request-ID`          |
-| `Accept`                |
+|---|
+| `Authorization` |
+| `Content-Type` |
+| `X-Request-ID` |
+| `Accept` |
 
 Allowed methods: `GET`, `POST`, `PUT`, `PATCH`, `DELETE`, `OPTIONS`.
 
@@ -93,7 +93,6 @@ users (global)
 ```
 
 This means:
-
 - One email + password for all companies
 - Different roles per company
 - Login may ask which company to enter if the user belongs to more than one
@@ -106,10 +105,10 @@ This means:
 
 Every successful login returns two tokens:
 
-| Token           | Lifetime | Purpose                                                  |
-| --------------- | -------- | -------------------------------------------------------- |
-| `access_token`  | 30 min   | `Authorization: Bearer <token>` on every request         |
-| `refresh_token` | 7 days   | Used once to get a new pair. Immediately rotated on use. |
+| Token | Lifetime | Purpose |
+|-------|----------|---------|
+| `access_token` | 30 min | `Authorization: Bearer <token>` on every request |
+| `refresh_token` | 7 days | Used once to get a new pair. Immediately rotated on use. |
 
 Store both in memory or secure storage. Never expose in URLs.
 
@@ -121,15 +120,15 @@ When the password **has** expired, login returns `must_change_password: true` �
 
 ```javascript
 // Axios interceptor
-axios.interceptors.request.use((config) => {
+axios.interceptors.request.use(config => {
   config.headers.Authorization = `Bearer ${store.accessToken}`;
   return config;
 });
 
 // On 401 TOKEN_INVALID → refresh, then retry once
-axios.interceptors.response.use(null, async (error) => {
+axios.interceptors.response.use(null, async error => {
   const { error_code } = error.response?.data ?? {};
-  if (error_code === "TOKEN_INVALID" && !error.config._retried) {
+  if (error_code === 'TOKEN_INVALID' && !error.config._retried) {
     error.config._retried = true;
     await store.refreshTokens();
     return axios(error.config);
@@ -151,10 +150,10 @@ All monetary amounts, exchange rates, spreads, and percentages are returned as *
 **Never** parse these with `parseFloat()` or JavaScript `Number()` — you will lose precision on large COP amounts. Use a decimal library instead:
 
 ```typescript
-import Decimal from "decimal.js";
+import Decimal from 'decimal.js';
 
-const cop = new Decimal(tx.cop_amount); // "2097285.00" → safe
-const rate = new Decimal(tx.exchange_rate); // "4194.57"    → safe
+const cop = new Decimal(tx.cop_amount);       // "2097285.00" → safe
+const rate = new Decimal(tx.exchange_rate);   // "4194.57"    → safe
 ```
 
 The same applies to request bodies — you may send numbers or strings, but strings are safest.
@@ -174,11 +173,11 @@ Every list endpoint that supports pagination returns the **same envelope shape**
 }
 ```
 
-| Field   | Type    | Meaning                                                |
-| ------- | ------- | ------------------------------------------------------ |
+| Field | Type | Meaning |
+|---|---|---|
 | `total` | integer | Total records matching the filter (not just this page) |
-| `page`  | integer | Current page (1-based)                                 |
-| `size`  | integer | Page size requested                                    |
+| `page` | integer | Current page (1-based) |
+| `size` | integer | Page size requested |
 
 Standard query params: `?page=1&size=20`. Maximum `size` is **100** for most endpoints.
 
@@ -205,12 +204,12 @@ Endpoints that return plain arrays (not paginated): `/fx/products`, `/branches`,
 }
 ```
 
-| Field         | Always present | Purpose                                          |
-| ------------- | -------------- | ------------------------------------------------ |
-| `status_code` | ✅             | HTTP status code (also in response header)       |
-| `error_code`  | ✅             | Machine-readable identifier — **switch on this** |
-| `detail`      | ✅             | Human-readable description                       |
-| `hint`        | ❌ optional    | Actionable guidance — safe to show to the user   |
+| Field | Always present | Purpose |
+|---|---|---|
+| `status_code` | ✅ | HTTP status code (also in response header) |
+| `error_code` | ✅ | Machine-readable identifier — **switch on this** |
+| `detail` | ✅ | Human-readable description |
+| `hint` | ❌ optional | Actionable guidance — safe to show to the user |
 
 > **Rule**: Switch on `error_code`. Never string-match `detail`.
 
@@ -220,149 +219,149 @@ Endpoints that return plain arrays (not paginated): `/fx/products`, `/branches`,
 
 ### Authentication
 
-| `error_code`          | HTTP | When                                                                         |
-| --------------------- | ---- | ---------------------------------------------------------------------------- |
-| `INVALID_CREDENTIALS` | 401  | Wrong email or password                                                      |
-| `ACCOUNT_LOCKED`      | 429  | Too many failed attempts — detail includes wait time                         |
-| `ACCOUNT_INACTIVE`    | 401  | User account has been deactivated                                            |
-| `TOKEN_INVALID`       | 401  | Token missing, malformed, revoked, **or expired** — always trigger a refresh |
-| `SESSION_EXPIRED`     | 401  | Tenant-selection or 2FA state token expired or already used                  |
+| `error_code` | HTTP | When |
+|---|---|---|
+| `INVALID_CREDENTIALS` | 401 | Wrong email or password |
+| `ACCOUNT_LOCKED` | 429 | Too many failed attempts — detail includes wait time |
+| `ACCOUNT_INACTIVE` | 401 | User account has been deactivated |
+| `TOKEN_INVALID` | 401 | Token missing, malformed, revoked, **or expired** — always trigger a refresh |
+| `SESSION_EXPIRED` | 401 | Tenant-selection or 2FA state token expired or already used |
 
 ### Tenant / membership access
 
-| `error_code`           | HTTP | When                                                        |
-| ---------------------- | ---- | ----------------------------------------------------------- |
-| `NO_ACTIVE_MEMBERSHIP` | 403  | Credentials valid, but all tenant memberships are suspended |
-| `TENANT_SUSPENDED`     | 403  | The tenant for this session has been suspended              |
-| `TENANT_INACTIVE`      | 403  | The selected tenant is not active                           |
-| `NO_TENANT_CONTEXT`    | 403  | Token has no tenant scope (shouldn't happen normally)       |
+| `error_code` | HTTP | When |
+|---|---|---|
+| `NO_ACTIVE_MEMBERSHIP` | 403 | Credentials valid, but all tenant memberships are suspended |
+| `TENANT_SUSPENDED` | 403 | The tenant for this session has been suspended |
+| `TENANT_INACTIVE` | 403 | The selected tenant is not active |
+| `NO_TENANT_CONTEXT` | 403 | Token has no tenant scope (shouldn't happen normally) |
 
 ### Permissions
 
-| `error_code`               | HTTP | When                                                              |
-| -------------------------- | ---- | ----------------------------------------------------------------- |
-| `PERMISSION_DENIED`        | 403  | Role is not allowed for this action — `hint` lists required roles |
-| `ROLE_PRIVILEGE_VIOLATION` | 403  | Trying to assign a role above your own level                      |
-| `NO_BRANCH_ASSIGNED`       | 403  | operator/readonly account has no branch — contact admin           |
+| `error_code` | HTTP | When |
+|---|---|---|
+| `PERMISSION_DENIED` | 403 | Role is not allowed for this action — `hint` lists required roles |
+| `ROLE_PRIVILEGE_VIOLATION` | 403 | Trying to assign a role above your own level |
+| `NO_BRANCH_ASSIGNED` | 403 | operator/readonly account has no branch — contact admin |
 
 ### Password
 
-| `error_code`         | HTTP | When                                             |
-| -------------------- | ---- | ------------------------------------------------ |
-| `PASSWORD_EXPIRED`   | 403  | Must change password before continuing           |
-| `PASSWORD_INCORRECT` | 400  | Current password is wrong                        |
-| `PASSWORD_WEAK`      | 422  | New password does not meet strength requirements |
-| `PASSWORD_REUSE`     | 400  | New password is the same as current              |
+| `error_code` | HTTP | When |
+|---|---|---|
+| `PASSWORD_EXPIRED` | 403 | Must change password before continuing |
+| `PASSWORD_INCORRECT` | 400 | Current password is wrong |
+| `PASSWORD_WEAK` | 422 | New password does not meet strength requirements |
+| `PASSWORD_REUSE` | 400 | New password is the same as current |
 
 ### Invitations
 
-| `error_code`              | HTTP | When                                        |
-| ------------------------- | ---- | ------------------------------------------- |
-| `INVITE_INVALID`          | 400  | Token not found or already used             |
-| `INVITE_EXPIRED`          | 400  | Invite link has expired — request a new one |
-| `INVITE_ALREADY_ACCEPTED` | 400  | User already completed onboarding           |
+| `error_code` | HTTP | When |
+|---|---|---|
+| `INVITE_INVALID` | 400 | Token not found or already used |
+| `INVITE_EXPIRED` | 400 | Invite link has expired — request a new one |
+| `INVITE_ALREADY_ACCEPTED` | 400 | User already completed onboarding |
 
 ### 2FA
 
-| `error_code`             | HTTP | When                          |
-| ------------------------ | ---- | ----------------------------- |
-| `TWO_FA_REQUIRED`        | 401  | Must complete 2FA to continue |
-| `TWO_FA_INVALID`         | 400  | Wrong code or backup code     |
-| `TWO_FA_ALREADY_ENABLED` | 400  | 2FA is already on             |
-| `TWO_FA_NOT_ENABLED`     | 400  | 2FA is not on                 |
-| `TWO_FA_SETUP_REQUIRED`  | 400  | Call /2fa/setup first         |
+| `error_code` | HTTP | When |
+|---|---|---|
+| `TWO_FA_REQUIRED` | 401 | Must complete 2FA to continue |
+| `TWO_FA_INVALID` | 400 | Wrong code or backup code |
+| `TWO_FA_ALREADY_ENABLED` | 400 | 2FA is already on |
+| `TWO_FA_NOT_ENABLED` | 400 | 2FA is not on |
+| `TWO_FA_SETUP_REQUIRED` | 400 | Call /2fa/setup first |
 
 ### Users
 
-| `error_code`             | HTTP | When                                          |
-| ------------------------ | ---- | --------------------------------------------- |
-| `USER_NOT_FOUND`         | 404  | User not found in this tenant                 |
-| `USER_ALREADY_IN_TENANT` | 409  | Email already has a membership in this tenant |
-| `INVALID_ROLE`           | 422  | Role value not in allowed list                |
-| `SELF_DEACTIVATION`      | 400  | Cannot deactivate your own account            |
+| `error_code` | HTTP | When |
+|---|---|---|
+| `USER_NOT_FOUND` | 404 | User not found in this tenant |
+| `USER_ALREADY_IN_TENANT` | 409 | Email already has a membership in this tenant |
+| `INVALID_ROLE` | 422 | Role value not in allowed list |
+| `SELF_DEACTIVATION` | 400 | Cannot deactivate your own account |
 
 ### Branches
 
-| `error_code`            | HTTP | When                                      |
-| ----------------------- | ---- | ----------------------------------------- |
-| `BRANCH_NOT_FOUND`      | 404  | Branch code not found                     |
-| `BRANCH_ALREADY_EXISTS` | 409  | Branch code already exists in this tenant |
+| `error_code` | HTTP | When |
+|---|---|---|
+| `BRANCH_NOT_FOUND` | 404 | Branch code not found |
+| `BRANCH_ALREADY_EXISTS` | 409 | Branch code already exists in this tenant |
 
 ### Tenants
 
-| `error_code`                | HTTP | When                                             |
-| --------------------------- | ---- | ------------------------------------------------ |
-| `TENANT_NOT_FOUND`          | 404  | Tenant slug not found                            |
-| `TENANT_ALREADY_EXISTS`     | 409  | Slug already taken                               |
-| `TENANT_STATUS_UNCHANGED`   | 400  | Tenant is already in that status                 |
-| `INVALID_TENANT_STATUS`     | 422  | Not a valid status value                         |
-| `INVALID_STATUS_TRANSITION` | 422  | Transition not allowed — `hint` lists valid ones |
+| `error_code` | HTTP | When |
+|---|---|---|
+| `TENANT_NOT_FOUND` | 404 | Tenant slug not found |
+| `TENANT_ALREADY_EXISTS` | 409 | Slug already taken |
+| `TENANT_STATUS_UNCHANGED` | 400 | Tenant is already in that status |
+| `INVALID_TENANT_STATUS` | 422 | Not a valid status value |
+| `INVALID_STATUS_TRANSITION` | 422 | Transition not allowed — `hint` lists valid ones |
 
 ### Currency
 
-| `error_code`               | HTTP | When                                                |
-| -------------------------- | ---- | --------------------------------------------------- |
-| `CURRENCY_INVALID_REQUEST` | 400  | Invalid currency code or amount                     |
-| `INVALID_DATE_RANGE`       | 400  | Date range invalid (future, reversed, or > 30 days) |
-| `RATE_UNAVAILABLE`         | 503  | External provider temporarily unavailable           |
+| `error_code` | HTTP | When |
+|---|---|---|
+| `CURRENCY_INVALID_REQUEST` | 400 | Invalid currency code or amount |
+| `INVALID_DATE_RANGE` | 400 | Date range invalid (future, reversed, or > 30 days) |
+| `RATE_UNAVAILABLE` | 503 | External provider temporarily unavailable |
 
 ### Sanctions
 
-| `error_code`               | HTTP | When                                     |
-| -------------------------- | ---- | ---------------------------------------- |
-| `SANCTIONS_DB_UNAVAILABLE` | 503  | Sanctions catalog DB unavailable         |
-| `SANCTIONS_TOO_MANY_CASES` | 400  | Exceeded max cases per screening request |
+| `error_code` | HTTP | When |
+|---|---|---|
+| `SANCTIONS_DB_UNAVAILABLE` | 503 | Sanctions catalog DB unavailable |
+| `SANCTIONS_TOO_MANY_CASES` | 400 | Exceeded max cases per screening request |
 
 ### Customers / KYC
 
-| `error_code`              | HTTP | When                                                     |
-| ------------------------- | ---- | -------------------------------------------------------- |
-| `CUSTOMER_ALREADY_EXISTS` | 409  | Document type + number already registered in this tenant |
-| `CUSTOMER_NOT_FOUND`      | 404  | Customer ID not found                                    |
+| `error_code` | HTTP | When |
+|---|---|---|
+| `CUSTOMER_ALREADY_EXISTS` | 409 | Document type + number already registered in this tenant |
+| `CUSTOMER_NOT_FOUND` | 404 | Customer ID not found |
 
 ### FX Operations
 
-| `error_code`                 | HTTP | When                                                                  |
-| ---------------------------- | ---- | --------------------------------------------------------------------- |
-| `NO_OPEN_SHIFT`              | 404  | No open shift exists for the requested branch                         |
-| `SHIFT_ALREADY_OPEN`         | 409  | Branch already has an open shift                                      |
-| `SHIFT_NOT_FOUND`            | 404  | Shift ID not found                                                    |
-| `TRANSACTION_NOT_FOUND`      | 404  | Transaction ID not found                                              |
-| `INSUFFICIENT_STOCK`         | 422  | Not enough available stock for this sell transaction                  |
-| `PRODUCT_NOT_FOUND`          | 404  | ISO currency code not configured as a product                         |
-| `PRODUCT_INACTIVE`           | 422  | Currency product is not active for trading                            |
-| `RATE_GUARD_RAIL_BREACH`     | 422  | Proposed rate exceeds volatility threshold — manual override required |
-| `CUSTOMER_FLAGGED`           | 422  | Customer screening status is `flagged` — transaction blocked          |
-| `SARLAFT_THRESHOLD_EXCEEDED` | 422  | Transaction would exceed customer's SARLAFT accumulator threshold     |
+| `error_code` | HTTP | When |
+|---|---|---|
+| `NO_OPEN_SHIFT` | 404 | No open shift exists for the requested branch |
+| `SHIFT_ALREADY_EXISTS` | 409 | Branch already has an open shift today |
+| `SHIFT_NOT_FOUND` | 404 | Shift ID not found |
+| `TRANSACTION_NOT_FOUND` | 404 | Transaction ID not found |
+| `INSUFFICIENT_STOCK` | 422 | Not enough available stock for this sell transaction |
+| `PRODUCT_NOT_FOUND` | 404 | ISO currency code not configured as a product |
+| `PRODUCT_INACTIVE` | 422 | Currency product is not active for trading |
+| `RATE_GUARD_RAIL_BREACH` | 422 | Proposed rate exceeds volatility threshold — manual override required |
+| `CUSTOMER_FLAGGED` | 422 | Customer screening status is `flagged` — transaction blocked |
+| `SARLAFT_THRESHOLD_EXCEEDED` | 422 | Transaction would exceed customer's SARLAFT accumulator threshold |
 
 ### Accounting
 
-| `error_code`              | HTTP | When                                                           |
-| ------------------------- | ---- | -------------------------------------------------------------- |
-| `ACCOUNT_NOT_FOUND`       | 404  | Account code not found in chart of accounts                    |
-| `ACCOUNT_ALREADY_EXISTS`  | 409  | Account code already exists                                    |
-| `JOURNAL_UNBALANCED`      | 422  | Total debits ≠ total credits in the journal entry              |
-| `PERIOD_ALREADY_CLOSED`   | 409  | An accounting period overlapping these dates is already closed |
-| `VOUCHER_TYPE_NOT_FOUND`  | 404  | Voucher type code not found                                    |
-| `JOURNAL_ENTRY_NOT_FOUND` | 404  | Journal entry ID not found                                     |
+| `error_code` | HTTP | When |
+|---|---|---|
+| `ACCOUNT_NOT_FOUND` | 404 | Account code not found in chart of accounts |
+| `ACCOUNT_ALREADY_EXISTS` | 409 | Account code already exists |
+| `JOURNAL_UNBALANCED` | 422 | Total debits ≠ total credits in the journal entry |
+| `PERIOD_ALREADY_CLOSED` | 409 | An accounting period overlapping these dates is already closed |
+| `VOUCHER_TYPE_NOT_FOUND` | 404 | Voucher type code not found |
+| `JOURNAL_ENTRY_NOT_FOUND` | 404 | Journal entry ID not found |
 
 ### Regulatory Reports
 
-| `error_code`             | HTTP | When                                       |
-| ------------------------ | ---- | ------------------------------------------ |
-| `REPORT_NOT_FOUND`       | 404  | Generated report ID not found              |
-| `STORAGE_FILE_NOT_FOUND` | 404  | Report file missing in storage             |
-| `STORAGE_UNAVAILABLE`    | 502  | Object storage unreachable                 |
-| `BANREP_NOT_ENABLED`     | 409  | `banrep_enabled=false` in company settings |
-| `UIAF_NOT_ENABLED`       | 422  | `uiaf_enabled=false` in company settings   |
+| `error_code` | HTTP | When |
+|---|---|---|
+| `REPORT_NOT_FOUND` | 404 | Generated report ID not found |
+| `STORAGE_FILE_NOT_FOUND` | 404 | Report file missing in storage |
+| `STORAGE_UNAVAILABLE` | 502 | Object storage unreachable |
+| `BANREP_NOT_ENABLED` | 409 | `banrep_enabled=false` in company settings |
+| `UIAF_NOT_ENABLED` | 422 | `uiaf_enabled=false` in company settings |
 
 ### Generic
 
-| `error_code`           | HTTP | When                                  |
-| ---------------------- | ---- | ------------------------------------- |
-| `NOT_FOUND`            | 404  | Generic resource not found            |
-| `CONFLICT`             | 409  | Generic duplicate resource            |
-| `MEMBERSHIP_NOT_FOUND` | 404  | User has no membership in this tenant |
+| `error_code` | HTTP | When |
+|---|---|---|
+| `NOT_FOUND` | 404 | Generic resource not found |
+| `CONFLICT` | 409 | Generic duplicate resource |
+| `MEMBERSHIP_NOT_FOUND` | 404 | User has no membership in this tenant |
 
 ---
 
@@ -378,73 +377,72 @@ interface ApiError {
 
 function handleApiError(error: ApiError) {
   switch (error.error_code) {
+
     // Auth — redirect to login
-    case "TOKEN_INVALID":
+    case 'TOKEN_INVALID':
       store.clearTokens();
-      router.push("/login");
+      router.push('/login');
       break;
 
-    case "ACCOUNT_LOCKED":
+    case 'ACCOUNT_LOCKED':
       showError(error.detail); // includes wait time
       break;
 
-    case "INVALID_CREDENTIALS":
-      showError("Email or password is incorrect.");
+    case 'INVALID_CREDENTIALS':
+      showError('Email or password is incorrect.');
       break;
 
-    case "NO_ACTIVE_MEMBERSHIP":
-    case "TENANT_SUSPENDED":
+    case 'NO_ACTIVE_MEMBERSHIP':
+    case 'TENANT_SUSPENDED':
       showError(error.hint ?? error.detail);
       break;
 
-    case "PASSWORD_EXPIRED":
-      router.push("/change-password");
+    case 'PASSWORD_EXPIRED':
+      router.push('/change-password');
       break;
 
-    case "PERMISSION_DENIED":
-    case "ROLE_PRIVILEGE_VIOLATION":
+    case 'PERMISSION_DENIED':
+    case 'ROLE_PRIVILEGE_VIOLATION':
       showError(error.hint ?? error.detail);
       break;
 
-    case "PASSWORD_WEAK":
-    case "INVALID_ROLE":
-    case "INVALID_DATE_RANGE":
+    case 'PASSWORD_WEAK':
+    case 'INVALID_ROLE':
+    case 'INVALID_DATE_RANGE':
       showFieldError(error.detail);
       break;
 
-    case "USER_ALREADY_IN_TENANT":
-    case "BRANCH_ALREADY_EXISTS":
-    case "TENANT_ALREADY_EXISTS":
-    case "CUSTOMER_ALREADY_EXISTS":
+    case 'USER_ALREADY_IN_TENANT':
+    case 'BRANCH_ALREADY_EXISTS':
+    case 'TENANT_ALREADY_EXISTS':
+    case 'CUSTOMER_ALREADY_EXISTS':
       showError(error.detail);
       break;
 
-    case "TWO_FA_REQUIRED":
-      router.push("/2fa-verify");
+    case 'TWO_FA_REQUIRED':
+      router.push('/2fa-verify');
       break;
 
-    case "TWO_FA_INVALID":
-      showError("Invalid code. Check your authenticator app.");
+    case 'TWO_FA_INVALID':
+      showError('Invalid code. Check your authenticator app.');
       break;
 
-    case "NO_OPEN_SHIFT":
-      showError("No open shift for this branch. Open a shift first.");
+    case 'NO_OPEN_SHIFT':
+      showError('No open shift for this branch. Open a shift first.');
       break;
 
-    case "CUSTOMER_FLAGGED":
-      showError(
-        "Transaction blocked: customer has a sanctions flag. Contact compliance.",
-      );
+    case 'CUSTOMER_FLAGGED':
+      showError('Transaction blocked: customer has a sanctions flag. Contact compliance.');
       break;
 
-    case "SARLAFT_THRESHOLD_EXCEEDED":
-      showError("Transaction blocked: customer SARLAFT threshold exceeded.");
+    case 'SARLAFT_THRESHOLD_EXCEEDED':
+      showError('Transaction blocked: customer SARLAFT threshold exceeded.');
       break;
 
-    case "RATE_UNAVAILABLE":
-    case "SANCTIONS_DB_UNAVAILABLE":
-    case "STORAGE_UNAVAILABLE":
-      showError("Service temporarily unavailable. Please try again shortly.");
+    case 'RATE_UNAVAILABLE':
+    case 'SANCTIONS_DB_UNAVAILABLE':
+    case 'STORAGE_UNAVAILABLE':
+      showError('Service temporarily unavailable. Please try again shortly.');
       break;
 
     default:
@@ -458,7 +456,6 @@ function handleApiError(error: ApiError) {
 ## Password requirements
 
 Minimum 8 characters including at least one of each:
-
 - Uppercase letter (`A-Z`)
 - Lowercase letter (`a-z`)
 - Digit (`0-9`)
@@ -479,22 +476,22 @@ super_admin  (JokerLabs platform — not a company user)
 
 ### Capabilities
 
-| Role          | Manages users                                     | Manages branches | Company settings | FX Transactions      | Accounting | Reports         |
-| ------------- | ------------------------------------------------- | ---------------- | ---------------- | -------------------- | ---------- | --------------- |
-| `super_admin` | Creates owners via onboard                        | —                | —                | —                    | —          | —               |
-| `owner`       | Creates admins and below                          | ✅               | ✅               | All branches         | Write      | All             |
-| `admin`       | Creates operators, compliance, readonly, contador | ✅               | ✅               | All branches         | Write      | All             |
-| `contador`    | ❌                                                | ❌               | ❌               | ❌                   | Write      | All             |
-| `compliance`  | ❌                                                | ❌               | ❌               | All branches (audit) | Read       | All             |
-| `operator`    | ❌                                                | ❌               | ❌               | Own branch only      | ❌         | Daily cash only |
-| `readonly`    | ❌                                                | ❌               | ❌               | Own branch only      | ❌         | ❌              |
+| Role | Manages users | Manages branches | Company settings | FX Transactions | Accounting | Reports |
+|---|---|---|---|---|---|---|
+| `super_admin` | Creates owners via onboard | — | — | — | — | — |
+| `owner` | Creates admins and below | ✅ | ✅ | All branches | Write | All |
+| `admin` | Creates operators, compliance, readonly, contador | ✅ | ✅ | All branches | Write | All |
+| `contador` | ❌ | ❌ | ❌ | ❌ | Write | All |
+| `compliance` | ❌ | ❌ | ❌ | All branches (audit) | Read | All |
+| `operator` | ❌ | ❌ | ❌ | Own branch only | ❌ | Daily cash only |
+| `readonly` | ❌ | ❌ | ❌ | Own branch only | ❌ | ❌ |
 
 ### Role assignment rules
 
-| Assigning                                        | Who can do it                      |
-| ------------------------------------------------ | ---------------------------------- |
-| `owner`                                          | `super_admin` only                 |
-| `admin`                                          | `owner` or `super_admin`           |
+| Assigning | Who can do it |
+|---|---|
+| `owner` | `super_admin` only |
+| `admin` | `owner` or `super_admin` |
 | `operator`, `compliance`, `readonly`, `contador` | `admin`, `owner`, or `super_admin` |
 
 Attempting to assign above your level returns `ROLE_PRIVILEGE_VIOLATION (403)`.
@@ -513,12 +510,12 @@ pending ──→ active ──→ suspended ──→ active
    └─────────────┴───────────┴──────→ cancelled (terminal)
 ```
 
-| Status      | User can login | Error returned                               |
-| ----------- | -------------- | -------------------------------------------- |
-| `pending`   | ❌             | `NO_ACTIVE_MEMBERSHIP`                       |
-| `active`    | ✅             | —                                            |
-| `suspended` | ❌             | `NO_ACTIVE_MEMBERSHIP` or `TENANT_SUSPENDED` |
-| `cancelled` | ❌ (terminal)  | `NO_ACTIVE_MEMBERSHIP`                       |
+| Status | User can login | Error returned |
+|---|---|---|
+| `pending` | ❌ | `NO_ACTIVE_MEMBERSHIP` |
+| `active` | ✅ | — |
+| `suspended` | ❌ | `NO_ACTIVE_MEMBERSHIP` or `TENANT_SUSPENDED` |
+| `cancelled` | ❌ (terminal) | `NO_ACTIVE_MEMBERSHIP` |
 
 ---
 
@@ -526,23 +523,23 @@ pending ──→ active ──→ suspended ──→ active
 
 ### Headers you receive on every response
 
-| Header           | Purpose                                     |
-| ---------------- | ------------------------------------------- |
-| `X-Request-ID`   | UUID trace ID — include when reporting bugs |
-| `X-Process-Time` | Server processing time in seconds           |
+| Header | Purpose |
+|---|---|
+| `X-Request-ID` | UUID trace ID — include when reporting bugs |
+| `X-Process-Time` | Server processing time in seconds |
 
 ### Security headers (always present)
 
 The server applies OWASP-recommended headers automatically. You don't need to set these, but be aware of them when debugging:
 
-| Header                      | Value                                                  |
-| --------------------------- | ------------------------------------------------------ |
-| `X-Content-Type-Options`    | `nosniff`                                              |
-| `X-Frame-Options`           | `DENY`                                                 |
-| `X-XSS-Protection`          | `1; mode=block`                                        |
-| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains`                  |
-| `Referrer-Policy`           | `strict-origin-when-cross-origin`                      |
-| `Content-Security-Policy`   | `default-src 'self'` (relaxed on `/docs` and `/redoc`) |
+| Header | Value |
+|---|---|
+| `X-Content-Type-Options` | `nosniff` |
+| `X-Frame-Options` | `DENY` |
+| `X-XSS-Protection` | `1; mode=block` |
+| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains` |
+| `Referrer-Policy` | `strict-origin-when-cross-origin` |
+| `Content-Security-Policy` | `default-src 'self'` (relaxed on `/docs` and `/redoc`) |
 
 ---
 
@@ -555,7 +552,6 @@ The server applies OWASP-recommended headers automatically. You don't need to se
 ### `POST /login`
 
 **Request**
-
 ```json
 {
   "email": "carlos@acme.com",
@@ -564,7 +560,6 @@ The server applies OWASP-recommended headers automatically. You don't need to se
 ```
 
 **Success — single company (HTTP 200)**
-
 ```json
 {
   "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -576,7 +571,6 @@ The server applies OWASP-recommended headers automatically. You don't need to se
 ```
 
 **Success — user belongs to multiple companies (HTTP 200)**
-
 ```json
 {
   "requires_tenant_selection": true,
@@ -599,22 +593,18 @@ The server applies OWASP-recommended headers automatically. You don't need to se
   ]
 }
 ```
-
 → Show company picker. On selection call `POST /auth/select-tenant`.
 
 **Success — 2FA required (HTTP 200)**
-
 ```json
 {
   "requires_2fa": true,
   "state_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 }
 ```
-
 → Show 2FA code input. Call `POST /auth/verify-2fa`.
 
 **Failure — wrong credentials (HTTP 401)**
-
 ```json
 {
   "status_code": 401,
@@ -625,7 +615,6 @@ The server applies OWASP-recommended headers automatically. You don't need to se
 ```
 
 **Failure — account locked (HTTP 429)**
-
 ```json
 {
   "status_code": 429,
@@ -640,7 +629,6 @@ The server applies OWASP-recommended headers automatically. You don't need to se
 ### `POST /select-tenant`
 
 **Request**
-
 ```json
 {
   "session_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -651,7 +639,6 @@ The server applies OWASP-recommended headers automatically. You don't need to se
 **Success (HTTP 200)** — same token pair shape as single-company login.
 
 **Failure — session expired (HTTP 401)**
-
 ```json
 {
   "status_code": 401,
@@ -668,7 +655,6 @@ The server applies OWASP-recommended headers automatically. You don't need to se
 > Requires `Authorization: Bearer <access_token>`
 
 **Request**
-
 ```json
 {
   "membership_id": "b2c3d4e5-f6a7-8901-bcde-f12345678902"
@@ -682,7 +668,6 @@ The server applies OWASP-recommended headers automatically. You don't need to se
 ### `POST /refresh`
 
 **Request**
-
 ```json
 {
   "refresh_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
@@ -690,7 +675,6 @@ The server applies OWASP-recommended headers automatically. You don't need to se
 ```
 
 **Success (HTTP 200)**
-
 ```json
 {
   "access_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -702,7 +686,6 @@ The server applies OWASP-recommended headers automatically. You don't need to se
 ```
 
 **Failure — token already used or expired (HTTP 401)**
-
 ```json
 {
   "status_code": 401,
@@ -727,7 +710,6 @@ The server applies OWASP-recommended headers automatically. You don't need to se
 > Requires `Authorization: Bearer <access_token>`
 
 **Success (HTTP 200)**
-
 ```json
 {
   "id": "c3d4e5f6-a7b8-9012-cdef-012345678904",
@@ -749,7 +731,6 @@ The server applies OWASP-recommended headers automatically. You don't need to se
 User clicks link in email: `https://your-app.com/invite/{token}`
 
 **Request**
-
 ```json
 {
   "token": "abc123def456...",
@@ -760,7 +741,6 @@ User clicks link in email: `https://your-app.com/invite/{token}`
 **Success (HTTP 200)** — returns full token pair. User is logged in immediately.
 
 **Failure — expired invite (HTTP 400)**
-
 ```json
 {
   "status_code": 400,
@@ -777,7 +757,6 @@ User clicks link in email: `https://your-app.com/invite/{token}`
 > Requires `Authorization: Bearer <access_token>`. Block all app routes until completed when `must_change_password: true`.
 
 **Request**
-
 ```json
 {
   "current_password": "OldPass@123",
@@ -788,7 +767,6 @@ User clicks link in email: `https://your-app.com/invite/{token}`
 **Success (HTTP 204)** — No body. All other sessions are revoked.
 
 **Failure — weak password (HTTP 422)**
-
 ```json
 {
   "status_code": 422,
@@ -803,7 +781,6 @@ User clicks link in email: `https://your-app.com/invite/{token}`
 ### `POST /forgot-password`
 
 **Request**
-
 ```json
 {
   "email": "carlos@acme.com"
@@ -817,7 +794,6 @@ User clicks link in email: `https://your-app.com/invite/{token}`
 ### `POST /reset-password`
 
 **Request**
-
 ```json
 {
   "token": "abc123def456...",
@@ -834,14 +810,12 @@ User clicks link in email: `https://your-app.com/invite/{token}`
 > Requires `Authorization: Bearer <access_token>`
 
 **Success (HTTP 200)**
-
 ```json
 {
   "secret": "JBSWY3DPEHPK3PXP",
   "otpauth_uri": "otpauth://totp/CurrencyApp%3Acarlos%40acme.com?secret=JBSWY3DPEHPK3PXP&issuer=CurrencyApp"
 }
 ```
-
 → Render `otpauth_uri` as a QR code for the user to scan in their authenticator app.
 
 ---
@@ -851,7 +825,6 @@ User clicks link in email: `https://your-app.com/invite/{token}`
 > Requires `Authorization: Bearer <access_token>`
 
 **Request**
-
 ```json
 {
   "code": "123456"
@@ -859,27 +832,52 @@ User clicks link in email: `https://your-app.com/invite/{token}`
 ```
 
 **Success (HTTP 200)**
-
 ```json
 {
   "backup_codes": [
-    "a1b2c3d4e5",
-    "f6g7h8i9j0",
-    "k1l2m3n4o5",
-    "p6q7r8s9t0",
-    "u1v2w3x4y5"
+    "A1B2-C3D4",
+    "E5F6-G7H8",
+    "I9J0-K1L2",
+    "M3N4-O5P6",
+    "Q7R8-S9T0",
+    "U1V2-W3X4",
+    "Y5Z6-A7B8",
+    "C9D0-E1F2"
   ]
 }
 ```
+→ **8 backup codes**, each in `XXXX-XXXX` format. Display once — they cannot be retrieved again. Each code is single-use.
 
-→ Display backup codes once. User must save them — they cannot be retrieved again.
+---
+
+### `POST /2fa/disable`
+
+> Requires `Authorization: Bearer <access_token>`. Accepts a live TOTP code **or** one backup code.
+
+**Request**
+```json
+{
+  "code": "123456"
+}
+```
+
+**Success (HTTP 204)** — No body.
+
+**Failure — 2FA not enabled (HTTP 400)**
+```json
+{
+  "status_code": 400,
+  "error_code": "TWO_FA_NOT_ENABLED",
+  "detail": "Two-factor authentication is not enabled on this account.",
+  "hint": null
+}
+```
 
 ---
 
 ### `POST /verify-2fa`
 
 **Request**
-
 ```json
 {
   "state_token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
@@ -890,7 +888,6 @@ User clicks link in email: `https://your-app.com/invite/{token}`
 **Success (HTTP 200)** — returns full token pair.
 
 **Failure — wrong code (HTTP 400)**
-
 ```json
 {
   "status_code": 400,
@@ -904,28 +901,38 @@ User clicks link in email: `https://your-app.com/invite/{token}`
 
 ### `POST /resend-invite/{user_id}`
 
-> Requires `owner`, `admin`, or `super_admin`. Regenerates a fresh invite token and resends the email.
+> Requires `owner`, `admin`, or `super_admin`. Expires all existing pending invitations for this user and creates a fresh one with a new 48-hour TTL.
 
 **Success (HTTP 200)**
-
 ```json
 {
   "id": "d4e5f6a7-b8c9-0123-defa-012345678905",
-  "email": "operador@acme.com",
-  "full_name": "Ana Garcia",
-  "role": "operator",
-  "invite_sent": true,
-  "expires_at": "2026-05-19T15:00:00Z"
+  "tenant_id": "f0e1d2c3-b4a5-9678-cdef-012345678901",
+  "user_id": "c3d4e5f6-a7b8-9012-cdef-012345678904",
+  "membership_id": "b2c3d4e5-f6a7-8901-bcde-f12345678902",
+  "invited_by": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "expires_at": "2026-05-30T10:00:00Z",
+  "accepted_at": null,
+  "created_at": "2026-05-28T10:00:00Z"
 }
 ```
 
 **Failure — user not found (HTTP 404)**
-
 ```json
 {
   "status_code": 404,
-  "error_code": "USER_NOT_FOUND",
-  "detail": "User not found in this tenant.",
+  "error_code": "NOT_FOUND",
+  "detail": "The requested resource was not found.",
+  "hint": null
+}
+```
+
+**Failure — already accepted (HTTP 400)**
+```json
+{
+  "status_code": 400,
+  "error_code": "INVITE_ALREADY_ACCEPTED",
+  "detail": "This user has already accepted their invitation.",
   "hint": null
 }
 ```
@@ -937,7 +944,6 @@ User clicks link in email: `https://your-app.com/invite/{token}`
 ### `POST /onboard`
 
 **Request**
-
 ```json
 {
   "slug": "acme-cambios",
@@ -950,7 +956,6 @@ User clicks link in email: `https://your-app.com/invite/{token}`
 ```
 
 **Success (HTTP 201)**
-
 ```json
 {
   "tenant": {
@@ -970,7 +975,6 @@ User clicks link in email: `https://your-app.com/invite/{token}`
 ```
 
 **Failure — slug taken (HTTP 409)**
-
 ```json
 {
   "status_code": 409,
@@ -987,7 +991,6 @@ User clicks link in email: `https://your-app.com/invite/{token}`
 **Query params**: `?status=active` (optional)
 
 **Success (HTTP 200)**
-
 ```json
 [
   {
@@ -1010,7 +1013,6 @@ User clicks link in email: `https://your-app.com/invite/{token}`
 ### `PATCH /{slug}/status`
 
 **Request**
-
 ```json
 {
   "status": "suspended",
@@ -1021,7 +1023,6 @@ User clicks link in email: `https://your-app.com/invite/{token}`
 **Success (HTTP 200)** — returns updated `TenantResponse`.
 
 **Failure — invalid transition (HTTP 422)**
-
 ```json
 {
   "status_code": 422,
@@ -1037,10 +1038,9 @@ User clicks link in email: `https://your-app.com/invite/{token}`
 
 ### `GET /` (list users)
 
-**Query params**: `?page=1&page_size=20`
+**Query params**: `?page=1&size=20`
 
 **Success (HTTP 200)**
-
 ```json
 {
   "items": [
@@ -1056,7 +1056,7 @@ User clicks link in email: `https://your-app.com/invite/{token}`
   ],
   "total": 1,
   "page": 1,
-  "page_size": 20
+  "size": 20
 }
 ```
 
@@ -1065,7 +1065,6 @@ User clicks link in email: `https://your-app.com/invite/{token}`
 ### `POST /invite`
 
 **Request**
-
 ```json
 {
   "email": "operador@acme.com",
@@ -1076,21 +1075,25 @@ User clicks link in email: `https://your-app.com/invite/{token}`
 ```
 
 **Success (HTTP 201)**
-
 ```json
 {
-  "id": "d4e5f6a7-b8c9-0123-defa-012345678905",
-  "email": "operador@acme.com",
-  "full_name": "Ana Garcia",
-  "role": "operator",
-  "branch_code": "BOG01",
-  "is_active": false,
-  "invite_sent": true
+  "invitation": {
+    "id": "d4e5f6a7-b8c9-0123-defa-012345678905",
+    "tenant_id": "f0e1d2c3-b4a5-9678-cdef-012345678901",
+    "user_id": "c3d4e5f6-a7b8-9012-cdef-012345678904",
+    "membership_id": "b2c3d4e5-f6a7-8901-bcde-f12345678902",
+    "invited_by": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "expires_at": "2026-05-30T10:00:00Z",
+    "accepted_at": null,
+    "created_at": "2026-05-28T10:00:00Z"
+  },
+  "email_sent": true
 }
 ```
 
-**Failure — already a member (HTTP 409)**
+> `email_sent: false` means the invitation record was created but email delivery failed. Call `POST /auth/resend-invite/{user_id}` to retry.
 
+**Failure — already a member (HTTP 409)**
 ```json
 {
   "status_code": 409,
@@ -1105,7 +1108,6 @@ User clicks link in email: `https://your-app.com/invite/{token}`
 ### `PATCH /{user_id}`
 
 **Request** — send only the fields to change
-
 ```json
 {
   "role": "admin",
@@ -1116,7 +1118,6 @@ User clicks link in email: `https://your-app.com/invite/{token}`
 **Success (HTTP 200)** — returns updated user object.
 
 **Failure — privilege violation (HTTP 403)**
-
 ```json
 {
   "status_code": 403,
@@ -1128,12 +1129,50 @@ User clicks link in email: `https://your-app.com/invite/{token}`
 
 ---
 
+### `POST /force-password-reset`
+
+> Requires `owner`, `admin`, or `super_admin`. Bulk-sends password reset emails to up to 50 users. Users not in the tenant, inactive users, and super-admins are silently skipped.
+
+**Request**
+```json
+{
+  "user_ids": [
+    "c3d4e5f6-a7b8-9012-cdef-012345678904",
+    "d4e5f6a7-b8c9-0123-defa-012345678905"
+  ]
+}
+```
+
+**Success (HTTP 200)**
+```json
+{
+  "sent": 1,
+  "failed": 0,
+  "skipped": 1,
+  "details": [
+    {
+      "user_id": "c3d4e5f6-a7b8-9012-cdef-012345678904",
+      "email": "ana@acme.com",
+      "status": "sent"
+    },
+    {
+      "user_id": "d4e5f6a7-b8c9-0123-defa-012345678905",
+      "email": "",
+      "status": "skipped",
+      "reason": "User not found in this tenant"
+    }
+  ]
+}
+```
+`status` values per detail entry: `"sent"` | `"failed"` | `"skipped"`.
+
+---
+
 ## Branches `/api/v1/branches`
 
 ### `GET /`
 
 **Success (HTTP 200)**
-
 ```json
 [
   {
@@ -1156,7 +1195,6 @@ User clicks link in email: `https://your-app.com/invite/{token}`
 ### `POST /`
 
 **Request**
-
 ```json
 {
   "code": "MED01",
@@ -1172,7 +1210,6 @@ User clicks link in email: `https://your-app.com/invite/{token}`
 **Success (HTTP 201)** — returns full `BranchResponse`.
 
 **Failure — code taken (HTTP 409)**
-
 ```json
 {
   "status_code": 409,
@@ -1189,7 +1226,6 @@ User clicks link in email: `https://your-app.com/invite/{token}`
 ### `GET /`
 
 **Success (HTTP 200)**
-
 ```json
 {
   "id": 1,
@@ -1222,7 +1258,6 @@ User clicks link in email: `https://your-app.com/invite/{token}`
 ### `PATCH /`
 
 **Request** — send only the fields to update
-
 ```json
 {
   "email": "nuevo@acme.com",
@@ -1243,18 +1278,16 @@ User clicks link in email: `https://your-app.com/invite/{token}`
 Example: `GET /trm/USD`
 
 **Success (HTTP 200)**
-
 ```json
 {
   "currency": "USD",
   "rate": "4215.50",
   "date": "2026-05-12",
-  "source": "banrep"
+  "source": "superfinanciera"
 }
 ```
 
 **Failure — unsupported currency (HTTP 400)**
-
 ```json
 {
   "status_code": 400,
@@ -1265,7 +1298,6 @@ Example: `GET /trm/USD`
 ```
 
 **Failure — provider down (HTTP 503)**
-
 ```json
 {
   "status_code": 503,
@@ -1282,7 +1314,6 @@ Example: `GET /trm/USD`
 **Query params**: `?start_date=2026-05-01&end_date=2026-05-12` (max 30 days)
 
 **Success (HTTP 200)**
-
 ```json
 {
   "currency": "USD",
@@ -1299,7 +1330,6 @@ Example: `GET /trm/USD`
 ### `POST /trm/{currency}/convert`
 
 **Request**
-
 ```json
 {
   "amount": "1000.00",
@@ -1308,7 +1338,6 @@ Example: `GET /trm/USD`
 ```
 
 **Success (HTTP 200)**
-
 ```json
 {
   "currency": "USD",
@@ -1324,7 +1353,6 @@ Example: `GET /trm/USD`
 ### `GET /trm/supported/currencies`
 
 **Success (HTTP 200)**
-
 ```json
 {
   "currencies": ["USD", "EUR", "GBP", "CAD", "CHF", "JPY", "BRL"]
@@ -1337,14 +1365,14 @@ Example: `GET /trm/USD`
 
 ### Sanctions list source codes
 
-| `list_source` | Full name                                                  | External link                             |
-| ------------- | ---------------------------------------------------------- | ----------------------------------------- |
-| `SDN`         | Specially Designated Nationals — US Treasury OFAC          | sanctionssearch.ofac.treas.gov            |
-| `UN`          | UN Security Council Consolidated List                      | scsanctions.un.org                        |
-| `PE`          | Personas Expuestas Políticamente — Colombia (datos.gov.co) | datos.gov.co                              |
-| `PF`          | PEP Family / Associates — Colombia                         | —                                         |
-| `EU`          | EU Consolidated Financial Sanctions                        | sanctionsmap.eu                           |
-| `UK`          | UK OFSI Consolidated Sanctions                             | sanctionssearchapp.ofsi.hmtreasury.gov.uk |
+| `list_source` | Full name | External link |
+|---|---|---|
+| `SDN` | Specially Designated Nationals — US Treasury OFAC | sanctionssearch.ofac.treas.gov |
+| `UN` | UN Security Council Consolidated List | scsanctions.un.org |
+| `PE` | Personas Expuestas Políticamente — Colombia (datos.gov.co) | datos.gov.co |
+| `PF` | PEP Family / Associates — Colombia | — |
+| `EU` | EU Consolidated Financial Sanctions | sanctionsmap.eu |
+| `UK` | UK OFSI Consolidated Sanctions | sanctionssearchapp.ofsi.hmtreasury.gov.uk |
 
 Use the `listSource` query param on `GET /persons` to filter to a specific list.
 
@@ -1352,58 +1380,67 @@ Use the `listSource` query param on `GET /persons` to filter to a specific list.
 
 ### `POST /universal-search`
 
-**Request** — up to 50 cases per request
+> Field names use **camelCase aliases** (`idNumber`, `externalId`, `maxResults`, `listSources`, `minScore`, `searchMode`). At least one of `idNumber`, `name`, `country`, or `address` is required per case.
 
+**Request** — up to 50 cases per request
 ```json
 {
   "cases": [
     {
-      "full_name": "Carlos Perez",
-      "document_number": "79000001"
+      "idNumber": "79000001",
+      "name": "Carlos Perez",
+      "externalId": "case-001"
     },
     {
-      "full_name": "Juan Rodriguez"
+      "name": "Juan Rodriguez"
     }
   ],
-  "minScore": 0.75
+  "maxResults": 10,
+  "minScore": 75,
+  "searchMode": "flexible"
 }
 ```
 
 **Success (HTTP 200)**
-
 ```json
 {
+  "success": true,
+  "totalMatches": 1,
+  "sources": [
+    {
+      "source": "SDN",
+      "name": "Specially Designated Nationals (SDN) - Treasury Department",
+      "publishDate": "2026-05-27",
+      "downloadDate": "2026-05-27T02:15:00Z",
+      "sourceLink": "https://sanctionssearch.ofac.treas.gov/"
+    }
+  ],
   "results": [
     {
-      "input_name": "Carlos Perez",
-      "input_document": "79000001",
-      "matches": [],
-      "highest_score": 0.0,
-      "is_flagged": false
+      "externalId": "case-001",
+      "name": "Carlos Perez",
+      "totalMatches": 0,
+      "matches": []
     },
     {
-      "input_name": "Juan Rodriguez",
-      "input_document": null,
+      "externalId": null,
+      "name": "Juan Rodriguez",
+      "totalMatches": 1,
       "matches": [
         {
-          "entity_id": "OFAC-12345",
-          "list_source": "OFAC",
-          "full_name": "Juan Carlos Rodriguez Gomez",
-          "score": 0.87,
-          "entity_type": "person",
-          "nationality": "COL",
-          "document_number": "80000002"
+          "score": 87,
+          "sources": ["SDN"],
+          "primarySource": "SDN",
+          "matchedSources": ["SDN"],
+          "uid": "OFAC-12345"
         }
-      ],
-      "highest_score": 0.87,
-      "is_flagged": true
+      ]
     }
   ]
 }
 ```
 
 **Failure — too many cases (HTTP 400)**
-
 ```json
 {
   "status_code": 400,
@@ -1417,25 +1454,21 @@ Use the `listSource` query param on `GET /persons` to filter to a specific list.
 
 ### `GET /persons`
 
-**Query params**: `?page=1&page_size=20&listSource=OFAC`
+> Supports ETag caching — send `If-None-Match: <etag>` to receive `304 Not Modified` when the dataset hasn't changed.
+
+**Query params**: `?page=1&page_size=50&listSource=SDN`
+
+Valid `listSource` values: `SDN`, `UN`, `EU`, `UK`, `PE`, `PF`.
 
 **Success (HTTP 200)**
-
 ```json
 {
-  "items": [
-    {
-      "entity_id": "OFAC-12345",
-      "list_source": "OFAC",
-      "full_name": "Juan Carlos Rodriguez Gomez",
-      "entity_type": "person",
-      "nationality": "COL",
-      "document_number": "80000002"
-    }
-  ],
-  "total": 1,
+  "items": [ /* PersonSummary objects */ ],
+  "total": 15420,
   "page": 1,
-  "page_size": 20
+  "page_size": 50,
+  "dataset_version": "20260527",
+  "last_sync_at": "2026-05-27T02:15:00Z"
 }
 ```
 
@@ -1444,21 +1477,24 @@ Use the `listSource` query param on `GET /persons` to filter to a specific list.
 ### `GET /metadata`
 
 **Success (HTTP 200)**
-
 ```json
 {
   "lists": [
     {
-      "list_source": "OFAC",
-      "record_count": 12340,
-      "last_sync_at": "2026-05-12T06:00:00Z",
-      "source_version": "20260512"
+      "list_key": "SDN",
+      "list_name": "Specially Designated Nationals (SDN) - Treasury Department",
+      "record_count_total": 10842,
+      "record_count_persons": 9240,
+      "source_version": "20260527",
+      "last_sync_at": "2026-05-27T02:15:00Z"
     },
     {
-      "list_source": "ONU",
-      "record_count": 890,
-      "last_sync_at": "2026-05-11T06:00:00Z",
-      "source_version": "20260511"
+      "list_key": "UN",
+      "list_name": "UN Security Council Consolidated List",
+      "record_count_total": 890,
+      "record_count_persons": 850,
+      "source_version": "20260526",
+      "last_sync_at": "2026-05-26T02:15:00Z"
     }
   ]
 }
@@ -1474,25 +1510,28 @@ Every FX transaction must happen inside an open shift. The full daily flow:
 
 ```
 1. GET  /fx/shifts/current?branch_code=BOG01
-        ├── 200 → shift already open, skip to step 4
+        ├── 200 → shift already open, skip to step 3
         └── 404 NO_OPEN_SHIFT → continue
 
-2. GET  /fx/shifts/rate-proposal
-        └── Review proposed rates per currency
-            ├── volatility_flagged: false → accept proposed rate (no override needed)
-            └── volatility_flagged: true  → supervisor must set buy/sell_rate_override
+2. POST /fx/shifts/open
+        └── Server auto-fetches live rates from Superfinanciera (USD) and
+            Exchange Rate API (others), computes TPPC and spreads.
+            Returns ShiftResponse with approved rates per currency.
+            If a currency has volatility_flagged: true, show a warning banner
+            (rate is still applied — no manual override needed at this level).
 
-3. POST /fx/shifts/open
-        └── Returns ShiftResponse with confirmed rates per currency
+3. POST /fx/transactions  (repeat per customer)
+        ├── customer_id, transaction_type (buy|sell), iso_code, foreign_amount, branch_code
+        └── Returns FxTransactionResponse with ticket_number, cop_amount,
+            exchange_rate, screening_status, sarlaft_flagged
 
-4. POST /fx/transactions  (repeat per customer)
-        ├── customer_id, transaction_type (buy|sell), iso_code, foreign_amount
-        └── Returns ticket with cop_amount, exchange_rate, screening_status
+4. POST /fx/shifts/{id}/close  (end of day)
+        └── Requires physical_counts for every currency in the shift
+            ├── Returns ShiftCloseResponse { shift, reconciliation[] }
+            └── reconciliation[].variance_status: "balanced" | "surplus" | "shortage"
 
-5. POST /fx/shifts/{id}/close  (end of day)
-        └── Returns closed shift with profit totals per currency
-
-6. GET  /fx/shifts/{id}/summary  (optional — for end-of-day report display)
+5. GET  /reports/daily-cash?shift_date=YYYY-MM-DD  (end-of-day report)
+        └── Returns cash summary per branch/shift for printing
 ```
 
 > `transaction_type: "buy"` = the exchange house **buys** foreign currency from the customer (customer receives COP).  
@@ -1505,7 +1544,6 @@ Every FX transaction must happen inside an open shift. The full daily flow:
 **Query params**: `?include_inactive=false`
 
 **Success (HTTP 200)**
-
 ```json
 [
   {
@@ -1534,7 +1572,6 @@ Every FX transaction must happen inside an open shift. The full daily flow:
 Example: `PATCH /products/USD`
 
 **Request** — send only fields to update
-
 ```json
 {
   "buy_spread": "0.0055",
@@ -1545,88 +1582,43 @@ Example: `PATCH /products/USD`
 
 **Success (HTTP 200)** — returns updated `CurrencyProductResponse`.
 
-**Failure — product not found (HTTP 404)**
-
-```json
-{
-  "status_code": 404,
-  "error_code": "PRODUCT_NOT_FOUND",
-  "detail": "Currency product 'XYZ' not found.",
-  "hint": null
-}
-```
-
 ---
 
-### `GET /shifts/rate-proposal`
+### `PATCH /products` (Bulk Update)
 
-**Query params**: `?proposal_date=2026-05-12` (optional, defaults to today)
+> Requires `admin`, `owner`, or `super_admin`. ISO codes that are not found are returned in `not_found` — they do not cause an error.
 
-**Success (HTTP 200)**
-
+**Request** — array of items, each including `iso_code`
 ```json
-{
-  "proposal_date": "2026-05-12",
-  "currencies": [
-    {
-      "iso_code": "USD",
-      "name": "Dólar Estadounidense",
-      "reference_rate": "4215.50",
-      "rate_source": "banrep",
-      "proposed_buy_rate": "4194.57",
-      "proposed_sell_rate": "4235.74",
-      "spread": "0.0050",
-      "volatility_pct": "0.0142",
-      "volatility_flagged": false,
-      "guard_rail_ok": true,
-      "guard_rail_message": null
-    },
-    {
-      "iso_code": "EUR",
-      "name": "Euro",
-      "reference_rate": "4650.00",
-      "rate_source": "banrep",
-      "proposed_buy_rate": "4613.35",
-      "proposed_sell_rate": "4672.30",
-      "spread": "0.0079",
-      "volatility_pct": "0.0320",
-      "volatility_flagged": true,
-      "guard_rail_ok": false,
-      "guard_rail_message": "Volatility exceeds 3% threshold — manual override required before approving this rate."
-    }
-  ]
-}
+[
+  { "iso_code": "USD", "buy_spread": "0.0055", "sell_spread": "0.0050" },
+  { "iso_code": "EUR", "available_stock": "3000.00" }
+]
 ```
 
-> `volatility_flagged: true` means you must provide a manual `buy_rate_override` / `sell_rate_override` in the open-shift request for that currency.
+**Success (HTTP 200)**
+```json
+{
+  "updated": [ /* array of CurrencyProductResponse */ ],
+  "not_found": ["GBP"]
+}
+```
 
 ---
 
 ### `POST /shifts/open`
 
-**Request**
+> Rates are fully automatic — the server fetches live rates and computes spreads/TPPC at open time. No currency list or rate overrides are accepted in the request.
 
+**Request**
 ```json
 {
   "branch_code": "BOG01",
-  "opening_cash_cop": "2000000.00",
-  "currencies": [
-    {
-      "iso_code": "USD",
-      "buy_rate_override": null,
-      "sell_rate_override": null
-    },
-    {
-      "iso_code": "EUR",
-      "buy_rate_override": "4580.00",
-      "sell_rate_override": "4690.00"
-    }
-  ]
+  "opening_cash_cop": "2000000.00"
 }
 ```
 
 **Success (HTTP 201)**
-
 ```json
 {
   "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
@@ -1645,47 +1637,34 @@ Example: `PATCH /products/USD`
       "id": "b2c3d4e5-f6a7-8901-bcde-f12345678902",
       "iso_code": "USD",
       "reference_rate": "4215.50",
-      "rate_source": "banrep",
+      "rate_source": "superfinanciera",
       "proposed_buy_rate": "4194.57",
       "proposed_sell_rate": "4235.74",
       "approved_buy_rate": "4194.57",
       "approved_sell_rate": "4235.74",
-      "rate_status": "proposed",
+      "rate_status": "approved",
       "volatility_flagged": false,
       "volatility_pct": "0.0142",
-      "base_units": "0.00",
+      "base_units": "12500.00",
       "units_purchased": "0.00",
       "units_sold": "0.00",
-      "profit_cop": "0.00"
-    },
-    {
-      "id": "c3d4e5f6-a7b8-0123-cdef-012345678903",
-      "iso_code": "EUR",
-      "reference_rate": "4650.00",
-      "rate_source": "banrep",
-      "proposed_buy_rate": "4613.35",
-      "proposed_sell_rate": "4672.30",
-      "approved_buy_rate": "4580.00",
-      "approved_sell_rate": "4690.00",
-      "rate_status": "overridden",
-      "volatility_flagged": true,
-      "volatility_pct": "0.0320",
-      "base_units": "0.00",
-      "units_purchased": "0.00",
-      "units_sold": "0.00",
-      "profit_cop": "0.00"
+      "profit_cop": "0.00",
+      "tppc": "4205.00",
+      "cop_paid_total": "0.00",
+      "closing_physical_count": null,
+      "variance": null,
+      "variance_note": null
     }
   ]
 }
 ```
 
-**Failure — shift already open (HTTP 409)**
-
+**Failure — shift already exists (HTTP 409)**
 ```json
 {
   "status_code": 409,
-  "error_code": "SHIFT_ALREADY_OPEN",
-  "detail": "Branch 'BOG01' already has an open shift.",
+  "error_code": "SHIFT_ALREADY_EXISTS",
+  "detail": "A shift already exists for branch 'BOG01' on 2026-05-12.",
   "hint": null
 }
 ```
@@ -1699,7 +1678,6 @@ Example: `PATCH /products/USD`
 **Success (HTTP 200)** — same shape as open-shift response.
 
 **Failure — no open shift (HTTP 404)**
-
 ```json
 {
   "status_code": 404,
@@ -1713,21 +1691,65 @@ Example: `PATCH /products/USD`
 
 ### `POST /shifts/{shift_id}/close`
 
-**Success (HTTP 200)** — returns shift with `status: "closed"` and updated `profit_cop` per currency.
+Physical cash counts are **mandatory** for every active currency in the shift. The system calculates the variance between `available_stock` (system-tracked) and the cashier's physical count, then updates `physical_stock` on the product.
 
----
-
-### `GET /shifts/{shift_id}/summary`
-
-**Success (HTTP 200)**
-
+**Request**
 ```json
 {
-  "shift": { "...": "full ShiftResponse object" },
-  "total_cop_purchased": "12500000.00",
-  "total_cop_sold": "8900000.00",
-  "total_profit_cop": "127500.00",
-  "transaction_count": 18
+  "physical_counts": [
+    { "iso_code": "USD", "count": "1450.00", "note": null },
+    { "iso_code": "EUR", "count": "820.00",  "note": "Billete dañado retirado" }
+  ]
+}
+```
+
+> Every currency that has `rate_status: "approved"` in the shift must have a matching entry in `physical_counts`. Missing currencies return HTTP 422.
+
+**Success (HTTP 200)**
+```json
+{
+  "shift": {
+    "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+    "date": "2026-05-12",
+    "branch_code": "BOG01",
+    "status": "closed",
+    "opened_at": "2026-05-12T08:00:00Z",
+    "closed_at": "2026-05-12T18:30:00Z"
+  },
+  "reconciliation": [
+    {
+      "iso_code": "USD",
+      "expected_closing": "1500.00",
+      "physical_count": "1450.00",
+      "variance": "-50.00",
+      "variance_status": "shortage"
+    },
+    {
+      "iso_code": "EUR",
+      "expected_closing": "820.00",
+      "physical_count": "820.00",
+      "variance": "0.00",
+      "variance_status": "balanced"
+    }
+  ]
+}
+```
+
+**`variance_status` values**
+
+| Value | Meaning |
+|-------|---------|
+| `balanced` | Physical count matches system expectation exactly |
+| `surplus` | Cashier counted more than the system expected |
+| `shortage` | Cashier counted less than the system expected |
+
+**Failure — missing currency count (HTTP 422)**
+```json
+{
+  "status_code": 422,
+  "error_code": "MISSING_PHYSICAL_COUNTS",
+  "detail": "Physical count required for: EUR.",
+  "hint": null
 }
 ```
 
@@ -1738,7 +1760,6 @@ Example: `PATCH /products/USD`
 **Query params**: `?page=1&size=20&branch_code=BOG01&date_from=2026-05-01&date_to=2026-05-12&shift_status=closed`
 
 **Success (HTTP 200)**
-
 ```json
 {
   "items": [
@@ -1764,21 +1785,22 @@ Example: `PATCH /products/USD`
 ### `POST /transactions`
 
 **Request**
-
 ```json
 {
   "customer_id": "d4e5f6a7-b8c9-0123-defa-012345678905",
   "transaction_type": "buy",
   "iso_code": "USD",
   "foreign_amount": "500.00",
+  "branch_code": "BOG01",
   "description": "Compra de turismo"
 }
 ```
 
-`transaction_type`: `"buy"` (customer sells foreign currency to exchange house) | `"sell"` (customer buys foreign currency)
+`transaction_type`: `"buy"` (exchange house buys foreign currency from customer — customer receives COP) | `"sell"` (exchange house sells foreign currency to customer — customer pays COP)
+
+> `branch_code` is **required** — the server uses it to find the open shift for that branch.
 
 **Success (HTTP 201)**
-
 ```json
 {
   "id": "e5f6a7b8-c9d0-1234-efab-012345678906",
@@ -1802,7 +1824,6 @@ Example: `PATCH /products/USD`
 ```
 
 **Failure — customer flagged (HTTP 422)**
-
 ```json
 {
   "status_code": 422,
@@ -1813,7 +1834,6 @@ Example: `PATCH /products/USD`
 ```
 
 **Failure — SARLAFT threshold (HTTP 422)**
-
 ```json
 {
   "status_code": 422,
@@ -1824,7 +1844,6 @@ Example: `PATCH /products/USD`
 ```
 
 **Failure — insufficient stock (HTTP 422)**
-
 ```json
 {
   "status_code": 422,
@@ -1836,14 +1855,20 @@ Example: `PATCH /products/USD`
 
 ---
 
-### `GET /transactions/{tx_id}/receipt`
+### `GET /transactions/{tx_id}`
+
+> Use this to get the full transaction detail including `customer_document` and `customer_name` for receipt display. There is no separate `/receipt` endpoint — build the receipt UI from this response.
 
 **Success (HTTP 200)**
-
 ```json
 {
+  "id": "e5f6a7b8-c9d0-1234-efab-012345678906",
   "ticket_number": 42,
-  "date": "2026-05-12 10:15:00",
+  "shift_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "customer_id": "d4e5f6a7-b8c9-0123-defa-012345678905",
+  "customer_document": "79000001",
+  "customer_name": "Carlos Perez",
+  "operator_id": "c3d4e5f6-a7b8-9012-cdef-012345678904",
   "branch_code": "BOG01",
   "transaction_type": "buy",
   "iso_code": "USD",
@@ -1851,10 +1876,13 @@ Example: `PATCH /products/USD`
   "exchange_rate": "4194.57",
   "cop_amount": "2097285.00",
   "official_trm": "4215.50",
-  "spread": "0.0050",
-  "customer_document": "79000001",
-  "customer_name": "Carlos Perez",
-  "operator_id": "c3d4e5f6-a7b8-9012-cdef-012345678904"
+  "spread": "-2.0500",
+  "description": "Compra de turismo",
+  "screening_status": "clear",
+  "sarlaft_flagged": false,
+  "tppc_used": null,
+  "iva_base_gravable": null,
+  "created_at": "2026-05-12T10:15:00Z"
 }
 ```
 
@@ -1865,10 +1893,9 @@ Example: `PATCH /products/USD`
 **Query params**: `?page=1&size=20&branch_code=BOG01&iso_code=USD&transaction_type=buy&date_from=2026-05-12&date_to=2026-05-12`
 
 **Success (HTTP 200)**
-
 ```json
 {
-  "items": [{ "...": "FxTransactionResponse objects" }],
+  "items": [ { "...": "FxTransactionResponse objects" } ],
   "total": 18,
   "page": 1,
   "size": 20
@@ -1884,7 +1911,6 @@ Example: `PATCH /products/USD`
 **Query params**: `?page=1&size=20&name=carlos&document_number=79000001&customer_type=customer&screening_status=clear&branch_code=BOG01&include_inactive=false`
 
 **Success (HTTP 200)**
-
 ```json
 {
   "items": [
@@ -1921,7 +1947,6 @@ Example: `PATCH /products/USD`
 ### `POST /` (create customer)
 
 **Request** — natural person
-
 ```json
 {
   "document_type": "CC",
@@ -1952,7 +1977,6 @@ Example: `PATCH /products/USD`
 ```
 
 **Request** — juridical person (company) — must use `document_type: "NIT"`
-
 ```json
 {
   "document_type": "NIT",
@@ -1973,7 +1997,6 @@ Example: `PATCH /products/USD`
 **Success (HTTP 201)** — returns full `CustomerFullResponse` (see GET /{customer_id} below).
 
 **Failure — duplicate document (HTTP 409)**
-
 ```json
 {
   "status_code": 409,
@@ -1984,7 +2007,6 @@ Example: `PATCH /products/USD`
 ```
 
 **Failure — juridical with wrong doc type (HTTP 422)**
-
 ```json
 {
   "status_code": 422,
@@ -1999,7 +2021,6 @@ Example: `PATCH /products/USD`
 ### `GET /{customer_id}`
 
 **Success (HTTP 200)**
-
 ```json
 {
   "id": "d4e5f6a7-b8c9-0123-defa-012345678905",
@@ -2051,7 +2072,6 @@ Example: `PATCH /products/USD`
 ### `PATCH /{customer_id}`
 
 **Request** — send only fields to update
-
 ```json
 {
   "address": "Carrera 15 # 88-64",
@@ -2075,7 +2095,6 @@ Example: `PATCH /products/USD`
 ### `GET /{customer_id}/pep`
 
 **Success (HTTP 200)**
-
 ```json
 [
   {
@@ -2102,7 +2121,6 @@ Example: `PATCH /products/USD`
 > Requires `compliance`, `admin`, `owner`, or `super_admin`
 
 **Request**
-
 ```json
 {
   "is_pep": true,
@@ -2122,7 +2140,6 @@ Example: `PATCH /products/USD`
 > Used for juridical persons
 
 **Success (HTTP 200)**
-
 ```json
 [
   {
@@ -2146,7 +2163,6 @@ Example: `PATCH /products/USD`
 > Requires `compliance`, `admin`, `owner`, or `super_admin`
 
 **Request**
-
 ```json
 {
   "full_name": "Maria Cardenas",
@@ -2166,7 +2182,6 @@ Example: `PATCH /products/USD`
 > Requires `compliance`, `admin`, `owner`, or `super_admin`
 
 **Success (HTTP 200)** — returns profile or `null` if not yet created
-
 ```json
 {
   "id": "b8c9d0e1-f2a3-4567-bcde-012345678909",
@@ -2194,7 +2209,6 @@ Example: `PATCH /products/USD`
 > Requires `compliance`, `admin`, `owner`, or `super_admin`
 
 **Request** — send only fields to update
-
 ```json
 {
   "risk_level": "medium",
@@ -2210,7 +2224,6 @@ Example: `PATCH /products/USD`
 ### `GET /{customer_id}/accumulators`
 
 **Success (HTTP 200)**
-
 ```json
 [
   {
@@ -2244,11 +2257,11 @@ Example: `PATCH /products/USD`
 
 ### Role matrix for accounting
 
-| Role                                        | GET accounts / voucher types | Read reports & journals | Write (accounts, entries, periods) |
-| ------------------------------------------- | ---------------------------- | ----------------------- | ---------------------------------- |
-| `super_admin`, `owner`, `admin`, `contador` | ✅                           | ✅                      | ✅                                 |
-| `compliance`                                | ✅                           | ✅                      | ❌                                 |
-| `operator`, `readonly`                      | ✅                           | ❌                      | ❌                                 |
+| Role | GET accounts / voucher types | Read reports & journals | Write (accounts, entries, periods) |
+|---|---|---|---|
+| `super_admin`, `owner`, `admin`, `contador` | ✅ | ✅ | ✅ |
+| `compliance` | ✅ | ✅ | ❌ |
+| `operator`, `readonly` | ✅ | ❌ | ❌ |
 
 ---
 
@@ -2259,7 +2272,6 @@ Example: `PATCH /products/USD`
 `account_type` values: `"asset"` | `"liability"` | `"equity"` | `"revenue"` | `"expense"`
 
 **Success (HTTP 200)**
-
 ```json
 {
   "items": [
@@ -2288,7 +2300,6 @@ Example: `PATCH /products/USD`
 > Requires `owner`, `admin`, `contador`, or `super_admin`
 
 **Request**
-
 ```json
 {
   "code": "11050502",
@@ -2311,7 +2322,6 @@ Example: `PATCH /products/USD`
 ### `GET /voucher-types`
 
 **Success (HTTP 200)**
-
 ```json
 [
   {
@@ -2331,7 +2341,6 @@ Example: `PATCH /products/USD`
 > Requires `owner`, `admin`, `contador`, or `super_admin`. Total debits must equal total credits.
 
 **Request**
-
 ```json
 {
   "entry_date": "2026-05-12",
@@ -2359,7 +2368,6 @@ Example: `PATCH /products/USD`
 ```
 
 **Success (HTTP 201)**
-
 ```json
 {
   "id": "e1f2a3b4-c5d6-7890-efab-012345678912",
@@ -2398,7 +2406,6 @@ Example: `PATCH /products/USD`
 ```
 
 **Failure — unbalanced entry (HTTP 422)**
-
 ```json
 {
   "status_code": 422,
@@ -2415,7 +2422,6 @@ Example: `PATCH /products/USD`
 **Query params**: `?page=1&size=20&voucher_type=FX&date_from=2026-05-01&date_to=2026-05-31&fx_transaction_id=<uuid>`
 
 **Success (HTTP 200)**
-
 ```json
 {
   "items": [
@@ -2451,7 +2457,6 @@ Example: `PATCH /products/USD`
 > Requires `compliance`, `admin`, `owner`, `contador`, or `super_admin`
 
 **Success (HTTP 200)**
-
 ```json
 {
   "closed_periods": [
@@ -2474,7 +2479,6 @@ Example: `PATCH /products/USD`
 **Query params**: `?date_from=2026-05-01&date_to=2026-05-31`
 
 **Success (HTTP 200)**
-
 ```json
 {
   "date_from": "2026-05-01",
@@ -2503,24 +2507,15 @@ Example: `PATCH /products/USD`
 **Query params**: `?as_of_date=2026-05-31`
 
 **Success (HTTP 200)**
-
 ```json
 {
   "as_of_date": "2026-05-31",
   "assets": [
-    {
-      "account_code": "11050501",
-      "description": "Caja Moneda Extranjera USD",
-      "balance": "10486425.00"
-    }
+    { "account_code": "11050501", "description": "Caja Moneda Extranjera USD", "balance": "10486425.00" }
   ],
   "liabilities": [],
   "equity": [
-    {
-      "account_code": "31000000",
-      "description": "Capital Social",
-      "balance": "50000000.00"
-    }
+    { "account_code": "31000000", "description": "Capital Social", "balance": "50000000.00" }
   ],
   "total_assets": "10486425.00",
   "total_liabilities": "0.00",
@@ -2539,7 +2534,6 @@ Example: `PATCH /products/USD`
 Example: `GET /accounting/reports/ledger/11050501?date_from=2026-05-01&date_to=2026-05-31`
 
 **Success (HTTP 200)**
-
 ```json
 {
   "account_code": "11050501",
@@ -2569,24 +2563,15 @@ Example: `GET /accounting/reports/ledger/11050501?date_from=2026-05-01&date_to=2
 **Query params**: `?date_from=2026-05-01&date_to=2026-05-31`
 
 **Success (HTTP 200)**
-
 ```json
 {
   "date_from": "2026-05-01",
   "date_to": "2026-05-31",
   "revenues": [
-    {
-      "account_code": "41000000",
-      "description": "Ingresos Operacionales",
-      "balance": "637500.00"
-    }
+    { "account_code": "41000000", "description": "Ingresos Operacionales", "balance": "637500.00" }
   ],
   "expenses": [
-    {
-      "account_code": "51000000",
-      "description": "Gastos Operacionales",
-      "balance": "120000.00"
-    }
+    { "account_code": "51000000", "description": "Gastos Operacionales", "balance": "120000.00" }
   ],
   "total_revenues": "637500.00",
   "total_expenses": "120000.00",
@@ -2635,7 +2620,6 @@ Example: `GET /accounting/reports/ledger/11050501?date_from=2026-05-01&date_to=2
 > Requires `compliance`, `admin`, `owner`, `contador`, or `super_admin`.
 
 **Success (HTTP 200)**
-
 ```json
 [
   {
@@ -2654,7 +2638,6 @@ Example: `GET /accounting/reports/ledger/11050501?date_from=2026-05-01&date_to=2
 > Requires `owner`, `admin`, `contador`, or `super_admin`.
 
 **Request**
-
 ```json
 {
   "local_code": "11050501",
@@ -2672,7 +2655,6 @@ Example: `GET /accounting/reports/ledger/11050501?date_from=2026-05-01&date_to=2
 > Closes an accounting period — no journal entries can be created for dates within a closed period.
 
 **Request**
-
 ```json
 {
   "period_year": 2026,
@@ -2682,7 +2664,6 @@ Example: `GET /accounting/reports/ledger/11050501?date_from=2026-05-01&date_to=2
 ```
 
 **Success (HTTP 201)**
-
 ```json
 {
   "id": "b4c5d6e7-f8a9-0123-bcde-012345678915",
@@ -2705,7 +2686,6 @@ Example: `GET /accounting/reports/ledger/11050501?date_from=2026-05-01&date_to=2
 **Query params**: `?shift_date=2026-05-12&branch_code=BOG01`
 
 **Success (HTTP 200)**
-
 ```json
 [
   {
@@ -2726,7 +2706,6 @@ Example: `GET /accounting/reports/ledger/11050501?date_from=2026-05-01&date_to=2
 ### `POST /dian/1099`
 
 **Request**
-
 ```json
 {
   "year": 2026,
@@ -2736,7 +2715,6 @@ Example: `GET /accounting/reports/ledger/11050501?date_from=2026-05-01&date_to=2
 ```
 
 **Success (HTTP 201)**
-
 ```json
 {
   "id": "c5d6e7f8-a9b0-1234-cdef-012345678916",
@@ -2756,7 +2734,6 @@ Example: `GET /accounting/reports/ledger/11050501?date_from=2026-05-01&date_to=2
 ### `POST /uiaf`
 
 **Request**
-
 ```json
 {
   "year": 2026,
@@ -2765,7 +2742,6 @@ Example: `GET /accounting/reports/ledger/11050501?date_from=2026-05-01&date_to=2
 ```
 
 **Failure — UIAF not enabled (HTTP 422)**
-
 ```json
 {
   "status_code": 422,
@@ -2788,7 +2764,6 @@ Example: `GET /accounting/reports/ledger/11050501?date_from=2026-05-01&date_to=2
 ### `POST /banrep`
 
 **Request**
-
 ```json
 {
   "date_from": "2026-05-05",
@@ -2820,12 +2795,12 @@ Example: `GET /accounting/reports/ledger/11050501?date_from=2026-05-01&date_to=2
 
 **Success** — returns the file as a binary download with appropriate `Content-Type` and `Content-Disposition` headers.
 
-| File format | Content-Type                     |
-| ----------- | -------------------------------- |
-| `xml`       | `application/xml`                |
-| `txt`       | `text/plain; charset=iso-8859-1` |
-| `json`      | `application/json`               |
-| `pdf`       | `application/pdf`                |
+| File format | Content-Type |
+|---|---|
+| `xml` | `application/xml` |
+| `txt` | `text/plain; charset=iso-8859-1` |
+| `json` | `application/json` |
+| `pdf` | `application/pdf` |
 
 ---
 
@@ -2836,7 +2811,6 @@ Example: `GET /accounting/reports/ledger/11050501?date_from=2026-05-01&date_to=2
 > Bulk-imports customers from a CSV file stored in object storage. `super_admin` only — not exposed in the tenant UI.
 
 **Request**
-
 ```json
 {
   "tenant_slug": "acme-cambios",
@@ -2850,7 +2824,6 @@ Example: `GET /accounting/reports/ledger/11050501?date_from=2026-05-01&date_to=2
 Set `dry_run: true` to validate the file without committing any records.
 
 **Success (HTTP 200)**
-
 ```json
 {
   "tenant_slug": "acme-cambios",
@@ -2868,7 +2841,6 @@ Set `dry_run: true` to validate the file without committing any records.
 ```
 
 **Failure — tenant not found (HTTP 404)**
-
 ```json
 {
   "status_code": 404,
@@ -2879,7 +2851,6 @@ Set `dry_run: true` to validate the file without committing any records.
 ```
 
 **Failure — file not found in storage (HTTP 404)**
-
 ```json
 {
   "status_code": 404,
@@ -2896,7 +2867,6 @@ Set `dry_run: true` to validate the file without committing any records.
 ### `GET /countries`
 
 **Success (HTTP 200)**
-
 ```json
 [
   { "code": "CO", "name": "Colombia", "alpha3": "COL" },
@@ -2909,7 +2879,6 @@ Set `dry_run: true` to validate the file without committing any records.
 ### `GET /departments`
 
 **Success (HTTP 200)**
-
 ```json
 [
   { "dane_code": "11", "name": "Bogotá D.C." },
@@ -2924,9 +2893,10 @@ Set `dry_run: true` to validate the file without committing any records.
 **Query params**: `?department=11`
 
 **Success (HTTP 200)**
-
 ```json
-[{ "dane_code": "11001", "name": "Bogotá", "department_code": "11" }]
+[
+  { "dane_code": "11001", "name": "Bogotá", "department_code": "11" }
+]
 ```
 
 ---
@@ -2934,13 +2904,9 @@ Set `dry_run: true` to validate the file without committing any records.
 ### `GET /economic-activities`
 
 **Success (HTTP 200)**
-
 ```json
 [
-  {
-    "code": "4711",
-    "description": "Comercio al por menor en establecimientos no especializados"
-  },
+  { "code": "4711", "description": "Comercio al por menor en establecimientos no especializados" },
   { "code": "6492", "description": "Actividades de las casas de cambio" }
 ]
 ```
@@ -2950,7 +2916,6 @@ Set `dry_run: true` to validate the file without committing any records.
 ### `GET /document-types`
 
 **Success (HTTP 200)**
-
 ```json
 [
   { "code": "CC", "description": "Cédula de Ciudadanía" },
@@ -2970,7 +2935,6 @@ Set `dry_run: true` to validate the file without committing any records.
 ### `GET /`
 
 **Success (HTTP 200)**
-
 ```json
 {
   "message": "Currency Exchange Backend",
@@ -2984,7 +2948,6 @@ Set `dry_run: true` to validate the file without committing any records.
 ### `GET /api/v1/health`
 
 **Success (HTTP 200)**
-
 ```json
 {
   "status": "healthy",
@@ -2998,7 +2961,6 @@ Set `dry_run: true` to validate the file without committing any records.
 ### `GET /api/v1/health/ping`
 
 **Success (HTTP 200)**
-
 ```json
 { "ping": "pong" }
 ```

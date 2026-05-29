@@ -4,11 +4,17 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuthStore } from "@/presentation/stores/auth.store";
 import { Box, CircularProgress } from "@mui/material";
+import { GetCurrentUser } from "@/use-cases/GetCurrentUser";
+import { authService } from "@/infrastructure/auth/HttpAuthService";
+import { to } from "@/utils/async";
+
+const getCurrentUser = new GetCurrentUser(authService);
 
 export function AuthGuard({ children }: { children: React.ReactNode }) {
   const router = useRouter();
-  const { accessToken } = useAuthStore();
+  const { accessToken, userProfile, setUserProfile, setActiveBranchCode } = useAuthStore();
   const [isHydrated, setIsHydrated] = useState(false);
+  const [loadingProfile, setLoadingProfile] = useState(false);
 
   // Wait for Zustand persistent store to hydrate from localStorage
   useEffect(() => {
@@ -29,7 +35,38 @@ export function AuthGuard({ children }: { children: React.ReactNode }) {
     }
   }, [isHydrated, accessToken, router]);
 
-  if (!isHydrated || !accessToken) {
+  // Restore transient profile on refresh if we have a token
+  useEffect(() => {
+    if (isHydrated && accessToken && !userProfile && !loadingProfile) {
+      const fetchProfile = async () => {
+        setLoadingProfile(true);
+        const [profileErr, profile] = await to(getCurrentUser.execute());
+        if (profileErr || !profile) {
+          useAuthStore.getState().clearTokens();
+          router.replace("/login");
+        } else {
+          setUserProfile(profile);
+          if (profile.branchCode) {
+            setActiveBranchCode(profile.branchCode);
+          } else {
+            setActiveBranchCode("BOG01");
+          }
+        }
+        setLoadingProfile(false);
+      };
+      fetchProfile();
+    }
+  }, [
+    isHydrated,
+    accessToken,
+    userProfile,
+    loadingProfile,
+    setUserProfile,
+    setActiveBranchCode,
+    router,
+  ]);
+
+  if (!isHydrated || !accessToken || (accessToken && !userProfile)) {
     return (
       <Box
         sx={{

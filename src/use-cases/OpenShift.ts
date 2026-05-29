@@ -12,9 +12,6 @@ export class OpenShift {
     if (isNaN(cash) || cash < 0) {
       throw new DomainError("validation_error", "El saldo inicial de caja en COP debe ser mayor o igual a cero");
     }
-    if (!payload.currencies || payload.currencies.length === 0) {
-      throw new DomainError("validation_error", "Se requiere al menos una divisa para abrir el turno");
-    }
     return this.shiftRepository.open(payload);
   }
 }

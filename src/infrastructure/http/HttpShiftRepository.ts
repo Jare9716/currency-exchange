@@ -97,12 +97,8 @@ export class HttpShiftRepository implements ShiftRepository {
 
   async open(payload: OpenShiftPayload): Promise<Shift> {
     const apiPayload = {
-      ...payload,
-      currencies: payload.currencies.map((c) => ({
-        iso_code: c.iso_code,
-        buy_rate_override: c.buy_rate_override ?? null,
-        sell_rate_override: c.sell_rate_override ?? null,
-      })),
+      branch_code: payload.branch_code,
+      opening_cash_cop: payload.opening_cash_cop,
     };
     const response = await HttpClient.post("/api/v1/fx/shifts/open", apiPayload);
     const data = await response.json();
