@@ -2,7 +2,7 @@ import { Sidebar } from "@/presentation/components/layout/Sidebar";
 import { Header } from "@/presentation/components/layout/Header";
 import { Footer } from "@/presentation/components/layout/Footer";
 import { Box } from "@mui/material";
-import { AuthGuard } from "@/presentation/components/features/auth/AuthGuard";
+import { AuthGuard } from "@/presentation/components/features/auth/components/AuthGuard";
 
 export default function DashboardLayout({
   children,

@@ -3,13 +3,15 @@ import { useRouter } from "next/navigation";
 import {
   loginSchema,
   LoginFormData,
-} from "@/presentation/components/features/auth/login.schema";
+} from "@/presentation/components/features/auth/schemas/login.schema";
 import { AuthenticateUser } from "@/use-cases/AuthenticateUser";
 import { GetCurrentUser } from "@/use-cases/GetCurrentUser";
 import { authService } from "@/infrastructure/auth/HttpAuthService";
 import { useAuthStore } from "@/presentation/stores/auth.store";
 import { to } from "@/utils/async";
-import { ApiError } from "@/domain/Errors";
+import { savePasswordExpiryWarning } from "@/presentation/components/features/auth/utils/password-expiry-warning";
+import { saveTwoFactorSession } from "@/presentation/components/features/auth/utils/two-factor-session";
+import { getSpanishAuthErrorMessage } from "@/presentation/components/features/auth/utils/auth-error-message";
 
 const authenticateUser = new AuthenticateUser(authService);
 const getCurrentUser = new GetCurrentUser(authService);
@@ -38,7 +40,6 @@ export function useLoginForm() {
           : event.target.value;
       setFormData((prev) => ({ ...prev, [field]: value }));
 
-      // Clear error when user starts typing
       if (errors[field]) {
         setErrors((prev) => ({ ...prev, [field]: undefined }));
       }
@@ -49,7 +50,6 @@ export function useLoginForm() {
     setIsSubmitting(true);
     setGeneralError(undefined);
 
-    // 1. Validate with Zod
     const validation = loginSchema.safeParse(formData);
 
     if (!validation.success) {
@@ -64,47 +64,64 @@ export function useLoginForm() {
       return;
     }
 
-    // 2. Call Use Case
-    const [err, tokens] = await to(
+    const [err, result] = await to(
       authenticateUser.execute({
         email: validation.data.email,
         password: validation.data.password,
-      })
+      }),
     );
 
     if (err) {
+      setGeneralError(getSpanishAuthErrorMessage(err, "Error de conexion al iniciar sesion"));
       setIsSubmitting(false);
-      if (err instanceof ApiError) {
-        setGeneralError(err.detail ?? "Credenciales inválidas");
-      } else {
-        setGeneralError("Error de conexión al iniciar sesión");
-      }
       return;
     }
 
-    // Success! Fetch Profile before redirecting
-    if (tokens) {
-      useAuthStore.getState().setTokens(tokens.accessToken, tokens.refreshToken);
-
-      const [profileErr, profile] = await to(getCurrentUser.execute());
-
+    if (!result) {
       setIsSubmitting(false);
-
-      if (profileErr || !profile) {
-        useAuthStore.getState().clearTokens();
-        setGeneralError("Error al obtener la información de perfil");
-        return;
-      }
-
-      useAuthStore.getState().setUserProfile(profile);
-
-      // Set active branch context
-      if (profile.branchCode) {
-        useAuthStore.getState().setActiveBranchCode(profile.branchCode);
-      }
-
-      router.push("/dashboard");
+      return;
     }
+
+    if (result.type === "tenant_selection_required") {
+      sessionStorage.setItem(
+        "auth:tenant-selection",
+        JSON.stringify({
+          sessionToken: result.sessionToken,
+          memberships: result.memberships,
+          email: validation.data.email,
+        }),
+      );
+      router.push("/login/tenant");
+      return;
+    }
+
+
+    if (result.type === "two_factor_required") {
+      saveTwoFactorSession({
+        stateToken: result.stateToken,
+        email: validation.data.email,
+      });
+      router.push("/2fa/verify");
+      return;
+    }
+
+    const authState = useAuthStore.getState();
+    authState.setTokens(result.accessToken, result.refreshToken);
+
+    const [profileErr, profile] = await to(getCurrentUser.execute());
+    if (!profileErr && profile) {
+      authState.setUserProfile(profile);
+      if (profile.branchCode) {
+        authState.setActiveBranchCode(profile.branchCode);
+      }
+    }
+
+    savePasswordExpiryWarning({
+      mustChangePassword: !!result.mustChangePassword,
+      passwordExpiresInDays: result.passwordExpiresInDays,
+    });
+
+    router.push("/dashboard/transactions");
   };
 
   return {
