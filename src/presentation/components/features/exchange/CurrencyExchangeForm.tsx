@@ -64,6 +64,8 @@ export function CurrencyExchangeForm() {
     Transaction | undefined
   >(undefined);
   const [receiptModalOpen, setReceiptModalOpen] = useState(false);
+  const [isVerifying, setIsVerifying] = useState(false);
+  const [isConfirming, setIsConfirming] = useState(false);
 
   // Fetch active shift on mount
   useEffect(() => {
@@ -106,6 +108,7 @@ export function CurrencyExchangeForm() {
     }
 
     setLookupAttempted(true);
+    setIsVerifying(true);
     try {
       const customer = await customerRepository.findByDocument(documentInput.trim());
 
@@ -136,6 +139,8 @@ export function CurrencyExchangeForm() {
       setFoundCustomer(updatedCustomer);
     } catch {
       showNotification("Error al verificar el cliente", "error", "Error");
+    } finally {
+      setIsVerifying(false);
     }
   };
 
@@ -156,6 +161,7 @@ export function CurrencyExchangeForm() {
       return;
     }
 
+    setIsConfirming(true);
     try {
       const branchCode = useAuthStore.getState().activeBranchCode || "001";
       const txn = await executeTransaction.execute(
@@ -174,6 +180,8 @@ export function CurrencyExchangeForm() {
       const errorMessage =
         error instanceof Error ? error.message : "Error en transacción";
       showNotification(errorMessage, "error", "Error");
+    } finally {
+      setIsConfirming(false);
     }
   };
 
@@ -255,6 +263,7 @@ export function CurrencyExchangeForm() {
                   variant="contained"
                   onClick={handleCheckCustomer}
                   sx={{ minWidth: 120 }}
+                  loading={isVerifying}
                 >
                   Verificar
                 </Button>
@@ -478,6 +487,7 @@ export function CurrencyExchangeForm() {
                   !amountUSD ||
                   calculatedCOP <= 0
                 }
+                loading={isConfirming}
               >
                 Confirmar Transacción
               </Button>

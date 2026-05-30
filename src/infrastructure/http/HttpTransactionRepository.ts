@@ -55,6 +55,7 @@ export class HttpTransactionRepository implements TransactionRepository {
     start_date?: string;
     end_date?: string;
     customer_id?: string;
+    shift_id?: string;
   }): Promise<PaginatedTransactions> {
     const params = new URLSearchParams();
     if (filters) {

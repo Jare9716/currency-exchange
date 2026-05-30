@@ -30,7 +30,7 @@ Read the relevant standard before writing code (files in `docs/standards/` TBA):
 | **Clean Architecture**      | Layers, dependency inversion, and DDD patterns                                                                    |
 | **Frontend Standards**      | [Next.js App Router, React, and MUI best practices](docs/standards/webapp-frontend.md)                            |
 | **Styling & Theming**       | Strict MUI theming rules and design token management                                                              |
-| **Git & Commits**           | Conventional Commits and branching workflow                                                                       |
+| **Git & Commits**           | [Conventional Commits and branching workflow](docs/standards/contributions.md)                                     |
 | **TypeScript & JS**         | [Types, error handling, and deps](docs/standards/typescript-javascript.md)                                        |
 | **Testing**                 | [Jest, AAA pattern, and structure](docs/standards/testing.md)                                                     |
 | **UI / UX**                 | [Usability, proportions, and alignment](docs/standards/ui-ux.md)                                                  |

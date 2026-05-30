@@ -1,15 +1,17 @@
-import { Button as MuiButton, ButtonProps as MuiButtonProps } from "@mui/material";
+import { Button as MuiButton, ButtonProps as MuiButtonProps, CircularProgress } from "@mui/material";
 
 export type ButtonProps = MuiButtonProps & {
   // Add custom props here if needed in the future
   customProp?: boolean;
+  loading?: boolean;
 };
 
-export function Button({ children, variant = "contained", fullWidth = true, ...props }: ButtonProps) {
+export function Button({ children, variant = "contained", fullWidth = true, loading, disabled, ...props }: ButtonProps) {
   return (
     <MuiButton
       variant={variant}
       fullWidth={fullWidth}
+      disabled={disabled || loading}
       sx={{
         textTransform: "none",
         fontWeight: 600,
@@ -17,7 +19,7 @@ export function Button({ children, variant = "contained", fullWidth = true, ...p
       }}
       {...props}
     >
-      {children}
+      {loading ? <CircularProgress size={20} color="inherit" /> : children}
     </MuiButton>
   );
 }
