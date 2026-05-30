@@ -38,7 +38,7 @@ export function ShiftDashboard() {
   useEffect(() => {
     if (activeShift) {
       // Fetch transactions for the active shift
-      fetchTransactions({ size: 5 });
+      fetchTransactions({ size: 5, shift_id: activeShift.id });
     }
   }, [activeShift, fetchTransactions]);
 

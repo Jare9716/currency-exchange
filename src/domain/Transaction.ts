@@ -48,5 +48,6 @@ export interface TransactionRepository {
     start_date?: string;
     end_date?: string;
     customer_id?: string;
+    shift_id?: string;
   }): Promise<PaginatedTransactions>;
 }
