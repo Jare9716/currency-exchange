@@ -1,0 +1,26 @@
+name: Sync to Azure Repos
+
+on:
+  push:
+    branches:
+      - "**" # Triggers on changes to any branch
+  create: # Triggers when new tags or branches are created
+  delete: # Triggers when branches or tags are deleted
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Fetches all history for all branches and tags
+
+      - name: Push Mirror to Azure DevOps
+        env:
+          AZURE_PAT: ${{ secrets.AZURE_DEVOPS_PAT }}
+        run: |
+          git remote add azure "https://git-sync:${AZURE_PAT}@dev.azure.com/jokerlabs/currency-exchange/_git/currency-exchange"
+
+          git push --prune azure "+refs/heads/*:refs/heads/*"
+          git push --tags --force azure
