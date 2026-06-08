@@ -22,7 +22,7 @@ export function getOperatorDetails(): OperatorDetails {
   const branch = state.activeBranchCode;
 
   if (!state.accessToken) {
-    throw new Error("No active session token found. Please log in.");
+    throw new Error("No se encontró ningún token de sesión activo. Por favor, inicia sesión.");
   }
 
   if (!profile) {

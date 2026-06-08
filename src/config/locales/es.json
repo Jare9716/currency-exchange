@@ -1,0 +1,23 @@
+{
+  "TOKEN_INVALID": "La sesión ha expirado o el token no es válido. Por favor, inicia sesión de nuevo.",
+  "UNAUTHORIZED": "No tienes autorización para realizar esta acción.",
+  "VALIDATION_ERROR": "Los datos proporcionados no son válidos.",
+  "INTERNAL_ERROR": "Ocurrió un error interno en el servidor. Por favor, inténtalo de nuevo más tarde.",
+  "EXCHANGE_RATE_UNAVAILABLE": "La tasa de cambio no está disponible en este momento.",
+  "SHIFT_CLOSED": "La caja está cerrada. Debes abrir un turno para realizar operaciones.",
+  "CUSTOMER_BLOCKED": "El cliente está bloqueado debido a coincidencias en la lista de sanciones.",
+  "Not authenticated": "No autenticado. Por favor, inicia sesión.",
+  "Could not validate credentials": "No se pudieron validar las credenciales.",
+  "Incorrect email or password": "Correo o contraseña incorrectos.",
+  "Incorrect password": "Contraseña incorrecta.",
+  "User is inactive": "El usuario está inactivo.",
+  "Register shift first": "Debe registrar la apertura de turno primero.",
+  "Shift is already active": "El turno ya se encuentra activo.",
+  "Shift not found": "Turno no encontrado.",
+  "Shift is closed": "El turno ya está cerrado.",
+  "Customer is already registered": "El cliente ya se encuentra registrado.",
+  "Sanction screening blocked": "El cliente está bloqueado por verificación en listas de sanciones.",
+  "Exchange rate expired": "La tasa de cambio ha expirado.",
+  "Insufficient cash inventory": "Inventario de efectivo insuficiente en caja.",
+  "Active shift not found": "No se encontró un turno activo para la caja."
+}
