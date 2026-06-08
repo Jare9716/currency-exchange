@@ -58,6 +58,7 @@ Read the relevant standard before writing code (files in `docs/standards/` TBA):
 16. **API Schema Boundary:** Every infrastructure repository MUST define a private `apiXxxSchema` using `.nullish().transform(val => val ?? undefined)` for all nullable optional fields. Never use domain schemas directly to parse API responses. See [State Management Standards §6](docs/standards/state-management.md).
 17. **No Client-Side Filtering:** Never perform client-side/in-memory filtering as a workaround for backend query issues. All data filtering, pagination, and sorting must be driven strictly by the backend endpoints.
 18. **Spec-Driven Development (SDD):** All new features, business rules, or behavioral modifications MUST follow the OpenSpec SDD workflow. No code changes or logic should be introduced without registering a corresponding change proposal or behavioral spec in the `openspec/` directory. See [OpenSpec SDD Guide & Active Specifications Directory](openspec/README.md).
+19. **Strict Error-Code-Only i18n:** Frontend i18n must exclusively use standard uppercase ERROR_CODES as translation keys. Never use literal backend messages as translation keys.
 
 ## UI / UX Implementation Notes
 

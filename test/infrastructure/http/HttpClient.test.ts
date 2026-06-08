@@ -90,7 +90,7 @@ describe("HttpClient", () => {
     expect(caughtError).toBeInstanceOf(ApiError);
     expect(caughtError?.errorCode).toBe("INVALID_CREDENTIALS");
     expect(caughtError?.statusCode).toBe(400);
-    expect(caughtError?.detail).toBe("Invalid email or password");
+    expect(caughtError?.detail).toBe("Correo o contraseña incorrectos.");
   });
 
   it("should attempt token refresh and retry request on TOKEN_INVALID error", async () => {

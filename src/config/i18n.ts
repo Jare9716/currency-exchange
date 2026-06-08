@@ -18,11 +18,10 @@ i18next.init({
 });
 
 /**
- * Translates an API error code or detail message to Spanish using i18next.
- * Falls back to the original message if no translation is found.
+ * Translates an API error code to Spanish using i18next.
+ * Falls back to the original message if the error code is not translated.
  */
 export function translateApiError(errorCode: string | undefined, defaultDetail: string): string {
-  // 1. Try to translate standard error code if present
   if (errorCode) {
     const key = errorCode.trim();
     if (key in apiTranslation) {
@@ -30,14 +29,7 @@ export function translateApiError(errorCode: string | undefined, defaultDetail: 
     }
   }
 
-  // 2. Try to translate standard detail message if present
-  if (defaultDetail) {
-    const key = defaultDetail.trim();
-    if (key in apiTranslation) {
-      return i18next.t(key, { ns: "api" });
-    }
-  }
-
+  // Gracefully fallback if errorCode is missing or not found
   return defaultDetail;
 }
 

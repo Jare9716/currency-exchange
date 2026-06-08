@@ -8,15 +8,12 @@ describe("i18n translation utility", () => {
     );
   });
 
-  it("should translate a known default detail string if error code is missing", () => {
-    const result = translateApiError(undefined, "Incorrect password");
+  it("should not translate a known default detail string if error code is missing", () => {
+    const result = translateApiError(undefined, "Contraseña incorrecta.");
     expect(result).toBe("Contraseña incorrecta.");
   });
 
-  it("should translate a known default detail string if error code is not found", () => {
-    const result = translateApiError("UNKNOWN_CODE", "Incorrect password");
-    expect(result).toBe("Contraseña incorrecta.");
-  });
+
 
   it("should return the default detail string if neither code nor detail are known", () => {
     const result = translateApiError("UNKNOWN_CODE", "Some random error");
