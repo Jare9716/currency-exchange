@@ -1890,12 +1890,41 @@ Physical cash counts are **mandatory** for every active currency in the shift. T
 
 ### `GET /transactions`
 
-**Query params**: `?page=1&size=20&branch_code=BOG01&iso_code=USD&transaction_type=buy&date_from=2026-05-12&date_to=2026-05-12`
+**Query params**:
+- `page` (integer, optional): Page number to retrieve. Default: `1`, minimum: `1`.
+- `size` (integer, optional): Number of items per page. Default: `20`, minimum: `1`, maximum: `100`.
+- `branch_code` (string | null, optional): Filter transactions by branch code.
+- `customer_id` (string | null ($uuid), optional): Filter transactions by customer ID.
+- `iso_code` (string | null, optional): Filter transactions by currency ISO code.
+- `transaction_type` (string | null, optional): Filter transactions by transaction type (`buy` or `sell`).
+- `shift_id` (string | null ($uuid), optional): Filter transactions by operator shift ID.
+- `date_from` (string | null ($date), optional): Filter transactions starting from this date (inclusive).
+- `date_to` (string | null ($date), optional): Filter transactions up to this date (inclusive).
 
 **Success (HTTP 200)**
 ```json
 {
-  "items": [ { "...": "FxTransactionResponse objects" } ],
+  "items": [
+    {
+      "id": "e5f6a7b8-c9d0-1234-efab-012345678906",
+      "ticket_number": 42,
+      "shift_id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+      "customer_id": "d4e5f6a7-b8c9-0123-defa-012345678905",
+      "operator_id": "c3d4e5f6-a7b8-9012-cdef-012345678904",
+      "branch_code": "BOG01",
+      "transaction_type": "buy",
+      "iso_code": "USD",
+      "foreign_amount": "500.00",
+      "exchange_rate": "4194.57",
+      "cop_amount": "2097285.00",
+      "official_trm": "4215.50",
+      "spread": "0.0050",
+      "description": "Compra de turismo",
+      "screening_status": "clear",
+      "sarlaft_flagged": false,
+      "created_at": "2026-05-12T10:15:00Z"
+    }
+  ],
   "total": 18,
   "page": 1,
   "size": 20

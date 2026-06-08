@@ -50,6 +50,7 @@ All screens displaying lists (Customers, Transactions, etc.) must follow this he
 - **Consistency:** All inputs in a form MUST share the same `size` (usually `"small"`).
 - **No Arbitrary Hardcoded Defaults:** Do NOT hardcode arbitrary, non-zero mock values (e.g., `2000000` for opening cash) as the default state of form inputs. Use standard clean defaults (`"0"`), empty states (`""`), or values fetched dynamically from the API/context.
 - **Toggle Buttons Rule**: Do NOT use dropdowns (`<Select>`) for selectors with less than 4 options. Use `<ToggleButtonGroup>` with `<ToggleButton>` to keep the layout direct and responsive.
+- **Loading Feedback & Anti-Double-Click**: All buttons triggering asynchronous, network, or server-bound operations (e.g., searching/verifying KYC, executing transactions, saving forms) MUST implement visual loading feedback. The button must transition to a loading state (e.g., rendering a spinner like `CircularProgress` inside it via the `loading` prop) and be immediately disabled to prevent duplicate submissions or race conditions.
 
 ## 3. MUI v6/v7 Deprecation Policy
 
