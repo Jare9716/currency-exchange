@@ -79,3 +79,27 @@ Relevant endpoints:
 ## Notes
 - Token storage must strictly stay in-memory (Zustand state) or highly secure preferences.
 - Sensitive PII data must NEVER be persisted to browser `localStorage` or `sessionStorage` via Zustand `persist` middleware.
+
+---
+
+### Requirement: two-factor-settings-management
+
+The system SHALL keep the security settings landing view available for multiple settings options and derive the two-factor management flow from the current authenticated user's 2FA status only after the user selects the 2FA option.
+
+#### Scenario: settings section opens
+- GIVEN an authenticated user opens or refreshes the security settings page
+- WHEN the settings page renders
+- THEN the page displays the settings options list
+- AND does not automatically display a 2FA setup or disable flow
+
+#### Scenario: 2FA disabled opens setup after selection
+- GIVEN an authenticated user whose restored profile indicates 2FA is disabled
+- WHEN the user selects `Verificacion de dos factores`
+- THEN the page displays the QR setup and activation flow directly
+- AND does not display an intermediate disabled/status selection view first
+
+#### Scenario: 2FA enabled opens disable after selection
+- GIVEN an authenticated user whose restored profile indicates 2FA is enabled
+- WHEN the user selects `Verificacion de dos factores`
+- THEN the page displays the disable 2FA confirmation flow directly
+- AND does not display the configure/activate 2FA option first

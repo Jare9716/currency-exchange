@@ -9,25 +9,34 @@ describe('AuthenticateUser', () => {
   beforeEach(() => {
     authService = {
       login: jest.fn(),
-      refresh: jest.fn(),
-    } as jest.Mocked<AuthService>;
+      getCurrentUser: jest.fn(),
+      selectTenant: jest.fn(),
+      acceptInvite: jest.fn(),
+      forgotPassword: jest.fn(),
+      resetPassword: jest.fn(),
+      setupTwoFactor: jest.fn(),
+      enableTwoFactor: jest.fn(),
+      disableTwoFactor: jest.fn(),
+      verifyTwoFactor: jest.fn(),
+    };
     authenticateUser = new AuthenticateUser(authService);
   });
 
-  it('should return tokens when credentials are valid', async () => {
+  it('should return an authenticated result when credentials are valid', async () => {
     // Arrange
     const credentials = { email: 'admin@joker.com', password: 'password123' };
-    const mockTokens = {
+    const mockResult = {
+      type: 'authenticated' as const,
       accessToken: 'access-123',
       refreshToken: 'refresh-456',
     };
-    authService.login.mockResolvedValue(mockTokens);
+    authService.login.mockResolvedValue(mockResult);
 
     // Act
     const result = await authenticateUser.execute(credentials);
 
     // Assert
-    expect(result).toEqual(mockTokens);
+    expect(result).toEqual(mockResult);
     expect(authService.login).toHaveBeenCalledWith(credentials);
   });
 

@@ -7,9 +7,11 @@ type AuthState = {
   refreshToken?: string;
   userProfile?: UserProfile;
   activeBranchCode?: string;
+  twoFactorEnabled?: boolean;
   setTokens: (access: string, refresh: string) => void;
   setUserProfile: (profile: UserProfile) => void;
   setActiveBranchCode: (branch: string) => void;
+  setTwoFactorEnabled: (enabled: boolean) => void;
   clearTokens: () => void;
   resetAuth: () => void;
 };
@@ -21,16 +23,34 @@ export const useAuthStore = create<AuthState>()(
       refreshToken: undefined,
       userProfile: undefined,
       activeBranchCode: undefined,
+      twoFactorEnabled: undefined,
       setTokens: (access, refresh) =>
         set({ accessToken: access, refreshToken: refresh }),
-      setUserProfile: (profile) => set({ userProfile: profile }),
+      setUserProfile: (profile) =>
+        set((state) => ({
+          userProfile: {
+            ...profile,
+            twoFactorEnabled:
+              profile.twoFactorEnabled ?? state.twoFactorEnabled,
+          },
+          twoFactorEnabled:
+            profile.twoFactorEnabled ?? state.twoFactorEnabled,
+        })),
       setActiveBranchCode: (branch) => set({ activeBranchCode: branch }),
+      setTwoFactorEnabled: (enabled) =>
+        set((state) => ({
+          twoFactorEnabled: enabled,
+          userProfile: state.userProfile
+            ? { ...state.userProfile, twoFactorEnabled: enabled }
+            : undefined,
+        })),
       clearTokens: () =>
         set({
           accessToken: undefined,
           refreshToken: undefined,
           userProfile: undefined,
           activeBranchCode: undefined,
+          twoFactorEnabled: undefined,
         }),
       resetAuth: () =>
         set({
@@ -38,6 +58,7 @@ export const useAuthStore = create<AuthState>()(
           refreshToken: undefined,
           userProfile: undefined,
           activeBranchCode: undefined,
+          twoFactorEnabled: undefined,
         }),
     }),
     {
