@@ -4,6 +4,7 @@ import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
 import InitColorSchemeScript from "@mui/material/InitColorSchemeScript";
 import "@/presentation/styles/globals.css";
 import { ThemeRegistry } from "@/presentation/styles/theme/ThemeRegistry";
+import "@/config/i18n";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -16,8 +17,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Currency Exchange - Admin Dashboard",
-  description: "Secure and efficient currency exchange management system",
+  title: "Panel de Administración - Casa de Cambio",
+  description: "Sistema seguro y eficiente de gestión de cambio de divisas",
   icons: {
     icon: "/favicon.ico",
   },
@@ -29,7 +30,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="es" suppressHydrationWarning>
       <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <InitColorSchemeScript />
         <AppRouterCacheProvider>

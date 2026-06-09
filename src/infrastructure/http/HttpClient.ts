@@ -1,6 +1,7 @@
 import { useAuthStore } from "@/presentation/stores/auth.store";
 import { ApiError, apiErrorSchema } from "@/domain/Errors";
 import { API_BASE_URL } from "@/config";
+import { translateApiError } from "@/config/i18n";
 import { to } from "@/utils/async";
 import { z } from "zod";
 
@@ -121,10 +122,14 @@ async function handleResponse(
             const retriedParsedError = apiErrorSchema.safeParse(retriedErrorData);
 
             if (retriedParsedError.success) {
+              const translatedDetail = translateApiError(
+                retriedParsedError.data.error_code,
+                retriedParsedError.data.detail
+              );
               throw new ApiError(
                 retriedParsedError.data.status_code,
                 retriedParsedError.data.error_code,
-                retriedParsedError.data.detail,
+                translatedDetail,
                 retriedParsedError.data.hint,
               );
             }
@@ -140,23 +145,27 @@ async function handleResponse(
     }
 
     // Other standardized API errors
+    const translatedDetail = translateApiError(
+      apiErr.error_code,
+      apiErr.detail
+    );
     throw new ApiError(
       apiErr.status_code,
       apiErr.error_code,
-      apiErr.detail,
+      translatedDetail,
       apiErr.hint,
     );
   }
 
   // 3. Fallback for non-standard or FastAPI-specific validation / HTTP exceptions
-  let detailMessage = "An unknown error occurred";
+  let detailMessage = "Ocurrió un error desconocido";
   if (errorData && typeof errorData === "object") {
     const errObj = errorData as Record<string, unknown>;
     if (typeof errObj.detail === "string") {
       detailMessage = errObj.detail;
     } else if (Array.isArray(errObj.detail)) {
       detailMessage = (errObj.detail as Array<{ loc?: string[]; msg?: string }>)
-        .map((err) => `${err.loc?.join(".") || "field"}: ${err.msg || "invalid value"}`)
+        .map((err) => `${err.loc?.join(".") || "campo"}: ${err.msg || "valor inválido"}`)
         .join("; ");
     } else if (errObj.message) {
       detailMessage = String(errObj.message);
